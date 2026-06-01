@@ -1,0 +1,1548 @@
+{
+  "metadata": {
+    "name": "Tikkle",
+    "components": {},
+    "componentSets": {}
+  },
+  "nodes": [
+    {
+      "id": "63:398",
+      "name": "FEAT-ONB-001_2",
+      "type": "FRAME",
+      "layout": "layout_BX27O0",
+      "fills": "fill_TSA2Q5",
+      "effects": "effect_UWV6S8",
+      "borderRadius": "40px",
+      "children": [
+        {
+          "id": "63:399",
+          "name": "Container",
+          "type": "FRAME",
+          "layout": "layout_PLHTL2",
+          "fills": "fill_UFPMPD",
+          "children": [
+            {
+              "id": "63:400",
+              "name": "Container",
+              "type": "FRAME",
+              "layout": "layout_IU6CNC",
+              "children": [
+                {
+                  "id": "63:401",
+                  "name": "9:41",
+                  "type": "TEXT",
+                  "layout": "layout_QOTVQP",
+                  "text": "9:41",
+                  "textStyle": "style_3QCI9D",
+                  "fills": "fill_Z5KAAF"
+                }
+              ]
+            },
+            {
+              "id": "63:402",
+              "name": "Container",
+              "type": "FRAME",
+              "layout": "layout_AKR3HA",
+              "children": [
+                {
+                  "id": "63:403",
+                  "name": "Icon",
+                  "type": "IMAGE-SVG",
+                  "layout": "layout_OVK28P"
+                },
+                {
+                  "id": "63:408",
+                  "name": "Icon",
+                  "type": "IMAGE-SVG",
+                  "layout": "layout_0R8GYN"
+                },
+                {
+                  "id": "63:412",
+                  "name": "Container",
+                  "type": "FRAME",
+                  "layout": "layout_DC6P44",
+                  "children": [
+                    {
+                      "id": "63:413",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_Z6430M",
+                      "strokes": "fill_Z5KAAF",
+                      "strokeWeight": "1.1428600549697876px",
+                      "borderRadius": "3px",
+                      "children": [
+                        {
+                          "id": "63:414",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_WXFSNH",
+                          "fills": "fill_Z5KAAF",
+                          "borderRadius": "6px"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "63:415",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_8K356P",
+                      "fills": "fill_Z5KAAF",
+                      "borderRadius": "0px 6px 6px 0px"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "63:416",
+          "name": "Container",
+          "type": "FRAME",
+          "layout": "layout_5K5XGS",
+          "children": [
+            {
+              "id": "63:417",
+              "name": "Container",
+              "type": "FRAME",
+              "layout": "layout_S5F2TX",
+              "fills": "fill_TSA2Q5",
+              "children": [
+                {
+                  "id": "63:418",
+                  "name": "Container",
+                  "type": "FRAME",
+                  "layout": "layout_EJYZA1",
+                  "fills": "fill_UFPMPD",
+                  "strokes": "fill_5TW1SF",
+                  "strokeWeight": "0px 0px 0.5714290142059326px",
+                  "children": [
+                    {
+                      "id": "63:419",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_NTRDDW",
+                      "children": [
+                        {
+                          "id": "63:420",
+                          "name": "Text",
+                          "type": "FRAME",
+                          "layout": "layout_2EDT6Q",
+                          "children": [
+                            {
+                              "id": "63:421",
+                              "name": "2 / 5 단계",
+                              "type": "TEXT",
+                              "layout": "layout_WM8LS7",
+                              "text": "2 / 5 단계",
+                              "textStyle": "style_AQW3KJ",
+                              "fills": "fill_0SIID5"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "63:422",
+                          "name": "Text",
+                          "type": "FRAME",
+                          "layout": "layout_ANZEWI",
+                          "children": [
+                            {
+                              "id": "63:423",
+                              "name": "40%",
+                              "type": "TEXT",
+                              "layout": "layout_RA9OGZ",
+                              "text": "40%",
+                              "textStyle": "style_4JOKLG",
+                              "fills": "fill_MQW0BP"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "63:424",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_37KD89",
+                      "fills": "fill_5TW1SF",
+                      "borderRadius": "19174000px",
+                      "children": [
+                        {
+                          "id": "63:425",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_2E2IRL",
+                          "fills": "fill_MQW0BP",
+                          "borderRadius": "19174000px"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "63:426",
+                  "name": "Container",
+                  "type": "FRAME",
+                  "layout": "layout_R9RR2X",
+                  "children": [
+                    {
+                      "id": "63:427",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_B3UITV",
+                      "children": [
+                        {
+                          "id": "63:428",
+                          "name": "Paragraph",
+                          "type": "FRAME",
+                          "layout": "layout_69G5JB",
+                          "children": [
+                            {
+                              "id": "63:429",
+                              "name": "잔돈 설정",
+                              "type": "TEXT",
+                              "layout": "layout_CSF6VW",
+                              "text": "잔돈 설정",
+                              "textStyle": "style_YS8V5R",
+                              "fills": "fill_MQW0BP"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "63:430",
+                          "name": "Heading 1",
+                          "type": "FRAME",
+                          "layout": "layout_VINUEX",
+                          "children": [
+                            {
+                              "id": "63:431",
+                              "name": "잔돈 규칙과 매매\n방식을 설정하세요",
+                              "type": "TEXT",
+                              "layout": "layout_DGC14S",
+                              "text": "잔돈 규칙과 매매\\n방식을 설정하세요",
+                              "textStyle": "style_RP4FFK",
+                              "fills": "fill_Z5KAAF"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "63:432",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_2RC8V8",
+                      "children": [
+                        {
+                          "id": "63:433",
+                          "name": "잔돈 발생 방식",
+                          "type": "TEXT",
+                          "layout": "layout_AMC5YI",
+                          "text": "잔돈 발생 방식",
+                          "textStyle": "style_3QCI9D",
+                          "fills": "fill_Z5KAAF"
+                        },
+                        {
+                          "id": "63:434",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_WWB291",
+                          "fills": "fill_3K5RWM",
+                          "borderRadius": "16px",
+                          "children": [
+                            {
+                              "id": "63:435",
+                              "name": "Button",
+                              "type": "FRAME",
+                              "layout": "layout_UQL7FF",
+                              "fills": "fill_UFPMPD",
+                              "effects": "effect_8P3T0Q",
+                              "borderRadius": "14px",
+                              "children": [
+                                {
+                                  "id": "63:436",
+                                  "name": "올림 잔돈 적립",
+                                  "type": "TEXT",
+                                  "layout": "layout_46JMOS",
+                                  "text": "올림 잔돈 적립",
+                                  "textStyle": "style_8PLWR2",
+                                  "fills": "fill_GWUKCF"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "63:437",
+                              "name": "Button",
+                              "type": "FRAME",
+                              "layout": "layout_UQL7FF",
+                              "borderRadius": "14px",
+                              "children": [
+                                {
+                                  "id": "63:438",
+                                  "name": "비율 잔돈 적립",
+                                  "type": "TEXT",
+                                  "layout": "layout_46JMOS",
+                                  "text": "비율 잔돈 적립",
+                                  "textStyle": "style_8PLWR2",
+                                  "fills": "fill_0SIID5"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "63:439",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_Q9T8SH",
+                          "fills": "fill_UFPMPD",
+                          "strokes": "fill_5TW1SF",
+                          "strokeWeight": "0.5714290142059326px",
+                          "borderRadius": "16px",
+                          "children": [
+                            {
+                              "id": "63:440",
+                              "name": "Container",
+                              "type": "FRAME",
+                              "layout": "layout_X4KCGS",
+                              "children": [
+                                {
+                                  "id": "63:441",
+                                  "name": "Text",
+                                  "type": "FRAME",
+                                  "layout": "layout_DBKR3P",
+                                  "children": [
+                                    {
+                                      "id": "63:442",
+                                      "name": "올림 기준 단위",
+                                      "type": "TEXT",
+                                      "layout": "layout_DFT266",
+                                      "text": "올림 기준 단위",
+                                      "textStyle": "style_PE0WDS",
+                                      "fills": "fill_0SIID5"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "63:443",
+                                  "name": "Text",
+                                  "type": "FRAME",
+                                  "layout": "layout_ZO4YS1",
+                                  "children": [
+                                    {
+                                      "id": "63:444",
+                                      "name": "1,000원",
+                                      "type": "TEXT",
+                                      "layout": "layout_6A2P2S",
+                                      "text": "1,000원",
+                                      "textStyle": "style_VR8JGH",
+                                      "fills": "fill_GWUKCF"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "id": "63:445",
+                              "name": "Paragraph",
+                              "type": "FRAME",
+                              "layout": "layout_8HPGI8",
+                              "children": [
+                                {
+                                  "id": "63:446",
+                                  "name": "결제 금액을 1,000원 단위로 올림한 차액을 잔돈으로 적립합니다",
+                                  "type": "TEXT",
+                                  "layout": "layout_ITJRDU",
+                                  "text": "결제 금액을 1,000원 단위로 올림한 차액을 잔돈으로 적립합니다",
+                                  "textStyle": "style_AQW3KJ",
+                                  "fills": "fill_0SIID5"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "63:447",
+                              "name": "Range Slider",
+                              "type": "FRAME",
+                              "layout": "layout_17N7FM",
+                              "fills": "fill_66TSKI",
+                              "borderRadius": "19174000px"
+                            },
+                            {
+                              "id": "63:448",
+                              "name": "Container",
+                              "type": "FRAME",
+                              "layout": "layout_FO1XLO",
+                              "children": [
+                                {
+                                  "id": "63:449",
+                                  "name": "Text",
+                                  "type": "FRAME",
+                                  "layout": "layout_J74TKV",
+                                  "children": [
+                                    {
+                                      "id": "63:450",
+                                      "name": "1,000원",
+                                      "type": "TEXT",
+                                      "layout": "layout_A8EXDP",
+                                      "text": "1,000원",
+                                      "textStyle": "style_4JOKLG",
+                                      "fills": "fill_GWUKCF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "63:451",
+                                  "name": "Text",
+                                  "type": "FRAME",
+                                  "layout": "layout_KPP6OH",
+                                  "children": [
+                                    {
+                                      "id": "63:452",
+                                      "name": "5,000원",
+                                      "type": "TEXT",
+                                      "layout": "layout_A8EXDP",
+                                      "text": "5,000원",
+                                      "textStyle": "style_AQW3KJ",
+                                      "fills": "fill_X4WBXT"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "63:453",
+                                  "name": "Text",
+                                  "type": "FRAME",
+                                  "layout": "layout_GGYJ43",
+                                  "children": [
+                                    {
+                                      "id": "63:454",
+                                      "name": "10,000원",
+                                      "type": "TEXT",
+                                      "layout": "layout_K58HUQ",
+                                      "text": "10,000원",
+                                      "textStyle": "style_AQW3KJ",
+                                      "fills": "fill_X4WBXT"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "63:455",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_V3TZLY",
+                      "children": [
+                        {
+                          "id": "63:456",
+                          "name": "Label",
+                          "type": "FRAME",
+                          "layout": "layout_OSVS6O",
+                          "children": [
+                            {
+                              "id": "63:457",
+                              "name": "매매 방식",
+                              "type": "TEXT",
+                              "layout": "layout_N9YFS4",
+                              "text": "매매 방식",
+                              "textStyle": "style_3QCI9D",
+                              "fills": "fill_Z5KAAF"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "63:458",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_JA6913",
+                          "fills": "fill_3K5RWM",
+                          "borderRadius": "16px",
+                          "children": [
+                            {
+                              "id": "63:459",
+                              "name": "Button",
+                              "type": "FRAME",
+                              "layout": "layout_TPJVXM",
+                              "fills": "fill_UFPMPD",
+                              "effects": "effect_8P3T0Q",
+                              "borderRadius": "14px",
+                              "children": [
+                                {
+                                  "id": "63:460",
+                                  "name": "Container",
+                                  "type": "FRAME",
+                                  "layout": "layout_OSVS6O",
+                                  "children": [
+                                    {
+                                      "id": "63:461",
+                                      "name": "자동 매매",
+                                      "type": "TEXT",
+                                      "layout": "layout_0XLJA9",
+                                      "text": "자동 매매",
+                                      "textStyle": "style_8PLWR2",
+                                      "fills": "fill_GWUKCF"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "63:462",
+                                  "name": "Container",
+                                  "type": "FRAME",
+                                  "layout": "layout_6I17S0",
+                                  "children": [
+                                    {
+                                      "id": "63:463",
+                                      "name": "잔돈 자동 투자",
+                                      "type": "TEXT",
+                                      "layout": "layout_3RAVXV",
+                                      "text": "잔돈 자동 투자",
+                                      "textStyle": "style_8GZDQ2",
+                                      "fills": "fill_0SIID5"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "id": "63:464",
+                              "name": "Button",
+                              "type": "FRAME",
+                              "layout": "layout_TPJVXM",
+                              "borderRadius": "14px",
+                              "children": [
+                                {
+                                  "id": "63:465",
+                                  "name": "Container",
+                                  "type": "FRAME",
+                                  "layout": "layout_OSVS6O",
+                                  "children": [
+                                    {
+                                      "id": "63:466",
+                                      "name": "수동 매매",
+                                      "type": "TEXT",
+                                      "layout": "layout_0XLJA9",
+                                      "text": "수동 매매",
+                                      "textStyle": "style_8PLWR2",
+                                      "fills": "fill_0SIID5"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "63:467",
+                                  "name": "Container",
+                                  "type": "FRAME",
+                                  "layout": "layout_6I17S0",
+                                  "children": [
+                                    {
+                                      "id": "63:468",
+                                      "name": "직접 종목 선택",
+                                      "type": "TEXT",
+                                      "layout": "layout_3RAVXV",
+                                      "text": "직접 종목 선택",
+                                      "textStyle": "style_8GZDQ2",
+                                      "fills": "fill_0SIID5"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "63:469",
+                  "name": "Container",
+                  "type": "FRAME",
+                  "layout": "layout_WB06AO",
+                  "fills": "fill_TSA2Q5",
+                  "children": [
+                    {
+                      "id": "63:470",
+                      "name": "Button",
+                      "type": "FRAME",
+                      "layout": "layout_PO8IG0",
+                      "fills": "fill_MQW0BP",
+                      "borderRadius": "16px",
+                      "children": [
+                        {
+                          "id": "63:471",
+                          "name": "다음",
+                          "type": "TEXT",
+                          "layout": "layout_GD8362",
+                          "text": "다음",
+                          "textStyle": "style_Y0PETP",
+                          "fills": "fill_UFPMPD"
+                        },
+                        {
+                          "id": "63:472",
+                          "name": "Icon",
+                          "type": "IMAGE-SVG",
+                          "layout": "layout_3IRTUG"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "globalVars": {
+    "styles": {
+      "layout_BX27O0": {
+        "mode": "column",
+        "padding": "0px 0px -0.000003814697265625px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 812
+        }
+      },
+      "fill_TSA2Q5": [
+        "#F5F5F7"
+      ],
+      "effect_UWV6S8": {
+        "boxShadow": "0px 25px 50px -12px rgba(0, 0, 0, 0.25)"
+      },
+      "layout_PLHTL2": {
+        "mode": "row",
+        "justifyContent": "space-between",
+        "alignItems": "center",
+        "padding": "8px 24px 0px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 44
+        }
+      },
+      "fill_UFPMPD": [
+        "#FFFFFF"
+      ],
+      "layout_IU6CNC": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 28.22,
+          "height": 20
+        }
+      },
+      "layout_QOTVQP": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.14
+        },
+        "dimensions": {
+          "width": 30,
+          "height": 20
+        }
+      },
+      "style_3QCI9D": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 14,
+        "lineHeight": "20px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "fill_Z5KAAF": [
+        "#1C1C1E"
+      ],
+      "layout_AKR3HA": {
+        "mode": "row",
+        "alignItems": "center",
+        "gap": "6px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 73,
+          "height": 12
+        }
+      },
+      "layout_OVK28P": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 17,
+          "height": 12
+        }
+      },
+      "layout_5F469G": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 4
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 8
+        }
+      },
+      "layout_FPYM3Q": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 4.5,
+          "y": 2.5
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 9.5
+        }
+      },
+      "layout_1BF0YL": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 9,
+          "y": 0.5
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 11.5
+        }
+      },
+      "layout_JQ5G58": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 13.5,
+          "y": 0
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 12
+        }
+      },
+      "layout_0R8GYN": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 16,
+          "height": 12
+        }
+      },
+      "layout_VLGSFH": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "dimensions": {
+          "width": 15,
+          "height": 4.8
+        }
+      },
+      "layout_QXIH21": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 2.2,
+          "y": 3.8
+        },
+        "dimensions": {
+          "width": 11.6,
+          "height": 3.7
+        }
+      },
+      "layout_GKL95A": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 6.5,
+          "y": 8.5
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 3
+        }
+      },
+      "layout_DC6P44": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 28,
+          "height": 12
+        }
+      },
+      "layout_Z6430M": {
+        "mode": "row",
+        "alignItems": "center",
+        "padding": "0px 2px 0px 1.9999622106552124px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0
+        },
+        "dimensions": {
+          "width": 24,
+          "height": 12
+        }
+      },
+      "layout_WXFSNH": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 16,
+          "height": 6
+        }
+      },
+      "layout_8K356P": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 26,
+          "y": 3
+        },
+        "dimensions": {
+          "width": 2,
+          "height": 6
+        }
+      },
+      "layout_5K5XGS": {
+        "mode": "column",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fill"
+        },
+        "dimensions": {
+          "width": 375
+        }
+      },
+      "layout_S5F2TX": {
+        "mode": "column",
+        "gap": "0.000003814697265625px",
+        "padding": "0px 0px -0.000003814697265625px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 768
+        }
+      },
+      "layout_EJYZA1": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "gap": "12.000007629394531px",
+        "padding": "15.999996185302734px 24.000030517578125px 0.5714290142059326px 24px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 70.57
+        }
+      },
+      "fill_5TW1SF": [
+        "#E5E5EA"
+      ],
+      "layout_NTRDDW": {
+        "mode": "row",
+        "justifyContent": "space-between",
+        "alignItems": "center",
+        "alignSelf": "stretch",
+        "padding": "0px -0.00002288818359375px 0px 0px",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 16
+        }
+      },
+      "layout_2EDT6Q": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 52.89,
+          "height": 16
+        }
+      },
+      "layout_WM8LS7": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 52,
+          "height": 16
+        }
+      },
+      "style_AQW3KJ": {
+        "fontFamily": "Inter",
+        "fontStyle": "Regular",
+        "fontWeight": 400,
+        "fontSize": 12,
+        "lineHeight": "16px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "fill_0SIID5": [
+        "#8E8E93"
+      ],
+      "layout_ANZEWI": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 27.96,
+          "height": 16
+        }
+      },
+      "layout_RA9OGZ": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 27,
+          "height": 16
+        }
+      },
+      "style_4JOKLG": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 12,
+        "lineHeight": "16px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "fill_MQW0BP": [
+        "#0051FF"
+      ],
+      "layout_37KD89": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "alignSelf": "stretch",
+        "padding": "0px 196.20535278320312px 0px 0px",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 6
+        }
+      },
+      "layout_2E2IRL": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 6
+        }
+      },
+      "layout_R9RR2X": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fill"
+        },
+        "dimensions": {
+          "width": 375
+        }
+      },
+      "layout_B3UITV": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "gap": "8px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 24,
+          "y": 28
+        },
+        "dimensions": {
+          "width": 327,
+          "height": 84.5
+        }
+      },
+      "layout_69G5JB": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 16
+        }
+      },
+      "layout_CSF6VW": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 49,
+          "height": 16
+        }
+      },
+      "style_YS8V5R": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 12,
+        "lineHeight": "16px",
+        "letterSpacing": "2.5%",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "layout_VINUEX": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 60.5
+        }
+      },
+      "layout_DGC14S": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.71
+        },
+        "dimensions": {
+          "width": 327,
+          "height": 61
+        }
+      },
+      "style_RP4FFK": {
+        "fontFamily": "Inter",
+        "fontStyle": "Bold",
+        "fontWeight": 700,
+        "fontSize": 22,
+        "lineHeight": "30.25px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "layout_2RC8V8": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 24,
+          "y": 140.5
+        },
+        "dimensions": {
+          "width": 327,
+          "height": 269.14
+        }
+      },
+      "layout_AMC5YI": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.14
+        },
+        "dimensions": {
+          "width": 85,
+          "height": 20
+        }
+      },
+      "layout_WWB291": {
+        "mode": "row",
+        "padding": "4px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 32
+        },
+        "dimensions": {
+          "width": 327,
+          "height": 48
+        }
+      },
+      "fill_3K5RWM": [
+        "#F0F0F5"
+      ],
+      "layout_UQL7FF": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 40
+        }
+      },
+      "effect_8P3T0Q": {
+        "boxShadow": "0px 1px 2px -1px rgba(0, 0, 0, 0.1), 0px 1px 3px 0px rgba(0, 0, 0, 0.1)"
+      },
+      "layout_46JMOS": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 38.21,
+          "y": 10.14
+        },
+        "dimensions": {
+          "width": 85,
+          "height": 20
+        }
+      },
+      "style_8PLWR2": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 14,
+        "lineHeight": "20px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      },
+      "fill_GWUKCF": [
+        "#000000"
+      ],
+      "layout_Q9T8SH": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 100
+        },
+        "dimensions": {
+          "width": 327,
+          "height": 169.14
+        }
+      },
+      "layout_X4KCGS": {
+        "mode": "row",
+        "justifyContent": "space-between",
+        "alignItems": "center",
+        "padding": "0px -0.000030517578125px 0px 0px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 20.57,
+          "y": 20.57
+        },
+        "dimensions": {
+          "width": 285.86,
+          "height": 28
+        }
+      },
+      "layout_DBKR3P": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 91.88,
+          "height": 20
+        }
+      },
+      "layout_DFT266": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.14
+        },
+        "dimensions": {
+          "width": 86,
+          "height": 20
+        }
+      },
+      "style_PE0WDS": {
+        "fontFamily": "Inter",
+        "fontStyle": "Regular",
+        "fontWeight": 400,
+        "fontSize": 14,
+        "lineHeight": "20px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "layout_ZO4YS1": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 67.67,
+          "height": 28
+        }
+      },
+      "layout_6A2P2S": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": -0.14
+        },
+        "dimensions": {
+          "width": 70,
+          "height": 28
+        }
+      },
+      "style_VR8JGH": {
+        "fontFamily": "Inter",
+        "fontStyle": "Bold",
+        "fontWeight": 700,
+        "fontSize": 18,
+        "lineHeight": "28px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "layout_8HPGI8": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 20.57,
+          "y": 52.57
+        },
+        "dimensions": {
+          "width": 285.86,
+          "height": 32
+        }
+      },
+      "layout_ITJRDU": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 286,
+          "height": 32
+        }
+      },
+      "layout_17N7FM": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 20.57,
+          "y": 112.29
+        },
+        "dimensions": {
+          "width": 285.86,
+          "height": 6
+        }
+      },
+      "fill_66TSKI": [
+        {
+          "type": "GRADIENT_LINEAR",
+          "gradient": "linear-gradient(90deg, rgba(0, 81, 255, 1) 0%, rgba(229, 229, 234, 1) 0%)"
+        }
+      ],
+      "layout_FO1XLO": {
+        "mode": "row",
+        "justifyContent": "space-between",
+        "padding": "0px -0.00003814697265625px 0px 0px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 20.57,
+          "y": 132.57
+        },
+        "dimensions": {
+          "width": 285.86,
+          "height": 16
+        }
+      },
+      "layout_J74TKV": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 44.32,
+          "height": 16
+        }
+      },
+      "layout_A8EXDP": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 44,
+          "height": 16
+        }
+      },
+      "layout_KPP6OH": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 44.66,
+          "height": 16
+        }
+      },
+      "fill_X4WBXT": [
+        "#C7C7CC"
+      ],
+      "layout_GGYJ43": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 50.02,
+          "height": 16
+        }
+      },
+      "layout_K58HUQ": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 50,
+          "height": 16
+        }
+      },
+      "layout_V3TZLY": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "gap": "12px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 24,
+          "y": 433.64
+        },
+        "dimensions": {
+          "width": 327,
+          "height": 101
+        }
+      },
+      "layout_OSVS6O": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 20
+        }
+      },
+      "layout_N9YFS4": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.14
+        },
+        "dimensions": {
+          "width": 55,
+          "height": 20
+        }
+      },
+      "layout_JA6913": {
+        "mode": "row",
+        "alignSelf": "stretch",
+        "padding": "4px",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 69
+        }
+      },
+      "layout_TPJVXM": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "gap": "2px",
+        "padding": "12px 0px 0px",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 61
+        }
+      },
+      "layout_0XLJA9": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 52.98,
+          "y": 0.14
+        },
+        "dimensions": {
+          "width": 55,
+          "height": 20
+        }
+      },
+      "layout_6I17S0": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 15
+        }
+      },
+      "layout_3RAVXV": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 50.08,
+          "y": 0.14
+        },
+        "dimensions": {
+          "width": 61,
+          "height": 15
+        }
+      },
+      "style_8GZDQ2": {
+        "fontFamily": "Inter",
+        "fontStyle": "Medium",
+        "fontWeight": 500,
+        "fontSize": 10,
+        "lineHeight": "15px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      },
+      "layout_WB06AO": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "padding": "0px 24.000030517578125px 0px 24px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 86.5
+        }
+      },
+      "layout_PO8IG0": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 54.5
+        }
+      },
+      "layout_GD8362": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 135.5,
+          "y": 15.29
+        },
+        "dimensions": {
+          "width": 28,
+          "height": 23
+        }
+      },
+      "style_Y0PETP": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 15,
+        "lineHeight": "22.5px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      },
+      "layout_3IRTUG": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 172.5,
+          "y": 17.25
+        },
+        "dimensions": {
+          "width": 20,
+          "height": 20
+        }
+      },
+      "layout_PQWNWP": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 7.5,
+          "y": 5
+        },
+        "dimensions": {
+          "width": 5,
+          "height": 10
+        }
+      }
+    }
+  }
+}

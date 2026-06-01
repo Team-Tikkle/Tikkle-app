@@ -1,0 +1,113 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════
+   Tikkle Design Tokens — Tailwind v4 @theme
+   (Figma file: wzEL83xCAIUcLrlUcjcbiT)
+   ══════════════════════════════════════════ */
+@theme {
+  /* Font family */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Font sizes */
+  --text-xs2:        10px;
+  --text-xs2--line-height: 14px;
+  --text-xs:         11px;
+  --text-xs--line-height: 16px;
+  --text-sm:         12px;
+  --text-sm--line-height: 16px;
+  --text-base:       14px;
+  --text-base--line-height: 20px;
+  --text-md:         15px;
+  --text-md--line-height: 22px;
+  --text-lg:         17px;
+  --text-lg--line-height: 24px;
+  --text-xl:         18px;
+  --text-xl--line-height: 26px;
+  --text-2xl:        22px;
+  --text-2xl--line-height: 30px;
+  --text-3xl:        24px;
+  --text-3xl--line-height: 32px;
+  --text-4xl:        32px;
+  --text-4xl--line-height: 40px;
+
+  /* Brand colors */
+  --color-brand:         #0051ff;
+  --color-brand-hover:   #005bf2;
+  --color-brand-300:     #3380ff;
+  --color-brand-400:     #66aaff;
+  --color-brand-200:     #99ccff;
+  --color-brand-100:     #b3d4ff;
+  --color-brand-50:      #c7dfff;
+  --color-brand-bg:      #eef3ff;
+
+  /* Text colors */
+  --color-text-primary:   #1c1c1e;
+  --color-text-secondary: #3c3c43;
+  --color-text-tertiary:  #8e8e93;
+  --color-text-disabled:  #c7c7cc;
+
+  /* Surface colors */
+  --color-surface:         #f5f5f7;
+  --color-surface-alt:     #f0f0f5;
+  --color-surface-card:    #ffffff;
+  --color-surface-border:  #e5e5ea;
+
+  /* Semantic */
+  --color-danger:          #ff3b30;
+  --color-danger-light:    #ff8a80;
+  --color-danger-bg:       #fff0f0;
+  --color-warning:         #c07800;
+  --color-warning-bg:      #fff8ec;
+  --color-success:         #00a651;
+
+  /* Border radius */
+  --radius-xs:   6px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   14px;
+  --radius-xl:   16px;
+  --radius-2xl:  20px;
+  --radius-3xl:  24px;
+  --radius-4xl:  40px;
+  --radius-pill: 9999px;
+
+  /* Max width */
+  --width-mobile: 430px;
+
+  /* Spacing extras */
+  --spacing-4_5: 18px;
+  --spacing-5_5: 22px;
+}
+
+/* ── Base ── */
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Utilities ── */
+.max-w-mobile    { max-width: 430px; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* ── Transaction status badge variants ── */
+.badge-invested  { background: #0051ff; color: #fff; }
+.badge-pending   { background: #fff8ec; color: #c07800; }
+.badge-canceled  { background: #f0f0f5; color: #8e8e93; }
+.badge-expired   { background: #fff0f0; color: #ff3b30; }

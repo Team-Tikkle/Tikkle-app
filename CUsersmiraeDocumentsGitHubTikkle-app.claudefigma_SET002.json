@@ -1,0 +1,414 @@
+{
+  "metadata": {
+    "name": "Tikkle",
+    "components": {},
+    "componentSets": {}
+  },
+  "nodes": [
+    {
+      "id": "68:1932",
+      "name": "FEAT-SET-002",
+      "type": "FRAME",
+      "layout": "layout_28L68K",
+      "fills": "fill_418QTZ",
+      "borderRadius": "24px",
+      "children": [
+        {
+          "id": "68:1933",
+          "name": "Container",
+          "type": "FRAME",
+          "layout": "layout_0H1O8Y",
+          "fills": "fill_HG9F75",
+          "borderRadius": "19174000px",
+          "children": [
+            {
+              "id": "68:1934",
+              "name": "Icon",
+              "type": "IMAGE-SVG",
+              "layout": "layout_PX4S6H"
+            }
+          ]
+        },
+        {
+          "id": "68:1938",
+          "name": "Heading 2",
+          "type": "FRAME",
+          "layout": "layout_O5YILG",
+          "children": [
+            {
+              "id": "68:1939",
+              "name": "서비스 탈퇴",
+              "type": "TEXT",
+              "layout": "layout_AU2213",
+              "text": "서비스 탈퇴",
+              "textStyle": "style_EIF8K1",
+              "fills": "fill_Z2OLGO"
+            }
+          ]
+        },
+        {
+          "id": "68:1940",
+          "name": "Container",
+          "type": "FRAME",
+          "layout": "layout_JDAN3G",
+          "fills": "fill_UNY4M8",
+          "strokes": "fill_GM3FVA",
+          "strokeWeight": "0.5714290142059326px",
+          "borderRadius": "16px",
+          "children": [
+            {
+              "id": "68:1942",
+              "name": "⚠️ 주의",
+              "type": "TEXT",
+              "layout": "layout_79LFZX",
+              "text": "⚠️ 주의",
+              "textStyle": "style_OS36G7",
+              "fills": "fill_TWCI62"
+            },
+            {
+              "id": "68:1943",
+              "name": "Paragraph",
+              "type": "FRAME",
+              "layout": "layout_5YOM5G"
+            }
+          ]
+        },
+        {
+          "id": "68:1944",
+          "name": "보유 중인 주식이 즉시 시장가로 일괄 매도됩니다.  이 작업은 되돌릴 수 없습니다.",
+          "type": "TEXT",
+          "layout": "layout_68BC88",
+          "text": "보유 중인 주식이 {ts1}**즉시 시장가로 일괄 매도**{/ts1}됩니다.  이 작업은 되돌릴 수 없습니다.",
+          "boldWeight": 700,
+          "textStyle": "style_R8KJ1A",
+          "fills": "fill_Q6OPLT"
+        },
+        {
+          "id": "68:1945",
+          "name": "Container",
+          "type": "FRAME",
+          "layout": "layout_V0JW4B",
+          "children": [
+            {
+              "id": "68:1946",
+              "name": "Button",
+              "type": "FRAME",
+              "layout": "layout_D9Q448",
+              "fills": "fill_TWCI62",
+              "borderRadius": "16px",
+              "children": [
+                {
+                  "id": "68:1947",
+                  "name": "탈퇴 신청하기",
+                  "type": "TEXT",
+                  "layout": "layout_R8IXDB",
+                  "text": "탈퇴 신청하기",
+                  "textStyle": "style_53PMM5",
+                  "fills": "fill_418QTZ"
+                }
+              ]
+            },
+            {
+              "id": "68:1948",
+              "name": "Button",
+              "type": "FRAME",
+              "layout": "layout_D9Q448",
+              "fills": "fill_A8BR23",
+              "borderRadius": "16px",
+              "children": [
+                {
+                  "id": "68:1949",
+                  "name": "취소",
+                  "type": "TEXT",
+                  "layout": "layout_JJG8ZX",
+                  "text": "취소",
+                  "textStyle": "style_FDO420",
+                  "fills": "fill_NBVTMI"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "globalVars": {
+    "styles": {
+      "layout_28L68K": {
+        "mode": "none",
+        "sizing": {},
+        "dimensions": {
+          "width": 374,
+          "height": 405
+        }
+      },
+      "fill_418QTZ": [
+        "#FFFFFF"
+      ],
+      "layout_0H1O8Y": {
+        "mode": "row",
+        "justifyContent": "center",
+        "alignItems": "center",
+        "padding": "0px 14.000003814697266px 0px 14px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 159,
+          "y": 24
+        },
+        "dimensions": {
+          "width": 56,
+          "height": 56
+        }
+      },
+      "fill_HG9F75": [
+        "#FFF0F0"
+      ],
+      "layout_PX4S6H": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 28,
+          "height": 28
+        }
+      },
+      "layout_TMWQQN": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 2.31,
+          "y": 3.48
+        },
+        "dimensions": {
+          "width": 23.35,
+          "height": 21.02
+        }
+      },
+      "fill_TWCI62": [
+        "#FF3B30"
+      ],
+      "layout_GM7YF8": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 14,
+          "y": 10.5
+        },
+        "dimensions": {
+          "width": 0,
+          "height": 4.67
+        }
+      },
+      "layout_SY2IG0": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 14,
+          "y": 19.83
+        },
+        "dimensions": {
+          "width": 0.01,
+          "height": 0
+        }
+      },
+      "layout_O5YILG": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 24,
+          "y": 94
+        },
+        "dimensions": {
+          "width": 326,
+          "height": 26
+        }
+      },
+      "layout_AU2213": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 121,
+          "y": 0
+        },
+        "dimensions": {
+          "width": 83,
+          "height": 26
+        }
+      },
+      "style_EIF8K1": {
+        "fontFamily": "Inter",
+        "fontStyle": "Bold",
+        "fontWeight": 700,
+        "fontSize": 17,
+        "lineHeight": "25.5px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      },
+      "fill_Z2OLGO": [
+        "#0051FF"
+      ],
+      "layout_JDAN3G": {
+        "mode": "column",
+        "gap": "4px",
+        "padding": "16.571441650390625px 16.571392059326172px 0.5714290142059326px 16.571430206298828px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 24,
+          "y": 134
+        },
+        "dimensions": {
+          "width": 326,
+          "height": 88
+        }
+      },
+      "fill_UNY4M8": [
+        "#FFF5F5"
+      ],
+      "fill_GM3FVA": [
+        "#FFCDD2"
+      ],
+      "layout_79LFZX": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "hug"
+        },
+        "dimensions": {
+          "width": 292
+        }
+      },
+      "style_OS36G7": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 14,
+        "lineHeight": "20px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      },
+      "layout_5YOM5G": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 19.5
+        }
+      },
+      "layout_68BC88": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 44,
+          "y": 174
+        },
+        "dimensions": {
+          "width": 286,
+          "height": 39
+        }
+      },
+      "ts1": {
+        "fontStyle": "Bold",
+        "fills": [
+          "#FF3B30"
+        ]
+      },
+      "style_R8KJ1A": {
+        "fontFamily": "Inter",
+        "fontStyle": "Regular",
+        "fontWeight": 400,
+        "fontSize": 12,
+        "lineHeight": "19.5px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      },
+      "fill_Q6OPLT": [
+        "#8E8E93"
+      ],
+      "layout_V0JW4B": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "gap": "9.999996185302734px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 24,
+          "y": 245
+        },
+        "dimensions": {
+          "width": 326,
+          "height": 111
+        }
+      },
+      "layout_D9Q448": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 50.5
+        }
+      },
+      "layout_R8IXDB": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 119,
+          "y": 13
+        },
+        "dimensions": {
+          "width": 87,
+          "height": 23
+        }
+      },
+      "style_53PMM5": {
+        "fontFamily": "Inter",
+        "fontStyle": "Bold",
+        "fontWeight": 700,
+        "fontSize": 15,
+        "lineHeight": "22.5px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      },
+      "fill_A8BR23": [
+        "#F0F0F5"
+      ],
+      "layout_JJG8ZX": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 149,
+          "y": 13.5
+        },
+        "dimensions": {
+          "width": 28,
+          "height": 23
+        }
+      },
+      "style_FDO420": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 15,
+        "lineHeight": "22.5px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      },
+      "fill_NBVTMI": [
+        "#1C1C1E"
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dist-ssr/
+*.local
+.DS_Store
+tmp_*.json
+
+# Figma fetch cache (raw API dumps, not needed in repo)
+.claude/figma_*.json
+.claude/settings.json
+C\:*
+
+# Editor
+.vscode/
+.idea/

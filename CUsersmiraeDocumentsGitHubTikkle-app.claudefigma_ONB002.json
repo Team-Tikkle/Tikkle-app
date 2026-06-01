@@ -1,0 +1,1552 @@
+{
+  "metadata": {
+    "name": "Tikkle",
+    "components": {},
+    "componentSets": {}
+  },
+  "nodes": [
+    {
+      "id": "64:848",
+      "name": "FEAT-ONB-002",
+      "type": "FRAME",
+      "layout": "layout_EFKHFY",
+      "fills": "fill_93HNMF",
+      "effects": "effect_RAFL1Z",
+      "borderRadius": "40px",
+      "children": [
+        {
+          "id": "64:849",
+          "name": "Container",
+          "type": "FRAME",
+          "layout": "layout_6SZACY",
+          "fills": "fill_N29SLC",
+          "children": [
+            {
+              "id": "64:850",
+              "name": "Container",
+              "type": "FRAME",
+              "layout": "layout_0378BY",
+              "children": [
+                {
+                  "id": "64:851",
+                  "name": "9:41",
+                  "type": "TEXT",
+                  "layout": "layout_UGUCA7",
+                  "text": "9:41",
+                  "textStyle": "style_DMR5VF",
+                  "fills": "fill_VMYBE9"
+                }
+              ]
+            },
+            {
+              "id": "64:852",
+              "name": "Container",
+              "type": "FRAME",
+              "layout": "layout_WYH4HV",
+              "children": [
+                {
+                  "id": "64:853",
+                  "name": "Icon",
+                  "type": "IMAGE-SVG",
+                  "layout": "layout_4OXTO1"
+                },
+                {
+                  "id": "64:858",
+                  "name": "Icon",
+                  "type": "IMAGE-SVG",
+                  "layout": "layout_V46JO7"
+                },
+                {
+                  "id": "64:862",
+                  "name": "Container",
+                  "type": "FRAME",
+                  "layout": "layout_336CJP",
+                  "children": [
+                    {
+                      "id": "64:863",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_F45GJR",
+                      "strokes": "fill_VMYBE9",
+                      "strokeWeight": "1.1428600549697876px",
+                      "borderRadius": "3px",
+                      "children": [
+                        {
+                          "id": "64:864",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_P11CI8",
+                          "fills": "fill_VMYBE9",
+                          "borderRadius": "6px"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "64:865",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_4UUTGZ",
+                      "fills": "fill_VMYBE9",
+                      "borderRadius": "0px 6px 6px 0px"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "64:866",
+          "name": "Container",
+          "type": "FRAME",
+          "layout": "layout_F8OA0F",
+          "children": [
+            {
+              "id": "64:867",
+              "name": "Container",
+              "type": "FRAME",
+              "layout": "layout_90UY0Q",
+              "fills": "fill_93HNMF",
+              "children": [
+                {
+                  "id": "64:868",
+                  "name": "Container",
+                  "type": "FRAME",
+                  "layout": "layout_GCZ0PA",
+                  "fills": "fill_N29SLC",
+                  "strokes": "fill_VZSMK4",
+                  "strokeWeight": "0px 0px 0.5714290142059326px",
+                  "children": [
+                    {
+                      "id": "64:869",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_P8J1Q4",
+                      "children": [
+                        {
+                          "id": "64:870",
+                          "name": "Text",
+                          "type": "FRAME",
+                          "layout": "layout_WL9OH9",
+                          "children": [
+                            {
+                              "id": "64:871",
+                              "name": "3 / 5 단계",
+                              "type": "TEXT",
+                              "layout": "layout_BUGMNR",
+                              "text": "3 / 5 단계",
+                              "textStyle": "style_77LXQX",
+                              "fills": "fill_EJT6GR"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "64:872",
+                          "name": "Text",
+                          "type": "FRAME",
+                          "layout": "layout_OKTUOY",
+                          "children": [
+                            {
+                              "id": "64:873",
+                              "name": "60%",
+                              "type": "TEXT",
+                              "layout": "layout_I8GMVO",
+                              "text": "60%",
+                              "textStyle": "style_2LD2Z1",
+                              "fills": "fill_V72X32"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "64:874",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_X61P3Z",
+                      "fills": "fill_VZSMK4",
+                      "borderRadius": "19174000px",
+                      "children": [
+                        {
+                          "id": "64:875",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_Y04B47",
+                          "fills": "fill_V72X32",
+                          "borderRadius": "19174000px"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "64:876",
+                  "name": "Container",
+                  "type": "FRAME",
+                  "layout": "layout_SMVOMN",
+                  "children": [
+                    {
+                      "id": "64:877",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_7G14D2",
+                      "children": [
+                        {
+                          "id": "64:878",
+                          "name": "Paragraph",
+                          "type": "FRAME",
+                          "layout": "layout_MQN80J",
+                          "children": [
+                            {
+                              "id": "64:879",
+                              "name": "증권사 연동",
+                              "type": "TEXT",
+                              "layout": "layout_GCBOYY",
+                              "text": "증권사 연동",
+                              "textStyle": "style_XAH3PO",
+                              "fills": "fill_V72X32"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "64:880",
+                          "name": "Heading 1",
+                          "type": "FRAME",
+                          "layout": "layout_CQR204",
+                          "children": [
+                            {
+                              "id": "64:881",
+                              "name": "한국투자증권 계정을\n연결해 주세요",
+                              "type": "TEXT",
+                              "layout": "layout_6JSX1Z",
+                              "text": "한국투자증권 계정을\\n연결해 주세요",
+                              "textStyle": "style_F7IGHU",
+                              "fills": "fill_VMYBE9"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "64:882",
+                          "name": "Paragraph",
+                          "type": "FRAME",
+                          "layout": "layout_JS7ABW",
+                          "children": [
+                            {
+                              "id": "64:883",
+                              "name": "모의 투자 계정을 연동합니다. 실제 계좌에는 영향이 없습니다.",
+                              "type": "TEXT",
+                              "layout": "layout_6TXWCD",
+                              "text": "모의 투자 계정을 연동합니다. 실제 계좌에는 영향이 없습니다.",
+                              "textStyle": "style_B9W8B4",
+                              "fills": "fill_EJT6GR"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "64:884",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_COV5CW",
+                      "fills": "fill_G8A7RP",
+                      "strokes": "fill_1OK11Y",
+                      "strokeWeight": "0.5714290142059326px",
+                      "borderRadius": "16px",
+                      "children": [
+                        {
+                          "id": "64:885",
+                          "name": "Icon",
+                          "type": "IMAGE-SVG",
+                          "layout": "layout_RPWPW9"
+                        },
+                        {
+                          "id": "64:889",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_Z81ERS",
+                          "children": [
+                            {
+                              "id": "64:890",
+                              "name": "Paragraph",
+                              "type": "FRAME",
+                              "layout": "layout_0C0XHK",
+                              "children": [
+                                {
+                                  "id": "64:891",
+                                  "name": "모의 투자 전용",
+                                  "type": "TEXT",
+                                  "layout": "layout_4NVKXD",
+                                  "text": "모의 투자 전용",
+                                  "textStyle": "style_DMR5VF",
+                                  "fills": "fill_V72X32"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "64:892",
+                              "name": "Paragraph",
+                              "type": "FRAME",
+                              "layout": "layout_KLVQEW",
+                              "children": [
+                                {
+                                  "id": "64:893",
+                                  "name": "한국투자증권 KIS Developers에서 모의 투자용 API 키를 발급받아 입력해 주세요",
+                                  "type": "TEXT",
+                                  "layout": "layout_ZGHG94",
+                                  "text": "한국투자증권 KIS Developers에서 모의 투자용 API 키를 발급받아 입력해 주세요.",
+                                  "textStyle": "style_FNPL31",
+                                  "fills": "fill_2DW9GO"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "64:894",
+                      "name": "Container",
+                      "type": "FRAME",
+                      "layout": "layout_Z6G9CD",
+                      "children": [
+                        {
+                          "id": "64:895",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_8JKY0B",
+                          "children": [
+                            {
+                              "id": "64:896",
+                              "name": "Label",
+                              "type": "FRAME",
+                              "layout": "layout_MQN80J",
+                              "children": [
+                                {
+                                  "id": "64:897",
+                                  "name": "계좌번호",
+                                  "type": "TEXT",
+                                  "layout": "layout_SS1394",
+                                  "text": "계좌번호",
+                                  "textStyle": "style_2LD2Z1",
+                                  "fills": "fill_RQ3811"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "64:898",
+                              "name": "Text Input",
+                              "type": "FRAME",
+                              "layout": "layout_YLRVB0",
+                              "fills": "fill_N29SLC",
+                              "strokes": "fill_VZSMK4",
+                              "strokeWeight": "1.7142900228500366px",
+                              "borderRadius": "16px",
+                              "children": [
+                                {
+                                  "id": "64:899",
+                                  "name": "모의 투자 계좌번호를 입력하세요",
+                                  "type": "TEXT",
+                                  "layout": "layout_7EBSID",
+                                  "text": "모의 투자 계좌번호를 입력하세요",
+                                  "textStyle": "style_UXK1WT",
+                                  "fills": "fill_9GGPJ2"
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "64:900",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_2TRQ9E",
+                          "children": [
+                            {
+                              "id": "64:901",
+                              "name": "Container",
+                              "type": "FRAME",
+                              "layout": "layout_E6KJW1",
+                              "children": [
+                                {
+                                  "id": "64:902",
+                                  "name": "Label",
+                                  "type": "FRAME",
+                                  "layout": "layout_0Y6212",
+                                  "children": [
+                                    {
+                                      "id": "64:903",
+                                      "name": "App Key",
+                                      "type": "TEXT",
+                                      "layout": "layout_NRVC5U",
+                                      "text": "App Key",
+                                      "textStyle": "style_2LD2Z1",
+                                      "fills": "fill_RQ3811"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "64:904",
+                                  "name": "Button",
+                                  "type": "FRAME",
+                                  "layout": "layout_PM09VW",
+                                  "children": [
+                                    {
+                                      "id": "64:905",
+                                      "name": "Icon",
+                                      "type": "FRAME",
+                                      "layout": "layout_1DYGR3"
+                                    },
+                                    {
+                                      "id": "64:909",
+                                      "name": "발급 방법 안내",
+                                      "type": "TEXT",
+                                      "layout": "layout_7AU0VF",
+                                      "text": "발급 방법 안내",
+                                      "textStyle": "style_OFGX0D",
+                                      "fills": "fill_V72X32"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "id": "64:910",
+                              "name": "Text Input",
+                              "type": "FRAME",
+                              "layout": "layout_1HUBXS",
+                              "fills": "fill_N29SLC",
+                              "strokes": "fill_VZSMK4",
+                              "strokeWeight": "1.7142900228500366px",
+                              "borderRadius": "16px",
+                              "children": [
+                                {
+                                  "id": "64:911",
+                                  "name": "App Key를 붙여넣으세요",
+                                  "type": "TEXT",
+                                  "layout": "layout_7EBSID",
+                                  "text": "App Key를 붙여넣으세요",
+                                  "textStyle": "style_UXK1WT",
+                                  "fills": "fill_9GGPJ2"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "64:912",
+                              "name": "KIS Developers → 앱 목록 → 앱 상세 → App Key 복사",
+                              "type": "TEXT",
+                              "layout": "layout_M93QDK",
+                              "text": "KIS Developers → 앱 목록 → 앱 상세 → App Key 복사",
+                              "textStyle": "style_M83Z7U",
+                              "fills": "fill_EJT6GR"
+                            }
+                          ]
+                        },
+                        {
+                          "id": "64:913",
+                          "name": "Container",
+                          "type": "FRAME",
+                          "layout": "layout_2TRQ9E",
+                          "children": [
+                            {
+                              "id": "64:914",
+                              "name": "Container",
+                              "type": "FRAME",
+                              "layout": "layout_E6KJW1",
+                              "children": [
+                                {
+                                  "id": "64:915",
+                                  "name": "Label",
+                                  "type": "FRAME",
+                                  "layout": "layout_ZE85X6",
+                                  "children": [
+                                    {
+                                      "id": "64:916",
+                                      "name": "Secret Key",
+                                      "type": "TEXT",
+                                      "layout": "layout_0YJOI2",
+                                      "text": "Secret Key",
+                                      "textStyle": "style_2LD2Z1",
+                                      "fills": "fill_RQ3811"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "id": "64:917",
+                                  "name": "Button",
+                                  "type": "FRAME",
+                                  "layout": "layout_PM09VW",
+                                  "children": [
+                                    {
+                                      "id": "64:918",
+                                      "name": "Icon",
+                                      "type": "FRAME",
+                                      "layout": "layout_1DYGR3"
+                                    },
+                                    {
+                                      "id": "64:922",
+                                      "name": "발급 방법 안내",
+                                      "type": "TEXT",
+                                      "layout": "layout_7AU0VF",
+                                      "text": "발급 방법 안내",
+                                      "textStyle": "style_OFGX0D",
+                                      "fills": "fill_V72X32"
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "id": "64:923",
+                              "name": "Password Input",
+                              "type": "FRAME",
+                              "layout": "layout_1HUBXS",
+                              "fills": "fill_N29SLC",
+                              "strokes": "fill_VZSMK4",
+                              "strokeWeight": "1.7142900228500366px",
+                              "borderRadius": "16px",
+                              "children": [
+                                {
+                                  "id": "64:924",
+                                  "name": "Secret Key를 붙여넣으세요",
+                                  "type": "TEXT",
+                                  "layout": "layout_7EBSID",
+                                  "text": "Secret Key를 붙여넣으세요",
+                                  "textStyle": "style_UXK1WT",
+                                  "fills": "fill_9GGPJ2"
+                                }
+                              ]
+                            },
+                            {
+                              "id": "64:925",
+                              "name": "App Key와 동일한 페이지에서 확인할 수 있습니다",
+                              "type": "TEXT",
+                              "layout": "layout_V3RO7G",
+                              "text": "App Key와 동일한 페이지에서 확인할 수 있습니다",
+                              "textStyle": "style_M83Z7U",
+                              "fills": "fill_EJT6GR"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "64:926",
+                  "name": "Container",
+                  "type": "FRAME",
+                  "layout": "layout_16OC0X",
+                  "fills": "fill_93HNMF",
+                  "children": [
+                    {
+                      "id": "64:927",
+                      "name": "Button",
+                      "type": "FRAME",
+                      "layout": "layout_4VHRVB",
+                      "fills": "fill_9GGPJ2",
+                      "borderRadius": "16px",
+                      "children": [
+                        {
+                          "id": "64:928",
+                          "name": "Icon",
+                          "type": "IMAGE-SVG",
+                          "layout": "layout_BVT4GM"
+                        },
+                        {
+                          "id": "64:930",
+                          "name": "인증 및 연결하기",
+                          "type": "TEXT",
+                          "layout": "layout_G7N6AB",
+                          "text": "인증 및 연결하기",
+                          "textStyle": "style_6VLV3D",
+                          "fills": "fill_N29SLC"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "globalVars": {
+    "styles": {
+      "layout_EFKHFY": {
+        "mode": "none",
+        "sizing": {},
+        "dimensions": {
+          "width": 375,
+          "height": 844
+        }
+      },
+      "fill_93HNMF": [
+        "#F5F5F7"
+      ],
+      "effect_RAFL1Z": {
+        "boxShadow": "0px 25px 50px -12px rgba(0, 0, 0, 0.25)"
+      },
+      "layout_6SZACY": {
+        "mode": "row",
+        "justifyContent": "space-between",
+        "alignItems": "center",
+        "padding": "8px 24px 0px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 44
+        }
+      },
+      "fill_N29SLC": [
+        "#FFFFFF"
+      ],
+      "layout_0378BY": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 28.22,
+          "height": 20
+        }
+      },
+      "layout_UGUCA7": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.14
+        },
+        "dimensions": {
+          "width": 30,
+          "height": 20
+        }
+      },
+      "style_DMR5VF": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 14,
+        "lineHeight": "20px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "fill_VMYBE9": [
+        "#1C1C1E"
+      ],
+      "layout_WYH4HV": {
+        "mode": "row",
+        "alignItems": "center",
+        "gap": "6px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 73,
+          "height": 12
+        }
+      },
+      "layout_4OXTO1": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 17,
+          "height": 12
+        }
+      },
+      "layout_LR9T2F": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 4
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 8
+        }
+      },
+      "layout_F3P3Z4": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 4.5,
+          "y": 2.5
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 9.5
+        }
+      },
+      "layout_9O2ISY": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 9,
+          "y": 0.5
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 11.5
+        }
+      },
+      "layout_XLS6L7": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 13.5,
+          "y": 0
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 12
+        }
+      },
+      "layout_V46JO7": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 16,
+          "height": 12
+        }
+      },
+      "layout_YQ0Q40": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "dimensions": {
+          "width": 15,
+          "height": 4.8
+        }
+      },
+      "layout_KXQYYR": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 2.2,
+          "y": 3.8
+        },
+        "dimensions": {
+          "width": 11.6,
+          "height": 3.7
+        }
+      },
+      "layout_KBK8BS": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 6.5,
+          "y": 8.5
+        },
+        "dimensions": {
+          "width": 3,
+          "height": 3
+        }
+      },
+      "layout_336CJP": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 28,
+          "height": 12
+        }
+      },
+      "layout_F45GJR": {
+        "mode": "row",
+        "alignItems": "center",
+        "padding": "0px 2px 0px 1.9999622106552124px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0
+        },
+        "dimensions": {
+          "width": 24,
+          "height": 12
+        }
+      },
+      "layout_P11CI8": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 16,
+          "height": 6
+        }
+      },
+      "layout_4UUTGZ": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 26,
+          "y": 3
+        },
+        "dimensions": {
+          "width": 2,
+          "height": 6
+        }
+      },
+      "layout_F8OA0F": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 44
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 768
+        }
+      },
+      "layout_90UY0Q": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 768
+        }
+      },
+      "layout_GCZ0PA": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "gap": "12px",
+        "padding": "16.000003814697266px 24.000030517578125px 0.5714290142059326px 24px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 70.57
+        }
+      },
+      "fill_VZSMK4": [
+        "#E5E5EA"
+      ],
+      "layout_P8J1Q4": {
+        "mode": "row",
+        "justifyContent": "space-between",
+        "alignItems": "center",
+        "alignSelf": "stretch",
+        "padding": "0px -0.00002288818359375px 0px 0px",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 16
+        }
+      },
+      "layout_WL9OH9": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 52.98,
+          "height": 16
+        }
+      },
+      "layout_BUGMNR": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 52,
+          "height": 16
+        }
+      },
+      "style_77LXQX": {
+        "fontFamily": "Inter",
+        "fontStyle": "Regular",
+        "fontWeight": 400,
+        "fontSize": 12,
+        "lineHeight": "16px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "fill_EJT6GR": [
+        "#8E8E93"
+      ],
+      "layout_OKTUOY": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 27.65,
+          "height": 16
+        }
+      },
+      "layout_I8GMVO": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 26,
+          "height": 16
+        }
+      },
+      "style_2LD2Z1": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 12,
+        "lineHeight": "16px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "fill_V72X32": [
+        "#0051FF"
+      ],
+      "layout_X61P3Z": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "alignSelf": "stretch",
+        "padding": "0px 130.80355834960938px 0px 0px",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 6
+        }
+      },
+      "layout_Y04B47": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 6
+        }
+      },
+      "layout_SMVOMN": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 71
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 628
+        }
+      },
+      "layout_7G14D2": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "gap": "8px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 24,
+          "y": 28
+        },
+        "dimensions": {
+          "width": 312.14,
+          "height": 138
+        }
+      },
+      "layout_MQN80J": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 16
+        }
+      },
+      "layout_GCBOYY": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 60,
+          "height": 16
+        }
+      },
+      "style_XAH3PO": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 12,
+        "lineHeight": "16px",
+        "letterSpacing": "2.5%",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "layout_CQR204": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 60.5
+        }
+      },
+      "layout_6JSX1Z": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.71
+        },
+        "dimensions": {
+          "width": 313,
+          "height": 61
+        }
+      },
+      "style_F7IGHU": {
+        "fontFamily": "Inter",
+        "fontStyle": "Bold",
+        "fontWeight": 700,
+        "fontSize": 22,
+        "lineHeight": "30.25px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "layout_JS7ABW": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 45.5
+        }
+      },
+      "layout_6TXWCD": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.29
+        },
+        "dimensions": {
+          "width": 313,
+          "height": 46
+        }
+      },
+      "style_B9W8B4": {
+        "fontFamily": "Inter",
+        "fontStyle": "Regular",
+        "fontWeight": 400,
+        "fontSize": 14,
+        "lineHeight": "22.75px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "layout_COV5CW": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 24,
+          "y": 194
+        },
+        "dimensions": {
+          "width": 312.14,
+          "height": 96.14
+        }
+      },
+      "fill_G8A7RP": [
+        "#EEF3FF"
+      ],
+      "fill_1OK11Y": [
+        "#C0D4FF"
+      ],
+      "layout_RPWPW9": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 16.57,
+          "y": 18.57
+        },
+        "dimensions": {
+          "width": 16,
+          "height": 16
+        }
+      },
+      "layout_R4BGGU": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 1.33,
+          "y": 1.33
+        },
+        "dimensions": {
+          "width": 13.33,
+          "height": 13.33
+        }
+      },
+      "layout_2ZBF3K": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 8,
+          "y": 8
+        },
+        "dimensions": {
+          "width": 0,
+          "height": 2.67
+        }
+      },
+      "layout_FE33J0": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 8,
+          "y": 5.33
+        },
+        "dimensions": {
+          "width": 0.01,
+          "height": 0
+        }
+      },
+      "layout_Z81ERS": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "gap": "4px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 44.57,
+          "y": 16.57
+        },
+        "dimensions": {
+          "width": 251,
+          "height": 63
+        }
+      },
+      "layout_0C0XHK": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 20
+        }
+      },
+      "layout_4NVKXD": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.14
+        },
+        "dimensions": {
+          "width": 85,
+          "height": 20
+        }
+      },
+      "layout_KLVQEW": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 39
+        }
+      },
+      "layout_ZGHG94": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.29
+        },
+        "dimensions": {
+          "width": 252,
+          "height": 39
+        }
+      },
+      "style_FNPL31": {
+        "fontFamily": "Inter",
+        "fontStyle": "Regular",
+        "fontWeight": 400,
+        "fontSize": 12,
+        "lineHeight": "19.5px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "fill_2DW9GO": [
+        "#3380FF"
+      ],
+      "layout_Z6G9CD": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "gap": "15.999984741210938px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 24,
+          "y": 314.14
+        },
+        "dimensions": {
+          "width": 312.14,
+          "height": 300.29
+        }
+      },
+      "layout_8JKY0B": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "alignSelf": "stretch",
+        "gap": "8px",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 75.43
+        }
+      },
+      "layout_SS1394": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 45,
+          "height": 16
+        }
+      },
+      "fill_RQ3811": [
+        "#3C3C43"
+      ],
+      "layout_YLRVB0": {
+        "mode": "row",
+        "alignItems": "center",
+        "alignSelf": "stretch",
+        "padding": "14px 16px",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 51.43
+        }
+      },
+      "layout_7EBSID": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "hug",
+          "vertical": "hug"
+        }
+      },
+      "style_UXK1WT": {
+        "fontFamily": "Inter",
+        "fontStyle": "Regular",
+        "fontWeight": 400,
+        "fontSize": 14,
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "fill_9GGPJ2": [
+        "#C7C7CC"
+      ],
+      "layout_2TRQ9E": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 96.43
+        }
+      },
+      "layout_E6KJW1": {
+        "mode": "row",
+        "justifyContent": "space-between",
+        "alignItems": "center",
+        "padding": "0px 0.00003814697265625px 0px 0px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0
+        },
+        "dimensions": {
+          "width": 312.14,
+          "height": 16
+        }
+      },
+      "layout_0Y6212": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 48.63,
+          "height": 16
+        }
+      },
+      "layout_NRVC5U": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 49,
+          "height": 16
+        }
+      },
+      "layout_PM09VW": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 81.34,
+          "height": 15
+        }
+      },
+      "layout_1DYGR3": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 1.5
+        },
+        "dimensions": {
+          "width": 12,
+          "height": 12
+        }
+      },
+      "layout_7AU0VF": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 19,
+          "y": 0.14
+        },
+        "dimensions": {
+          "width": 61,
+          "height": 15
+        }
+      },
+      "style_OFGX0D": {
+        "fontFamily": "Inter",
+        "fontStyle": "Medium",
+        "fontWeight": 500,
+        "fontSize": 10,
+        "lineHeight": "15px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      },
+      "layout_1HUBXS": {
+        "mode": "row",
+        "alignItems": "center",
+        "padding": "14px 16px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 24
+        },
+        "dimensions": {
+          "width": 312.14,
+          "height": 51.43
+        }
+      },
+      "layout_M93QDK": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 4,
+          "y": 81.57
+        },
+        "dimensions": {
+          "width": 239,
+          "height": 15
+        }
+      },
+      "style_M83Z7U": {
+        "fontFamily": "Inter",
+        "fontStyle": "Regular",
+        "fontWeight": 400,
+        "fontSize": 10,
+        "lineHeight": "15px",
+        "textAlignHorizontal": "LEFT",
+        "textAlignVertical": "TOP"
+      },
+      "layout_ZE85X6": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "width": 62.65,
+          "height": 16
+        }
+      },
+      "layout_0YJOI2": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 0.57
+        },
+        "dimensions": {
+          "width": 63,
+          "height": 16
+        }
+      },
+      "layout_V3RO7G": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 4,
+          "y": 81.57
+        },
+        "dimensions": {
+          "width": 210,
+          "height": 15
+        }
+      },
+      "layout_16OC0X": {
+        "mode": "column",
+        "alignItems": "stretch",
+        "padding": "0px 24.000030517578125px 0px 24px",
+        "sizing": {
+          "horizontal": "fixed",
+          "vertical": "fixed"
+        },
+        "locationRelativeToParent": {
+          "x": 0,
+          "y": 712.5
+        },
+        "dimensions": {
+          "width": 375,
+          "height": 86.5
+        }
+      },
+      "layout_4VHRVB": {
+        "mode": "none",
+        "sizing": {
+          "horizontal": "fill",
+          "vertical": "fixed"
+        },
+        "dimensions": {
+          "height": 54.5
+        }
+      },
+      "layout_BVT4GM": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 93.21,
+          "y": 17.25
+        },
+        "dimensions": {
+          "width": 20,
+          "height": 20
+        }
+      },
+      "layout_M51BX0": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 3.33,
+          "y": 5
+        },
+        "dimensions": {
+          "width": 13.33,
+          "height": 9.17
+        }
+      },
+      "layout_G7N6AB": {
+        "mode": "none",
+        "sizing": {},
+        "locationRelativeToParent": {
+          "x": 125.21,
+          "y": 15.29
+        },
+        "dimensions": {
+          "width": 105,
+          "height": 23
+        }
+      },
+      "style_6VLV3D": {
+        "fontFamily": "Inter",
+        "fontStyle": "Semi Bold",
+        "fontWeight": 600,
+        "fontSize": 15,
+        "lineHeight": "22.5px",
+        "textAlignHorizontal": "CENTER",
+        "textAlignVertical": "TOP"
+      }
+    }
+  }
+}
