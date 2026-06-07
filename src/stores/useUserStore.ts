@@ -77,7 +77,20 @@ export const useUserStore = defineStore('user', () => {
   // Backend returns tokens + onboarding status so the router can redirect
   // immediately without a separate profile fetch.
   async function login(googleAccessToken: string): Promise<void> {
+    // Defensive check: ensure we are sending a plain non-empty string
+    if (!googleAccessToken || typeof googleAccessToken !== 'string') {
+      throw new Error('[login] Google access token is missing or not a string')
+    }
+
     const { default: api } = await import('@/utils/api')
+
+    // Send EXACTLY { "accessToken": "string_value" } — verified payload shape
+    const payload = { accessToken: googleAccessToken }
+    if (import.meta.env.DEV) {
+      console.log('[login] POST /api/auth/oauth/google payload key:', Object.keys(payload))
+      console.log('[login] accessToken type:', typeof googleAccessToken, '| length:', googleAccessToken.length)
+    }
+
     const { data } = await api.post<{
       accessToken: string
       refreshToken: string
@@ -85,7 +98,7 @@ export const useUserStore = defineStore('user', () => {
       userId?: string
     }>(
       '/api/auth/oauth/google',
-      { accessToken: googleAccessToken },
+      payload,
     )
 
     _persistTokens(data.accessToken, data.refreshToken)
@@ -103,12 +116,23 @@ export const useUserStore = defineStore('user', () => {
   }
 
   // ── Logout (POST /api/auth/logout) ──
+  // Authorization header is attached by the Axios request interceptor.
+  // We verify the token exists before firing and log it in dev.
   async function logout(): Promise<void> {
+    if (import.meta.env.DEV) {
+      const storedToken = localStorage.getItem(LS_ACCESS)
+      console.log('[logout] access token in localStorage:', storedToken ? `${storedToken.slice(0, 12)}…` : 'MISSING')
+    }
     try {
       const { default: api } = await import('@/utils/api')
       await api.post('/api/auth/logout')
-    } catch {
-      // Always clear local session even if the server request fails
+    } catch (err) {
+      // Always clear local session regardless of server response.
+      // A 401 here means the token was already expired — the session
+      // is considered terminated on the client side regardless.
+      if (import.meta.env.DEV) {
+        console.warn('[logout] server call failed — clearing session anyway:', err)
+      }
     } finally {
       _clearSession()
     }
@@ -116,11 +140,18 @@ export const useUserStore = defineStore('user', () => {
 
   // ── Token reissue (POST /api/auth/reissue) ──
   // Called internally by the Axios response interceptor on 401.
+  // The interceptor already guards against null refresh tokens,
+  // but we add the same guard here for calls made directly.
   async function reissueTokens(): Promise<{ accessToken: string; refreshToken: string }> {
+    const token = refreshToken.value ?? localStorage.getItem(LS_REFRESH)
+    if (!token || token === 'null') {
+      throw new Error('[reissueTokens] No refresh token available')
+    }
     const { default: api } = await import('@/utils/api')
+    // Send EXACTLY { "refreshToken": "string_value" } — never null
     const { data } = await api.post<{ accessToken: string; refreshToken: string }>(
       '/api/auth/reissue',
-      { refreshToken: refreshToken.value },
+      { refreshToken: token },
     )
     _persistTokens(data.accessToken, data.refreshToken)
     return data

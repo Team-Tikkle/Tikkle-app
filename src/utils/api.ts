@@ -7,6 +7,15 @@ const LS_REFRESH = 'tikkle_refresh_token'
 // Error code returned by the backend when the refresh token is expired
 const REFRESH_EXPIRED_CODE = 'AUTH-006'
 
+// ── Dev logger — only prints in development builds ──
+const isDev = import.meta.env.DEV
+function devLog(...args: unknown[]) {
+  if (isDev) console.log('[api]', ...args)
+}
+function devWarn(...args: unknown[]) {
+  if (isDev) console.warn('[api]', ...args)
+}
+
 // ── Axios instance ──
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL as string,
@@ -17,16 +26,34 @@ const api = axios.create({
 // ── Request interceptor: attach access token ──
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem(LS_ACCESS)
-  if (token) {
+
+  // Guard against the literal string "null" being stored in localStorage
+  if (token && token !== 'null') {
     config.headers.Authorization = `Bearer ${token}`
+    devLog(`→ ${config.method?.toUpperCase()} ${config.url} | Bearer attached (${token.slice(0, 12)}...)`)
+  } else {
+    devWarn(`→ ${config.method?.toUpperCase()} ${config.url} | No access token — Authorization header skipped`)
   }
+
+  // Log outgoing body for POST/PATCH to verify payload shape
+  if (isDev && (config.method === 'post' || config.method === 'patch') && config.data) {
+    const body = typeof config.data === 'string' ? JSON.parse(config.data) : config.data
+    // Mask token values beyond first 15 chars for security
+    const masked = Object.fromEntries(
+      Object.entries(body).map(([k, v]) =>
+        typeof v === 'string' && v.length > 20
+          ? [k, v.slice(0, 15) + '…(masked)']
+          : [k, v],
+      ),
+    )
+    devLog(`   body:`, masked)
+  }
+
   return config
 })
 
 // ── Response interceptor: handle 401 / token reissue ──
-// We use a flag to avoid infinite retry loops if the reissue endpoint itself fails.
 let isRefreshing = false
-// Queue of callbacks waiting for the new token
 type RefreshCallback = (newToken: string) => void
 let waitQueue: RefreshCallback[] = []
 
@@ -36,23 +63,38 @@ function processQueue(newToken: string) {
 }
 
 api.interceptors.response.use(
-  (response) => response,
-  async (error: AxiosError<{ code?: string }>) => {
+  (response) => {
+    devLog(`← ${response.status} ${response.config.url}`)
+    return response
+  },
+  async (error: AxiosError<{ code?: string; message?: string }>) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+    const status    = error.response?.status
+    const errorCode = error.response?.data?.code
 
-    // Only intercept 401 errors that haven't already been retried
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    devWarn(`← ${status} ${originalRequest?.url} | code=${errorCode ?? '—'} msg=${error.response?.data?.message ?? error.message}`)
+
+    // Only intercept 401s that haven't already been retried
+    if (status !== 401 || originalRequest._retry) {
       return Promise.reject(error)
     }
 
-    // If the backend reports the refresh token itself is expired, force logout
-    const errorCode = error.response.data?.code
+    // Refresh token itself expired → force logout immediately
     if (errorCode === REFRESH_EXPIRED_CODE) {
+      devWarn('Refresh token expired (AUTH-006) — forcing logout')
       _forceLogout()
       return Promise.reject(error)
     }
 
-    // If another request is already refreshing, queue this one
+    // ── Guard: if there is no refresh token, do not even attempt reissue ──
+    const storedRefresh = localStorage.getItem(LS_REFRESH)
+    if (!storedRefresh || storedRefresh === 'null') {
+      devWarn('No refresh token in localStorage — cannot reissue, forcing logout')
+      _forceLogout()
+      return Promise.reject(error)
+    }
+
+    // Queue concurrent 401s so only one reissue runs at a time
     if (isRefreshing) {
       return new Promise<string>((resolve) => {
         waitQueue.push((token) => resolve(token))
@@ -62,24 +104,23 @@ api.interceptors.response.use(
       })
     }
 
-    // Start the refresh flow
     originalRequest._retry = true
     isRefreshing = true
 
     try {
-      const refreshToken = localStorage.getItem(LS_REFRESH)
+      devLog('Attempting token reissue...')
+      // Send EXACTLY { "refreshToken": "string_value" } — never null
       const { data } = await api.post<{ accessToken: string; refreshToken: string }>(
         '/api/auth/reissue',
-        { refreshToken },
+        { refreshToken: storedRefresh },
       )
 
-      // Persist new tokens directly to localStorage (store may not be ready in this context)
+      devLog('Reissue succeeded — storing new tokens')
       localStorage.setItem(LS_ACCESS,  data.accessToken)
       localStorage.setItem(LS_REFRESH, data.refreshToken)
 
-      // Also update the Pinia store if it is already initialised
+      // Sync the Pinia store if it is already initialised
       try {
-        // Lazy import to avoid circular dependency at module load time
         const { useUserStore } = await import('@/stores/useUserStore')
         const store = useUserStore()
         store.accessToken  = data.accessToken
@@ -92,7 +133,8 @@ api.interceptors.response.use(
       originalRequest.headers.Authorization = `Bearer ${data.accessToken}`
       return api(originalRequest)
     } catch (refreshError) {
-      // Reissue itself failed — force logout
+      devWarn('Reissue failed — forcing logout')
+      waitQueue = []
       _forceLogout()
       return Promise.reject(refreshError)
     } finally {
@@ -101,14 +143,10 @@ api.interceptors.response.use(
   },
 )
 
-// ── Force logout helper ──
-// Cannot import the store synchronously here (circular dep), so we clear storage
-// directly and dispatch a custom event for the app to react to.
+// ── Force logout: clear storage + notify App.vue via DOM event ──
 function _forceLogout() {
   localStorage.removeItem(LS_ACCESS)
   localStorage.removeItem(LS_REFRESH)
-  // The router guard in main.ts / App.vue will redirect to /login on next navigation.
-  // We also dispatch a DOM event so App.vue can react immediately.
   window.dispatchEvent(new CustomEvent('tikkle:force-logout'))
 }
 
