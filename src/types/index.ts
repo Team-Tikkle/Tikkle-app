@@ -4,6 +4,7 @@ export type RoundUpRule = 'UNDER_1000' | 'UNDER_500' | 'UNDER_100'
 
 export interface UserProfile {
   id: string
+  name: string              // display name returned by GET /api/users/me
   risk_type: RiskType
   rule: RoundUpRule
   is_auto: boolean
@@ -71,6 +72,13 @@ export interface EducationContent {
   body: string
   target_risk_types: RiskType[]
   tags: string[]
+}
+
+// Category-specific round-up rule (overrides global rule per spending category)
+export interface CategoryRoundUpRule {
+  category: string
+  type: 'fixed' | 'percent'
+  value: number // unit in KRW if fixed (100 | 500 | 1000), percentage if percent (1-20)
 }
 
 // AI Stock Recommendation

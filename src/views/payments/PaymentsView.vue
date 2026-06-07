@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { usePaymentStore } from '@/stores/usePaymentStore'
 import AppHeader from '@/components/common/AppHeader.vue'
 import BottomNav from '@/components/common/BottomNav.vue'
@@ -11,6 +11,29 @@ onMounted(() => {
   paymentStore.fetchTransactions()
   paymentStore.fetchSummary()
 })
+
+// ── Remaining time for PENDING items ──
+// A reactive tick counter — increments every 60s to force re-evaluation
+const tick = ref(0)
+let tickTimer: ReturnType<typeof setInterval> | null = null
+onMounted(() => { tickTimer = setInterval(() => tick.value++, 60_000) })
+onUnmounted(() => { if (tickTimer) clearInterval(tickTimer) })
+
+function getRemainingTime(expiredAt: string | undefined): { label: string; colorClass: string } | null {
+  if (!expiredAt) return null
+  // Reading tick.value makes this expression reactive to the 60s timer
+  void tick.value
+  const diffMs = new Date(expiredAt).getTime() - Date.now()
+  if (diffMs <= 0) return { label: '만료됨', colorClass: 'text-gray-400' }
+  const totalMinutes = Math.floor(diffMs / 60_000)
+  const hours   = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  if (hours >= 1) {
+    const label = minutes > 0 ? `${hours}시간 ${minutes}분 남음` : `${hours}시간 남음`
+    return { label, colorClass: 'text-amber-500' }
+  }
+  return { label: `${minutes}분 남음`, colorClass: 'text-red-500' }
+}
 
 // ── Filter ──
 type FilterKey = 'ALL' | TransactionStatus
@@ -116,13 +139,22 @@ const categoryIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none
           <button
             v-for="f in (['ALL','INVESTED','PENDING','CANCELED'] as FilterKey[])"
             :key="f"
-            class="px-3 py-1.5 rounded-pill text-sm whitespace-nowrap transition-all shrink-0 border"
+            class="px-3 py-1.5 rounded-pill text-sm whitespace-nowrap transition-all shrink-0 border flex items-center gap-1.5"
             :class="activeFilter === f
               ? 'bg-brand text-white border-brand font-semibold'
               : 'bg-white text-text-tertiary border-surface-border font-medium'"
             @click="activeFilter = f"
           >
             {{ f === 'ALL' ? '전체' : f === 'INVESTED' ? '투자 완료' : f === 'PENDING' ? '대기 중' : '취소' }}
+
+            <!-- Count badge on PENDING chip — shows count up to 9, then "9+" -->
+            <span
+              v-if="f === 'PENDING' && paymentStore.pendingTransactions.length > 0"
+              class="min-w-[18px] h-[18px] px-1 rounded-full text-xs2 font-bold flex items-center justify-center leading-none"
+              :class="activeFilter === 'PENDING' ? 'bg-white text-brand' : 'bg-danger text-white'"
+            >
+              {{ paymentStore.pendingTransactions.length > 9 ? '9+' : paymentStore.pendingTransactions.length }}
+            </span>
           </button>
         </div>
 
@@ -165,6 +197,16 @@ const categoryIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none
                   {{ statusConfig[tx.status].label }}
                 </span>
               </div>
+              <!-- Remaining time — only shown for PENDING items -->
+              <template v-if="tx.status === 'PENDING'">
+                <span
+                  v-if="getRemainingTime(tx.expired_at)"
+                  class="text-xs2 font-medium"
+                  :class="getRemainingTime(tx.expired_at)!.colorClass"
+                >
+                  {{ getRemainingTime(tx.expired_at)!.label }}
+                </span>
+              </template>
             </div>
           </div>
         </div>

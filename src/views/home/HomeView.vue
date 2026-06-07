@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { usePortfolioStore } from '@/stores/usePortfolioStore'
 import { useUserStore } from '@/stores/useUserStore'
 import BottomNav from '@/components/common/BottomNav.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
+import { stockLogoMap } from '@/mocks/stockLogos'
 
 const portfolioStore = usePortfolioStore()
 const userStore = useUserStore()
@@ -12,6 +13,23 @@ onMounted(() => portfolioStore.fetchPortfolio())
 
 function fmt(n: number) {
   return n.toLocaleString('ko-KR')
+}
+
+// Track which logos have failed to load (fallback to initial letter)
+const logoErrors = ref<Set<string>>(new Set())
+
+function onLogoError(name: string) {
+  logoErrors.value = new Set([...logoErrors.value, name])
+}
+
+function logoUrl(name: string): string {
+  const domain = stockLogoMap[name]
+  return domain ? `https://logo.clearbit.com/${domain}` : ''
+}
+
+// First letter for fallback placeholder
+function initial(name: string): string {
+  return name.charAt(0)
 }
 
 // Portfolio donut chart segments (mock — proportional to weight_percent)
@@ -51,7 +69,8 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
     <!-- ── Header ── -->
     <div class="bg-white px-6 pt-12 pb-4 flex items-center justify-between sticky top-0 z-40">
       <h1 class="text-xl font-bold text-text-primary">
-        {{ userStore.profile?.id ?? 'Username' }}
+        <!-- Show name from GET /api/users/me; fall back while loading -->
+        {{ userStore.profile?.name || '티끌 유저' }}
       </h1>
       <!-- Notification bell icon -->
       <button class="w-10 h-10 flex items-center justify-center text-text-primary">
@@ -148,9 +167,26 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
               :key="h.ticker"
               class="flex items-center justify-between py-3 first:pt-0 last:pb-0"
             >
-              <div class="flex flex-col gap-0.5">
-                <span class="text-base font-medium text-text-primary">{{ h.name }}</span>
-                <span class="text-sm text-text-tertiary">비중 {{ h.weight_percent }}%</span>
+              <div class="flex items-center gap-3">
+                <!-- Company logo: Clearbit primary, colored initial fallback -->
+                <div class="w-8 h-8 rounded-full overflow-hidden shrink-0 bg-brand-bg flex items-center justify-center">
+                  <img
+                    v-if="logoUrl(h.name) && !logoErrors.has(h.name)"
+                    :src="logoUrl(h.name)"
+                    :alt="h.name"
+                    class="w-full h-full object-contain"
+                    @error="onLogoError(h.name)"
+                  />
+                  <!-- Fallback: colored circle with first letter -->
+                  <span
+                    v-else
+                    class="text-sm font-bold text-brand"
+                  >{{ initial(h.name) }}</span>
+                </div>
+                <div class="flex flex-col gap-0.5">
+                  <span class="text-base font-medium text-text-primary">{{ h.name }}</span>
+                  <span class="text-sm text-text-tertiary">비중 {{ h.weight_percent }}%</span>
+                </div>
               </div>
               <div class="text-right">
                 <p class="text-base font-semibold text-text-primary">₩{{ fmt(h.evaluated_amount) }}</p>

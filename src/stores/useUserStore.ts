@@ -1,14 +1,198 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { UserProfile, RoundUpRule } from '@/types'
+import type { UserProfile, RoundUpRule, CategoryRoundUpRule } from '@/types'
 import { mockUser } from '@/mocks'
 
-export const useUserStore = defineStore('user', () => {
-  const profile = ref<UserProfile | null>(mockUser)
+// ── localStorage keys ──
+const LS_ACCESS  = 'tikkle_access_token'
+const LS_REFRESH = 'tikkle_refresh_token'
 
-  const isOnboardingComplete = computed(
-    () => profile.value?.onboarding_completed ?? false,
+// ── Backend response shape for GET /api/users/me ──
+interface UserMeResponse {
+  id: string
+  name: string
+  onboarding_completed: boolean
+  risk_type: UserProfile['risk_type']
+  rule: UserProfile['rule']
+  is_auto: boolean
+}
+
+export const useUserStore = defineStore('user', () => {
+
+  // ════════════════════════════════════════════════
+  // State
+  // ════════════════════════════════════════════════
+
+  // Full user profile (null until fetchProfile succeeds)
+  const profile = ref<UserProfile | null>(null)
+
+  // Per-category round-up overrides
+  const categoryRules = ref<CategoryRoundUpRule[]>([])
+
+  // In development, VITE_SKIP_AUTH=true hydrates placeholder tokens so the
+  // router guard doesn't block navigation while working without a real backend.
+  const DEV_SKIP = import.meta.env.VITE_SKIP_AUTH === 'true'
+  const accessToken  = ref<string | null>(
+    localStorage.getItem(LS_ACCESS)  ?? (DEV_SKIP ? 'dev-mock-token' : null),
   )
+  const refreshToken = ref<string | null>(
+    localStorage.getItem(LS_REFRESH) ?? (DEV_SKIP ? 'dev-mock-refresh' : null),
+  )
+
+  // ════════════════════════════════════════════════
+  // Computed
+  // ════════════════════════════════════════════════
+
+  const isAuthenticated     = computed(() => !!accessToken.value)
+  const isOnboardingComplete = computed(() => profile.value?.onboarding_completed ?? false)
+
+  // ════════════════════════════════════════════════
+  // Private helpers
+  // ════════════════════════════════════════════════
+
+  function _persistTokens(access: string, refresh: string) {
+    accessToken.value  = access
+    refreshToken.value = refresh
+    localStorage.setItem(LS_ACCESS,  access)
+    localStorage.setItem(LS_REFRESH, refresh)
+  }
+
+  function _clearTokens() {
+    accessToken.value  = null
+    refreshToken.value = null
+    localStorage.removeItem(LS_ACCESS)
+    localStorage.removeItem(LS_REFRESH)
+  }
+
+  function _clearSession() {
+    _clearTokens()
+    profile.value = null
+  }
+
+  // ════════════════════════════════════════════════
+  // Auth actions
+  // ════════════════════════════════════════════════
+
+  // ── Login via Google OAuth token (POST /api/auth/oauth/google) ──
+  // Backend returns tokens + onboarding status so the router can redirect
+  // immediately without a separate profile fetch.
+  async function login(googleAccessToken: string): Promise<void> {
+    const { default: api } = await import('@/utils/api')
+    const { data } = await api.post<{
+      accessToken: string
+      refreshToken: string
+      onboardingCompleted: boolean
+      userId?: string
+    }>(
+      '/api/auth/oauth/google',
+      { accessToken: googleAccessToken },
+    )
+
+    _persistTokens(data.accessToken, data.refreshToken)
+
+    // Seed a minimal profile so isOnboardingComplete is immediately correct.
+    // fetchProfile() will fill in the rest on the next navigation.
+    profile.value = {
+      id:   data.userId ?? '',
+      name: '',               // filled in by fetchProfile
+      risk_type: 'NEUTRAL',
+      rule: 'UNDER_1000',
+      is_auto: true,
+      onboarding_completed: data.onboardingCompleted,
+    }
+  }
+
+  // ── Logout (POST /api/auth/logout) ──
+  async function logout(): Promise<void> {
+    try {
+      const { default: api } = await import('@/utils/api')
+      await api.post('/api/auth/logout')
+    } catch {
+      // Always clear local session even if the server request fails
+    } finally {
+      _clearSession()
+    }
+  }
+
+  // ── Token reissue (POST /api/auth/reissue) ──
+  // Called internally by the Axios response interceptor on 401.
+  async function reissueTokens(): Promise<{ accessToken: string; refreshToken: string }> {
+    const { default: api } = await import('@/utils/api')
+    const { data } = await api.post<{ accessToken: string; refreshToken: string }>(
+      '/api/auth/reissue',
+      { refreshToken: refreshToken.value },
+    )
+    _persistTokens(data.accessToken, data.refreshToken)
+    return data
+  }
+
+  // ════════════════════════════════════════════════
+  // User API actions
+  // ════════════════════════════════════════════════
+
+  // ── Get profile (GET /api/users/me) ──
+  // Populates the full profile including name, onboarding status, and
+  // investment preferences. Called during bootstrap and on app resume.
+  async function fetchProfile(): Promise<void> {
+    const { default: api } = await import('@/utils/api')
+    const { data } = await api.get<UserMeResponse>('/api/users/me')
+    profile.value = {
+      id:                  data.id,
+      name:                data.name,
+      risk_type:           data.risk_type,
+      rule:                data.rule,
+      is_auto:             data.is_auto,
+      onboarding_completed: data.onboarding_completed,
+    }
+  }
+
+  // ── Update profile name (PATCH /api/users/me) ──
+  async function updateProfile(name: string): Promise<void> {
+    const { default: api } = await import('@/utils/api')
+    const { data } = await api.patch<{ name: string }>('/api/users/me', { name })
+    if (profile.value) profile.value.name = data.name
+  }
+
+  // ── Delete account (DELETE /api/users/me) ──
+  // Removes the account server-side then tears down the local session.
+  async function deleteAccount(): Promise<void> {
+    const { default: api } = await import('@/utils/api')
+    await api.delete('/api/users/me')
+    _clearSession()
+  }
+
+  // ════════════════════════════════════════════════
+  // Bootstrap — called once in main.ts BEFORE app.mount()
+  //
+  // Resolves the auth state so the router guard sees the correct values
+  // on the very first navigation with zero flash of protected content.
+  // ════════════════════════════════════════════════
+  async function bootstrap(): Promise<void> {
+    // Dev mode: skip real API calls, hydrate mock profile so the app is usable
+    if (DEV_SKIP) {
+      profile.value = { ...mockUser }
+      return
+    }
+
+    // No stored token → nothing to do; guard will redirect to /login
+    if (!accessToken.value) return
+
+    try {
+      // Attempt to restore the session from the stored access token.
+      // If the token is expired the Axios interceptor will automatically try
+      // the refresh token. If that also fails it fires 'tikkle:force-logout'
+      // and this await rejects, landing in the catch below.
+      await fetchProfile()
+    } catch {
+      // Both tokens are expired / invalid — wipe the session.
+      // isAuthenticated becomes false so the guard will send to /login.
+      _clearSession()
+    }
+  }
+
+  // ════════════════════════════════════════════════
+  // Existing profile-mutation actions (unchanged)
+  // ════════════════════════════════════════════════
 
   function setProfile(newProfile: UserProfile) {
     profile.value = newProfile
@@ -26,5 +210,36 @@ export const useUserStore = defineStore('user', () => {
     if (profile.value) profile.value.onboarding_completed = true
   }
 
-  return { profile, isOnboardingComplete, setProfile, updateRoundUpRule, updateTradingMode, completeOnboarding }
+  function saveCategoryRules(rules: CategoryRoundUpRule[]) {
+    categoryRules.value = [...rules]
+  }
+
+  // ════════════════════════════════════════════════
+  // Exports
+  // ════════════════════════════════════════════════
+  return {
+    // state
+    profile,
+    categoryRules,
+    accessToken,
+    refreshToken,
+    // computed
+    isAuthenticated,
+    isOnboardingComplete,
+    // auth
+    bootstrap,
+    login,
+    logout,
+    reissueTokens,
+    // user APIs
+    fetchProfile,
+    updateProfile,
+    deleteAccount,
+    // profile mutations
+    setProfile,
+    updateRoundUpRule,
+    updateTradingMode,
+    completeOnboarding,
+    saveCategoryRules,
+  }
 })

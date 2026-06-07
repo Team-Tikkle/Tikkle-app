@@ -8,13 +8,22 @@ import type {
   StockRecommendation,
 } from '@/types'
 
+// Helper: generate an ISO string relative to now
+function hoursFromNow(h: number): string {
+  return new Date(Date.now() + h * 3_600_000).toISOString()
+}
+function minutesFromNow(m: number): string {
+  return new Date(Date.now() + m * 60_000).toISOString()
+}
+
 export const mockUser: UserProfile = {
   id: 'user-001',
+  name: '티끌 사용자',
   risk_type: 'NEUTRAL',
   rule: 'UNDER_1000',
   is_auto: true,
   kis_account_number: '50123456789',
-  onboarding_completed: false,
+  onboarding_completed: true, // set to false to test the onboarding flow
 }
 
 export const mockTransactions: Transaction[] = [
@@ -34,8 +43,8 @@ export const mockTransactions: Transaction[] = [
     round_up_amount: 800,
     category: '편의점',
     status: 'PENDING',
-    created_at: '2026-05-31T11:30:00Z',
-    expired_at: '2026-06-01T11:30:00Z',
+    created_at: new Date(Date.now() - 1 * 3_600_000).toISOString(), // 1h ago
+    expired_at: hoursFromNow(23),                                    // expires in ~23h (hours display)
   },
   {
     id: 'tx-003',
@@ -62,8 +71,18 @@ export const mockTransactions: Transaction[] = [
     round_up_amount: 100,
     category: '식당',
     status: 'PENDING',
-    created_at: '2026-06-01T08:45:00Z',
-    expired_at: '2026-06-02T08:45:00Z',
+    created_at: new Date(Date.now() - 23.5 * 3_600_000).toISOString(), // ~23.5h ago
+    expired_at: minutesFromNow(30),                                     // expires in 30min (minutes display, red)
+  },
+  {
+    id: 'tx-006',
+    merchant: '버거킹 홍대점',
+    amount: 12400,
+    round_up_amount: 600,
+    category: '식음료',
+    status: 'PENDING',
+    created_at: new Date(Date.now() - 25 * 3_600_000).toISOString(),   // 25h ago
+    expired_at: hoursFromNow(-1),                                       // expired 1h ago (만료됨)
   },
 ]
 

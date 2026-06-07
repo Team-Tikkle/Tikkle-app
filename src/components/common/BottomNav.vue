@@ -1,7 +1,13 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { usePaymentStore } from '@/stores/usePaymentStore'
 
 const route = useRoute()
+const paymentStore = usePaymentStore()
+
+// Reactive pending count — drives the red dot on the payments tab
+const hasPending = computed(() => paymentStore.pendingTransactions.length > 0)
 
 const tabs = [
   {
@@ -40,13 +46,21 @@ const tabs = [
         :key="tab.name"
         :to="tab.path"
         class="flex-1 flex flex-col items-center pt-2.5 pb-3 gap-1 transition-colors"
-        :class="route.name === tab.name
-          ? 'text-brand'
-          : 'text-text-tertiary'"
+        :class="route.name === tab.name ? 'text-brand' : 'text-text-tertiary'"
       >
-        <!-- SVG icon rendered inline -->
-        <!-- eslint-disable-next-line vue/no-v-html -->
-        <span class="w-[22px] h-[22px]" v-html="tab.icon" />
+        <!-- Icon wrapper — relative so we can position the red dot badge -->
+        <span class="relative w-[22px] h-[22px]">
+          <!-- SVG icon -->
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <span class="w-full h-full" v-html="tab.icon" />
+
+          <!-- Red dot badge on "결제내역" when there are pending transactions -->
+          <span
+            v-if="tab.name === 'payments' && hasPending"
+            class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-danger"
+          />
+        </span>
+
         <span
           class="text-xs2 leading-none"
           :class="route.name === tab.name ? 'font-semibold' : 'font-medium'"

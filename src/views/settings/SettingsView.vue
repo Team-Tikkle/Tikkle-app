@@ -11,6 +11,35 @@ const userStore = useUserStore()
 // Withdrawal modal state
 const showWithdrawalModal = ref(false)
 
+// Logout: calls POST /api/auth/logout, clears session, redirects to /login
+const isLoggingOut = ref(false)
+async function handleLogout() {
+  if (isLoggingOut.value) return
+  isLoggingOut.value = true
+  try {
+    await userStore.logout()
+    router.replace({ name: 'login' })
+  } finally {
+    isLoggingOut.value = false
+  }
+}
+
+// Delete account: calls DELETE /api/users/me, clears session, redirects to /login
+const isDeletingAccount = ref(false)
+async function handleDeleteAccount() {
+  if (isDeletingAccount.value) return
+  isDeletingAccount.value = true
+  try {
+    await userStore.deleteAccount()
+    showWithdrawalModal.value = false
+    router.replace({ name: 'login' })
+  } catch {
+    // Keep modal open if the request fails so the user can retry
+  } finally {
+    isDeletingAccount.value = false
+  }
+}
+
 // Risk type labels
 const riskLabel: Record<string, string> = {
   STABLE: '안정형',
@@ -76,7 +105,7 @@ import { computed } from 'vue'
         <!-- 투자 규칙 변경 -->
         <button
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
-          @click="router.push('/onboarding')"
+          @click="router.push('/settings/category-rules')"
         >
           <div class="flex flex-col gap-1 text-left">
             <span class="text-base font-medium text-text-primary">투자 규칙 변경</span>
@@ -116,6 +145,36 @@ import { computed } from 'vue'
         <div class="px-5 py-4 flex items-center justify-between">
           <span class="text-base font-medium text-text-tertiary">앱 버전 1.0.0</span>
         </div>
+      </div>
+
+      <!-- ── Logout ── -->
+      <div class="bg-white rounded-xl overflow-hidden">
+        <button
+          class="w-full px-5 py-4 flex items-center gap-3 active:bg-surface transition-colors disabled:opacity-50"
+          :disabled="isLoggingOut"
+          @click="handleLogout"
+        >
+          <!-- Logout icon -->
+          <svg
+            class="text-text-secondary shrink-0"
+            width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+
+          <span class="text-base font-medium text-text-primary">
+            {{ isLoggingOut ? '로그아웃 중...' : '로그아웃' }}
+          </span>
+
+          <!-- Spinner while request is in-flight -->
+          <span
+            v-if="isLoggingOut"
+            class="ml-auto w-4 h-4 border-2 border-surface-border border-t-brand rounded-full animate-spin"
+          />
+        </button>
       </div>
 
       <!-- ── Danger zone: withdrawal ── -->
@@ -184,12 +243,20 @@ import { computed } from 'vue'
               <!-- Actions -->
               <div class="flex flex-col gap-3">
                 <button
-                  class="w-full py-4 rounded-xl bg-danger text-white text-md font-bold active:opacity-80"
+                  class="w-full py-4 rounded-xl bg-danger text-white text-md font-bold active:opacity-80 disabled:opacity-50 flex items-center justify-center gap-2"
+                  :disabled="isDeletingAccount"
+                  @click="handleDeleteAccount"
                 >
-                  탈퇴 신청하기
+                  <!-- Spinner while DELETE /api/users/me is in-flight -->
+                  <span
+                    v-if="isDeletingAccount"
+                    class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"
+                  />
+                  {{ isDeletingAccount ? '처리 중...' : '탈퇴 신청하기' }}
                 </button>
                 <button
                   class="w-full py-4 rounded-xl bg-surface text-md font-semibold text-text-primary active:bg-surface-border"
+                  :disabled="isDeletingAccount"
                   @click="showWithdrawalModal = false"
                 >
                   취소
