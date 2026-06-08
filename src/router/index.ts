@@ -52,6 +52,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
     {
+      // Debug/dev route — simulates Android payment push-notification scraping
+      path: '/payments/simulator',
+      name: 'payment-simulator',
+      component: () => import('@/views/payments/PaymentSimulatorView.vue'),
+      meta: { requiresAuth: true, requiresOnboarding: true },
+    },
+    {
       path: '/insights',
       name: 'insights',
       component: () => import('@/views/insights/InsightsView.vue'),
