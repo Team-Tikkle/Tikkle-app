@@ -32,11 +32,6 @@ const CATEGORIES: { name: string; icon: string }[] = [
   { name: '기타',      icon: '📦' },
 ]
 
-// ── Build initial rule state from store (fallback to global rule) ──
-function defaultValue(type: 'fixed' | 'percent') {
-  return type === 'fixed' ? 1000 : 5
-}
-
 // Local editable copy of rules, keyed by category name
 const localRules = reactive<Record<string, CategoryRoundUpRule>>(
   Object.fromEntries(

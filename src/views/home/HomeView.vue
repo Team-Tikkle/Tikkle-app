@@ -123,7 +123,7 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
           <div class="flex items-center gap-6">
             <!-- SVG donut chart -->
             <svg width="120" height="120" viewBox="0 0 120 120" class="shrink-0">
-              <template v-for="(seg, i) in buildDonutPath(portfolioStore.summary.holdings)" :key="i">
+              <template v-for="seg in buildDonutPath(portfolioStore.summary.holdings)" :key="seg.d">
                 <path
                   :d="seg.d"
                   :stroke="seg.color"

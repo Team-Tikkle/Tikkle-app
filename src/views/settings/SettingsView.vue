@@ -50,30 +50,6 @@ const riskLabel: Record<string, string> = {
 // Chevron icon (right arrow for menu items)
 const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`
 
-// Menu items config
-const menuItems = [
-  {
-    label: '투자 규칙 변경',
-    sub: computed(() => {
-      const rule = userStore.profile?.rule
-      const ruleLabel = rule === 'UNDER_1000' ? '1,000원 단위'
-        : rule === 'UNDER_500' ? '500원 단위'
-        : '100원 단위'
-      const mode = userStore.profile?.is_auto ? '자동 매매' : '수동 매매'
-      return `올림 잔돈 / ${ruleLabel} · ${mode}`
-    }),
-    action: () => router.push('/onboarding'),
-    hasChevron: true,
-  },
-  {
-    label: '증권사 계정 및 API 키 관리',
-    sub: computed(() => 'KIS 모의 투자 계정 연결됨'),
-    action: () => router.push('/onboarding/api-key'),
-    hasChevron: true,
-  },
-]
-
-import { computed } from 'vue'
 </script>
 
 <template>

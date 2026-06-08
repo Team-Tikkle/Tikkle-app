@@ -1,12 +1,12 @@
 // Type declarations for Google Identity Services (GSI) SDK
 // Loaded dynamically via <script src="https://accounts.google.com/gsi/client">
 
-interface GoogleTokenResponse {
+export interface GoogleTokenResponse {
   access_token?: string
   error?: string
 }
 
-interface GoogleTokenClient {
+export interface GoogleTokenClient {
   requestAccessToken(): void
 }
 

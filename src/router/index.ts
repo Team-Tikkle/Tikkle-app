@@ -1,8 +1,8 @@
-import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '@/stores/useUserStore'
+import { createRouter, createWebHashHistory } from 'vue-router';
+import { useUserStore } from '@/stores/useUserStore';
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHashHistory(import.meta.env.BASE_URL),
   routes: [
     // ══════════════════════════════════════
     // Public — unauthenticated only
@@ -86,7 +86,7 @@ const router = createRouter({
       redirect: { name: 'login' },
     },
   ],
-})
+});
 
 // ══════════════════════════════════════════════════════════════════════════
 // Global navigation guard
@@ -107,33 +107,35 @@ const router = createRouter({
 //   bootstrap() is a no-op → isAuthenticated = false → login
 // ══════════════════════════════════════════════════════════════════════════
 router.beforeEach((to) => {
-  const { isAuthenticated, isOnboardingComplete } = useUserStore()
+  const { isAuthenticated, isOnboardingComplete } = useUserStore();
 
   // ── 1. Unauthenticated access to any protected route → /login ──
   if (to.meta.requiresAuth && !isAuthenticated) {
-    return { name: 'login' }
+    return { name: 'login' };
   }
 
   // ── 2. Authenticated user tries to open /login → bounce away ──
   if (to.meta.guestOnly && isAuthenticated) {
     return isOnboardingComplete
       ? { name: 'home' }
-      : { name: 'onboarding-survey' }
+      : { name: 'onboarding-survey' };
   }
 
   // ── 3. Authenticated but onboarding not complete ──
   if (to.meta.requiresOnboarding && !isOnboardingComplete) {
-    return { name: 'onboarding-survey' }
+    return { name: 'onboarding-survey' };
   }
 
   // ── 4. Unknown path: authenticated users go home, others to login ──
   if (to.name === 'not-found') {
     return isAuthenticated
-      ? (isOnboardingComplete ? { name: 'home' } : { name: 'onboarding-survey' })
-      : { name: 'login' }
+      ? isOnboardingComplete
+        ? { name: 'home' }
+        : { name: 'onboarding-survey' }
+      : { name: 'login' };
   }
 
   // All checks passed — allow navigation
-})
+});
 
-export default router
+export default router;

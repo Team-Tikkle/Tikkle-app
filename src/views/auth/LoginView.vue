@@ -1,46 +1,102 @@
 <script setup lang="ts">
-// Google GSI types are declared in src/types/google.d.ts
-import '@/types/google.d.ts'
+/**
+ * LoginView.vue
+ *
+ * Platform-aware Google authentication:
+ *  - Web  : Google Identity Services (GSI) JavaScript SDK — requestAccessToken()
+ *            popup flow works in a real browser.
+ *  - Native (Android / iOS) : @codetrix-studio/capacitor-google-auth
+ *            uses the native Google Sign-In SDK, which works inside a Capacitor
+ *            WebView where popup windows are blocked.
+ *
+ * Both paths resolve to the same backend call:
+ *   POST /api/auth/oauth/google  { accessToken: string }
+ */
+import type { GoogleTokenClient, GoogleTokenResponse } from '@/types/google.d.ts'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { Capacitor } from '@capacitor/core'
 import { useUserStore } from '@/stores/useUserStore'
 
 const router    = useRouter()
 const userStore = useUserStore()
 
-const isLoading  = ref(false)
-const errorMsg   = ref('')
-const sdkReady   = ref(false)
+const isLoading = ref(false)
+const errorMsg  = ref('')
 
+// True when the auth SDK is ready to be invoked (web: GSI loaded; native: plugin initialised)
+const sdkReady  = ref(false)
+
+// ─────────────────────────────────────────────
+// Web-only: GSI token client
+// ─────────────────────────────────────────────
 let tokenClient: GoogleTokenClient | null = null
 
-// ── Initialise Google OAuth2 token client once the GSI script is loaded ──
 function initGoogleClient() {
   if (!window.google) return
   tokenClient = window.google.accounts.oauth2.initTokenClient({
     client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID as string,
-    // openid + profile + email — the backend exchanges this token for its own session tokens
     scope: 'openid profile email',
-    callback: handleGoogleResponse,
+    callback: handleGsiResponse,
   })
   sdkReady.value = true
 }
 
-// ── Handle the token returned by the Google popup ──
-async function handleGoogleResponse(response: GoogleTokenResponse) {
+async function handleGsiResponse(response: GoogleTokenResponse) {
   if (response.error || !response.access_token) {
     errorMsg.value  = '구글 로그인이 취소됐거나 오류가 발생했습니다.'
     isLoading.value = false
     return
   }
+  await _finaliseLogin(response.access_token)
+}
 
+// ─────────────────────────────────────────────
+// Native-only: Capacitor Google Auth plugin
+// ─────────────────────────────────────────────
+async function initNativeGoogleAuth() {
+  try {
+    // Dynamic import keeps the native plugin out of the web bundle.
+    const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth')
+    await GoogleAuth.initialize({
+      clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID as string,
+      scopes: ['openid', 'profile', 'email'],
+      grantOfflineAccess: true,
+    })
+    sdkReady.value = true
+  } catch (err) {
+    if (import.meta.env.DEV) console.error('[login] native GoogleAuth.initialize failed:', err)
+    errorMsg.value = '구글 SDK 초기화에 실패했습니다. 앱을 재시작해 주세요.'
+  }
+}
+
+async function signInWithGoogleNative() {
+  isLoading.value = true
+  errorMsg.value  = ''
+  try {
+    const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth')
+    const googleUser = await GoogleAuth.signIn()
+    const accessToken = googleUser.authentication.accessToken
+    if (!accessToken) throw new Error('Google access token missing from native sign-in response')
+    await _finaliseLogin(accessToken)
+  } catch (err: unknown) {
+    // User cancelled the picker → silent failure; any other error shows a message
+    const message = err instanceof Error ? err.message : String(err)
+    if (!message.toLowerCase().includes('cancel')) {
+      errorMsg.value = '구글 로그인에 실패했습니다. 다시 시도해 주세요.'
+    }
+    if (import.meta.env.DEV) console.error('[login] native sign-in error:', err)
+    isLoading.value = false
+  }
+}
+
+// ─────────────────────────────────────────────
+// Shared: exchange Google access token → backend session
+// ─────────────────────────────────────────────
+async function _finaliseLogin(googleAccessToken: string) {
   try {
     errorMsg.value = ''
-    // Exchange the Google access token for backend session tokens.
-    // The store persists the tokens and exposes isOnboardingComplete.
-    await userStore.login(response.access_token)
-
-    // Route based on onboarding status returned by the backend
+    await userStore.login(googleAccessToken)
     router.replace(
       userStore.isOnboardingComplete
         ? { name: 'home' }
@@ -53,19 +109,31 @@ async function handleGoogleResponse(response: GoogleTokenResponse) {
   }
 }
 
-// ── Trigger Google OAuth popup ──
+// ─────────────────────────────────────────────
+// Button handler — delegates to the right path
+// ─────────────────────────────────────────────
 function signInWithGoogle() {
-  if (!tokenClient) {
-    errorMsg.value = 'Google SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해 주세요.'
-    return
+  if (Capacitor.isNativePlatform()) {
+    if (!sdkReady.value) {
+      errorMsg.value = 'Google SDK가 아직 초기화되지 않았습니다. 잠시 후 다시 시도해 주세요.'
+      return
+    }
+    signInWithGoogleNative()
+  } else {
+    if (!tokenClient) {
+      errorMsg.value = 'Google SDK가 아직 로드되지 않았습니다. 잠시 후 다시 시도해 주세요.'
+      return
+    }
+    isLoading.value = true
+    errorMsg.value  = ''
+    tokenClient.requestAccessToken()
   }
-  isLoading.value = true
-  errorMsg.value  = ''
-  tokenClient.requestAccessToken()
 }
 
-// ── On mount: skip login screen if already authenticated, else load GSI script ──
-onMounted(() => {
+// ─────────────────────────────────────────────
+// Mount — redirect if already logged in, else init the right SDK
+// ─────────────────────────────────────────────
+onMounted(async () => {
   if (userStore.isAuthenticated) {
     router.replace(
       userStore.isOnboardingComplete ? { name: 'home' } : { name: 'onboarding-survey' },
@@ -73,17 +141,22 @@ onMounted(() => {
     return
   }
 
-  // Avoid injecting the script twice (e.g. on hot-reload)
-  if (!document.querySelector('script[src*="gsi/client"]')) {
-    const script = document.createElement('script')
-    script.src   = 'https://accounts.google.com/gsi/client'
-    script.async = true
-    script.defer = true
-    script.onload = initGoogleClient
-    document.head.appendChild(script)
-  } else if (window.google) {
-    // Script already loaded from a previous mount
-    initGoogleClient()
+  if (Capacitor.isNativePlatform()) {
+    // Native: use the Capacitor Google Auth plugin (no popup, works in WebView)
+    await initNativeGoogleAuth()
+  } else {
+    // Web: inject the GSI <script> tag
+    if (!document.querySelector('script[src*="gsi/client"]')) {
+      const script    = document.createElement('script')
+      script.src      = 'https://accounts.google.com/gsi/client'
+      script.async    = true
+      script.defer    = true
+      script.onload   = initGoogleClient
+      document.head.appendChild(script)
+    } else if (window.google) {
+      // Script was already loaded by a previous navigation
+      initGoogleClient()
+    }
   }
 })
 </script>

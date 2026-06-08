@@ -10,11 +10,8 @@
  * Auth : requiresAuth (same guard as the rest of the app)
  */
 import { ref, reactive } from 'vue'
-import { useRouter } from 'vue-router'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { generatePaymentSignature } from '@/utils/paymentSigner'
-
-const router = useRouter()
 
 // ── Form state ──
 const form = reactive({
