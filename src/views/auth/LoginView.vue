@@ -13,8 +13,8 @@
  *   POST /api/auth/oauth/google  { accessToken: string }
  */
 import type { GoogleTokenClient, GoogleTokenResponse } from '@/types/google.d.ts'
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, nextTick } from 'vue'
+import { useRouter, isNavigationFailure } from 'vue-router'
 import { Capacitor } from '@capacitor/core'
 import { useUserStore } from '@/stores/useUserStore'
 
@@ -97,13 +97,49 @@ async function _finaliseLogin(googleAccessToken: string) {
   try {
     errorMsg.value = ''
     await userStore.login(googleAccessToken)
-    router.replace(
-      userStore.isOnboardingComplete
-        ? { name: 'home' }
-        : { name: 'onboarding-survey' },
-    )
+
+    // Flush Vue's reactive queue so computed values (isAuthenticated,
+    // isOnboardingComplete) reflect the tokens just written by login().
+    await nextTick()
+
+    // ── DEV: dump state so field-name mismatches are immediately visible ──
+    if (import.meta.env.DEV) {
+      console.log('[login] isAuthenticated    :', userStore.isAuthenticated)
+      console.log('[login] isOnboardingComplete:', userStore.isOnboardingComplete)
+      console.log('[login] profile            :', JSON.stringify(userStore.profile))
+      console.log('[login] accessToken present:', !!userStore.accessToken)
+    }
+
+    // Safety check: if token persistence silently failed (e.g. backend field-name
+    // mismatch — access_token vs accessToken) the guard would redirect us straight
+    // back to /login, producing an invisible NavigationDuplicated.
+    if (!userStore.isAuthenticated) {
+      throw new Error(
+        'Token persistence failed — isAuthenticated is still false after login(). ' +
+        'Check that the backend response uses "accessToken" (camelCase).',
+      )
+    }
+
+    const target = userStore.isOnboardingComplete
+      ? { name: 'home' as const }
+      : { name: 'onboarding-survey' as const }
+
+    // Await navigation so any NavigationFailure can be distinguished from real
+    // errors. A redirected failure (guard changed the destination) is acceptable;
+    // anything else is a genuine problem we should surface.
+    const navResult = await router.replace(target)
+
+    if (import.meta.env.DEV && isNavigationFailure(navResult)) {
+      console.warn('[login] navigation redirected/duplicated:', navResult)
+    }
   } catch (err: unknown) {
-    errorMsg.value = err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.'
+    if (import.meta.env.DEV) console.error('[login] _finaliseLogin error:', err)
+
+    // NavigationFailure objects are not user-facing errors — swallow them.
+    // Only real exceptions (API errors, token errors) get shown.
+    if (!isNavigationFailure(err)) {
+      errorMsg.value = err instanceof Error ? err.message : '로그인 중 오류가 발생했습니다.'
+    }
   } finally {
     isLoading.value = false
   }

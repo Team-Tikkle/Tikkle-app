@@ -8,13 +8,18 @@ const LS_ACCESS  = 'tikkle_access_token'
 const LS_REFRESH = 'tikkle_refresh_token'
 
 // ── Backend response shape for GET /api/users/me ──
-interface UserMeResponse {
-  id: string
+// Wrapped in the standard envelope: { code, message, data: UserMeData }
+interface UserMeData {
+  id: number
   name: string
-  onboarding_completed: boolean
-  risk_type: UserProfile['risk_type']
-  rule: UserProfile['rule']
-  is_auto: boolean
+  email: string
+  status: string
+  createdAt: string
+}
+interface UserMeEnvelope {
+  code: string
+  message: string
+  data: UserMeData
 }
 
 export const useUserStore = defineStore('user', () => {
@@ -91,27 +96,34 @@ export const useUserStore = defineStore('user', () => {
       console.log('[login] accessToken type:', typeof googleAccessToken, '| length:', googleAccessToken.length)
     }
 
-    const { data } = await api.post<{
-      accessToken: string
-      refreshToken: string
-      onboardingCompleted: boolean
-      userId?: string
+    // Backend wraps tokens in an envelope: { code, message, data: { accessToken, refreshToken } }
+    const { data: envelope } = await api.post<{
+      code: string
+      message: string
+      data: {
+        accessToken: string
+        refreshToken: string
+        onboardingCompleted?: boolean  // not yet implemented by backend — defaults to true
+        userId?: string
+      }
     }>(
       '/api/auth/oauth/google',
       payload,
     )
 
-    _persistTokens(data.accessToken, data.refreshToken)
+    const tokenData = envelope.data
+    _persistTokens(tokenData.accessToken, tokenData.refreshToken)
 
     // Seed a minimal profile so isOnboardingComplete is immediately correct.
-    // fetchProfile() will fill in the rest on the next navigation.
+    // onboardingCompleted is not yet returned by the backend — default to true
+    // so the router sends authenticated users to home rather than onboarding.
     profile.value = {
-      id:   data.userId ?? '',
-      name: '',               // filled in by fetchProfile
+      id:   tokenData.userId ?? '',
+      name: '',
       risk_type: 'NEUTRAL',
       rule: 'UNDER_1000',
       is_auto: true,
-      onboarding_completed: data.onboardingCompleted,
+      onboarding_completed: tokenData.onboardingCompleted ?? true,
     }
   }
 
@@ -157,23 +169,52 @@ export const useUserStore = defineStore('user', () => {
     return data
   }
 
+  // ── Dev-only: issue a JWT for an existing user by email (POST /api/auth/test-token) ──
+  // Local environment only. Persists the returned tokens like a real login.
+  async function issueTestToken(email: string): Promise<void> {
+    const { default: api } = await import('@/utils/api')
+    const { data: envelope } = await api.post<{
+      code: string
+      message: string
+      data: { accessToken: string; refreshToken: string }
+    }>('/api/auth/test-token', { email })
+    _persistTokens(envelope.data.accessToken, envelope.data.refreshToken)
+  }
+
+  // ── Dev-only: create a user (or reuse if exists) and issue a JWT (POST /api/auth/test-signup) ──
+  // Local environment only. Persists the returned tokens like a real login.
+  async function testSignup(email: string, name: string): Promise<void> {
+    const { default: api } = await import('@/utils/api')
+    const { data: envelope } = await api.post<{
+      code: string
+      message: string
+      data: { accessToken: string; refreshToken: string }
+    }>('/api/auth/test-signup', { email, name })
+    _persistTokens(envelope.data.accessToken, envelope.data.refreshToken)
+  }
+
   // ════════════════════════════════════════════════
   // User API actions
   // ════════════════════════════════════════════════
 
   // ── Get profile (GET /api/users/me) ──
-  // Populates the full profile including name, onboarding status, and
-  // investment preferences. Called during bootstrap and on app resume.
+  // Fetches id, name, and email from the server and merges them into the
+  // existing profile. Fields seeded during login (risk_type, rule, is_auto,
+  // onboarding_completed) are preserved so they are not lost on a re-fetch.
   async function fetchProfile(): Promise<void> {
     const { default: api } = await import('@/utils/api')
-    const { data } = await api.get<UserMeResponse>('/api/users/me')
+    const { data: envelope } = await api.get<UserMeEnvelope>('/api/users/me')
+    const fetched = envelope.data
     profile.value = {
-      id:                  data.id,
-      name:                data.name,
-      risk_type:           data.risk_type,
-      rule:                data.rule,
-      is_auto:             data.is_auto,
-      onboarding_completed: data.onboarding_completed,
+      // Preserve login-seeded investment prefs (defaults if not yet available)
+      risk_type:            profile.value?.risk_type           ?? 'NEUTRAL',
+      rule:                 profile.value?.rule                ?? 'UNDER_1000',
+      is_auto:              profile.value?.is_auto             ?? true,
+      onboarding_completed: profile.value?.onboarding_completed ?? true,
+      // Fields owned by GET /api/users/me
+      id:    String(fetched.id),
+      name:  fetched.name,
+      email: fetched.email,
     }
   }
 
@@ -262,6 +303,8 @@ export const useUserStore = defineStore('user', () => {
     login,
     logout,
     reissueTokens,
+    issueTestToken,
+    testSignup,
     // user APIs
     fetchProfile,
     updateProfile,

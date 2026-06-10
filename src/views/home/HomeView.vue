@@ -9,7 +9,12 @@ import { stockLogoMap } from '@/mocks/stockLogos'
 const portfolioStore = usePortfolioStore()
 const userStore = useUserStore()
 
-onMounted(() => portfolioStore.fetchPortfolio())
+onMounted(() => {
+  portfolioStore.fetchPortfolio()
+  // Fetch the user profile if it was not already hydrated (e.g. on a hard
+  // refresh where bootstrap() restored tokens but had no cached profile).
+  if (!userStore.profile?.name) userStore.fetchProfile().catch(() => {})
+})
 
 function fmt(n: number) {
   return n.toLocaleString('ko-KR')

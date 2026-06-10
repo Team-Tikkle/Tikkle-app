@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '@/components/common/AppHeader.vue'
 import BottomNav from '@/components/common/BottomNav.vue'
@@ -7,6 +7,12 @@ import { useUserStore } from '@/stores/useUserStore'
 
 const router = useRouter()
 const userStore = useUserStore()
+
+// Ensure profile is loaded even if the user navigates directly to /settings
+// without passing through HomeView (e.g. deep-link or hard refresh).
+onMounted(() => {
+  if (!userStore.profile?.name) userStore.fetchProfile().catch(() => {})
+})
 
 // Withdrawal modal state
 const showWithdrawalModal = ref(false)
@@ -40,13 +46,6 @@ async function handleDeleteAccount() {
   }
 }
 
-// Risk type labels
-const riskLabel: Record<string, string> = {
-  STABLE: '안정형',
-  NEUTRAL: '위험중립형',
-  AGGRESSIVE: '적극투자형',
-}
-
 // Chevron icon (right arrow for menu items)
 const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`
 
@@ -61,16 +60,17 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
       <!-- ── Profile card ── -->
       <div class="bg-white rounded-xl px-5 py-5">
         <div class="flex items-center gap-4">
-          <!-- Avatar -->
-          <div class="w-[52px] h-[52px] rounded-xl bg-brand-bg flex items-center justify-center text-2xl shrink-0">
-            🪙
+          <!-- Avatar: first letter of name, falls back to coin emoji -->
+          <div class="w-[52px] h-[52px] rounded-xl bg-brand-bg flex items-center justify-center text-2xl font-bold text-brand shrink-0">
+            {{ userStore.profile?.name?.charAt(0) || '🪙' }}
           </div>
-          <!-- Info -->
-          <div>
-            <p class="text-md font-bold text-text-primary">티끌 사용자</p>
-            <p class="text-sm text-text-tertiary mt-0.5">
-              {{ riskLabel[userStore.profile?.risk_type ?? 'NEUTRAL'] }} ·
-              {{ userStore.profile?.is_auto ? '자동 매매 중' : '수동 매매 중' }}
+          <!-- Info: reactively bound to store — clears on logout automatically -->
+          <div class="min-w-0">
+            <p class="text-md font-bold text-text-primary truncate">
+              {{ userStore.profile?.name || '티끌 유저' }}
+            </p>
+            <p class="text-sm text-text-tertiary mt-0.5 truncate">
+              {{ userStore.profile?.email || '' }}
             </p>
           </div>
         </div>
