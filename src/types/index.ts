@@ -62,6 +62,7 @@ export interface NewsArticle {
   id: string
   title: string
   summary: string
+  press?: string            // publishing news outlet name
   thumbnail_url: string
   source_url: string
   published_at: string
@@ -89,12 +90,23 @@ export interface InvestmentTerm {
   description: string
 }
 
+// Beginner article (GET /api/insights/articles, /api/insights/articles/{id})
+// The list endpoint omits `body`; the detail endpoint includes it.
+export interface InsightArticle {
+  id: string
+  title: string
+  thumbnail_url: string
+  published_at: string
+  body?: string
+}
+
 // Curated recommended video (GET /api/insights/videos)
 export interface RecommendedVideo {
   id: string
   title: string
   thumbnail_url: string
   video_url: string
+  channel_name?: string
 }
 
 // AI Stock Recommendation

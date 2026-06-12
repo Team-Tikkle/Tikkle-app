@@ -65,6 +65,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
     {
+      // Full investment glossary — reached from the Beginner's Guide entry card
+      path: '/insights/glossary',
+      name: 'insights-glossary',
+      component: () => import('@/views/insights/GlossaryView.vue'),
+      meta: { requiresAuth: true, requiresOnboarding: true },
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('@/views/settings/SettingsView.vue'),
