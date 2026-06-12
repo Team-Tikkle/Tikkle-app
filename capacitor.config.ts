@@ -18,6 +18,10 @@ const capacitorConfig: CapacitorConfig = {
       // The Web Client ID from Google Cloud Console (OAuth 2.0 credentials).
       // Same value as VITE_GOOGLE_CLIENT_ID used by the web GSI flow.
       scopes: ['openid', 'profile', 'email'],
+      // The Android native plugin reads "clientId" (or "androidClientId"), NOT
+      // "serverClientId" — see GoogleAuth.java load(). Both must be the WEB
+      // client ID so requestIdToken()/requestServerAuthCode() succeed.
+      clientId: process.env.VITE_GOOGLE_CLIENT_ID ?? '',
       serverClientId: process.env.VITE_GOOGLE_CLIENT_ID ?? '',
       // grantOfflineAccess=true causes the Android SDK to also request a
       // server auth code alongside the access token.
