@@ -20,13 +20,7 @@ const router = createRouter({
     {
       path: '/onboarding',
       name: 'onboarding-survey',
-      component: () => import('@/views/onboarding/OnboardingSurveyView.vue'),
-      meta: { requiresAuth: true },
-    },
-    {
-      path: '/onboarding/api-key',
-      name: 'onboarding-api-key',
-      component: () => import('@/views/onboarding/OnboardingApiKeyView.vue'),
+      component: () => import('@/views/onboarding/OnboardingView.vue'),
       meta: { requiresAuth: true },
     },
 
@@ -75,6 +69,13 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: () => import('@/views/settings/SettingsView.vue'),
+      meta: { requiresAuth: true, requiresOnboarding: true },
+    },
+    {
+      // Manage KIS securities account & API keys — reached from Settings
+      path: '/settings/api-key',
+      name: 'settings-api-key',
+      component: () => import('@/views/onboarding/OnboardingApiKeyView.vue'),
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
     {

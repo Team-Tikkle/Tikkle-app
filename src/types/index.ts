@@ -2,6 +2,48 @@
 export type RiskType = 'STABLE' | 'NEUTRAL' | 'AGGRESSIVE'
 export type RoundUpRule = 'UNDER_1000' | 'UNDER_500' | 'UNDER_100'
 
+// ── Onboarding API payload types (POST /api/onboarding) ──
+export type RiskTolerance     = 'SAFE' | 'MODERATE' | 'AGGRESSIVE'
+export type InvestmentTerm    = 'SHORT_TERM' | 'LONG_TERM'
+export type InvestmentStyle   = 'VALUE' | 'MOMENTUM'
+export type PreferredTheme    = 'TECH' | 'BIO' | 'SEMICONDUCTOR' | 'GREEN' | 'ENTERTAINMENT' | 'NONE'
+export type StockCapPref      = 'BLUE_CHIP' | 'NEW_LISTING'
+export type MarketPreference  = 'DOMESTIC' | 'FOREIGN' | 'BOTH'
+export type EsgFocus          = 'NONE' | 'ESG_DRIVEN'
+export type SinIndustryFilter = 'NONE' | 'WEAPON' | 'TOBACCO' | 'FOSSIL_FUEL'
+export type ReturnPreference  = 'DIVIDEND' | 'GROWTH'
+export type DiversificationType = 'CONCENTRATED' | 'DIVERSIFIED'
+export type ExecutionMode     = 'AUTO' | 'MANUAL'
+
+// Exactly 7 unique categories required by the backend
+export type CategoryType = 'CAFE' | 'MART' | 'FOOD' | 'SHOPPING' | 'TRAFFIC' | 'CULTURE' | 'ETC'
+export type RuleType     = 'ROUND_UP_1000' | 'ROUND_UP_5000' | 'ROUND_UP_10000' | 'PERCENT_10'
+
+export interface CategoryRule {
+  category: CategoryType
+  ruleType: RuleType
+}
+
+export interface OnboardingRequest {
+  kisAppKey:           string
+  kisAppSecret:        string
+  kisAccountNum:       string
+  targetCardCompany:   string
+  targetCardLast4:     string       // exactly 4-digit numeric string
+  riskTolerance:       RiskTolerance
+  investmentTerm:      InvestmentTerm
+  investmentStyle:     InvestmentStyle
+  preferredTheme:      PreferredTheme
+  stockCapPreference:  StockCapPref
+  marketPreference:    MarketPreference
+  esgFocus:            EsgFocus
+  sinIndustryFilter:   SinIndustryFilter
+  returnPreference:    ReturnPreference
+  diversificationType: DiversificationType
+  executionMode:       ExecutionMode
+  categoryRules:       CategoryRule[] // length must be exactly 7
+}
+
 export interface UserProfile {
   id: string
   name: string              // display name returned by GET /api/users/me
@@ -84,7 +126,7 @@ export interface CategoryRoundUpRule {
 }
 
 // Investment glossary term (GET /api/insights/terms)
-export interface InvestmentTerm {
+export interface GlossaryTerm {
   id: string
   term: string
   description: string
@@ -107,6 +149,22 @@ export interface RecommendedVideo {
   thumbnail_url: string
   video_url: string
   channel_name?: string
+}
+
+// Payment scraping (POST /api/payments — HMAC signed, no JWT)
+export interface PaymentRequest {
+  userId:          number   // unique user identifier
+  cardCompany:     string   // named card issuer, e.g. "신한카드"
+  cardNumberLast4: string   // last 4 digits of the card number
+  merchant:        string   // merchant name from push notification
+  amount:          number   // total payment amount in KRW
+  transactionId:   string   // deterministic SHA-256 hex hash (idempotency key)
+}
+
+export interface PaymentResponse {
+  code:    string   // "SUCCESS" | "COMMON-001" | "PAYMENT-001"
+  message: string
+  data:    null
 }
 
 // AI Stock Recommendation

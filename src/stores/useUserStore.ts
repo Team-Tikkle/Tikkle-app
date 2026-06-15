@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { Preferences } from '@capacitor/preferences'
 import type { UserProfile, RoundUpRule, CategoryRoundUpRule } from '@/types'
 import { mockUser } from '@/mocks'
 
@@ -115,15 +116,16 @@ export const useUserStore = defineStore('user', () => {
     _persistTokens(tokenData.accessToken, tokenData.refreshToken)
 
     // Seed a minimal profile so isOnboardingComplete is immediately correct.
-    // onboardingCompleted is not yet returned by the backend — default to true
-    // so the router sends authenticated users to home rather than onboarding.
+    // onboardingCompleted is not yet returned by the backend — default to false
+    // so a fresh login sends the user through onboarding. Once the backend adds
+    // the flag this becomes accurate; until then repeated onboarding is expected.
     profile.value = {
       id:   tokenData.userId ?? '',
       name: '',
       risk_type: 'NEUTRAL',
       rule: 'UNDER_1000',
       is_auto: true,
-      onboarding_completed: tokenData.onboardingCompleted ?? true,
+      onboarding_completed: tokenData.onboardingCompleted ?? false,
     }
   }
 
@@ -210,12 +212,15 @@ export const useUserStore = defineStore('user', () => {
       risk_type:            profile.value?.risk_type           ?? 'NEUTRAL',
       rule:                 profile.value?.rule                ?? 'UNDER_1000',
       is_auto:              profile.value?.is_auto             ?? true,
-      onboarding_completed: profile.value?.onboarding_completed ?? true,
+      onboarding_completed: profile.value?.onboarding_completed ?? false,
       // Fields owned by GET /api/users/me
       id:    String(fetched.id),
       name:  fetched.name,
       email: fetched.email,
     }
+
+    // Bridge userId to native Android so PaymentNotificationListener can read it
+    await Preferences.set({ key: 'userId', value: String(fetched.id) })
   }
 
   // ── Update profile name (PATCH /api/users/me) ──
