@@ -15,7 +15,7 @@ const userStore = useUserStore()
 const onboardingStore = useOnboardingStore()
 
 // ── Step tracking ──
-// 1: 투자 성향  2: 증권사·카드 연동  3: 카테고리 규칙
+// 1: 투자 성향  2: 카테고리 규칙  3: 증권사·카드 연동
 const step = ref(1)
 const TOTAL_STEPS = 3
 
@@ -43,34 +43,76 @@ const cardLast4     = ref('')
 
 const isCardLast4Valid = computed(() => /^\d{4}$/.test(cardLast4.value))
 
-const isStep2Valid = computed(() =>
+const isStep3Valid = computed(() =>
   kisAccountNum.value.trim() &&
   kisAppKey.value.trim() &&
   kisAppSecret.value.trim() &&
   isCardLast4Valid.value,
 )
 
-// ── Step 3 state ──
-const CATEGORIES: { type: CategoryType; label: string }[] = [
-  { type: 'CAFE',     label: '카페·디저트' },
-  { type: 'MART',     label: '편의점·마트' },
-  { type: 'FOOD',     label: '식사·배달푸드' },
-  { type: 'SHOPPING', label: '쇼핑' },
-  { type: 'TRAFFIC',  label: '교통·주유' },
-  { type: 'CULTURE',  label: '문화·여가' },
-  { type: 'ETC',      label: '기타' },
+// ── Step 2 state: 잔돈 규칙 ──
+// 온보딩에서는 하나의 규칙을 모든 카테고리에 일괄 적용한다.
+// 카테고리별 세부 조정은 가입 후 설정 화면(CategoryRulesView)에서 가능.
+const ALL_CATEGORIES: CategoryType[] = [
+  'CAFE', 'MART', 'FOOD', 'SHOPPING', 'TRAFFIC', 'CULTURE', 'ETC',
 ]
 
-const RULE_OPTIONS: { value: RuleType; label: string }[] = [
-  { value: 'ROUND_UP_1000',  label: '1,000원 단위 올림' },
-  { value: 'ROUND_UP_5000',  label: '5,000원 단위 올림' },
-  { value: 'ROUND_UP_10000', label: '10,000원 단위 올림' },
-  { value: 'PERCENT_10',     label: '결제액의 10%' },
+// 잔돈 발생 방식 토글 (올림 / 비율)
+const ruleMode = ref<'ROUND_UP' | 'PERCENT'>('ROUND_UP')
+
+// 각 방식의 슬라이더 옵션 — 백엔드 RuleType과 1:1 대응
+const ROUND_UP_OPTIONS: { value: RuleType; amount: number; tick: string }[] = [
+  { value: 'ROUND_UP_1000',  amount: 1000,  tick: '1천' },
+  { value: 'ROUND_UP_5000',  amount: 5000,  tick: '5천' },
+  { value: 'ROUND_UP_10000', amount: 10000, tick: '1만' },
+  { value: 'ROUND_UP_50000', amount: 50000, tick: '5만' },
+]
+const PERCENT_OPTIONS: { value: RuleType; percent: number; tick: string }[] = [
+  { value: 'PERCENT_5',  percent: 5,  tick: '5%' },
+  { value: 'PERCENT_10', percent: 10, tick: '10%' },
+  { value: 'PERCENT_20', percent: 20, tick: '20%' },
+  { value: 'PERCENT_30', percent: 30, tick: '30%' },
 ]
 
-const categoryRules = reactive<Record<CategoryType, RuleType>>(
-  Object.fromEntries(CATEGORIES.map(c => [c.type, 'ROUND_UP_1000'])) as Record<CategoryType, RuleType>
+// 방식별 슬라이더 위치 — 토글을 오가도 각자의 선택이 보존된다
+const roundUpIndex = ref(0)
+const percentIndex = ref(0)
+
+// 현재 활성화된 옵션 목록 / 슬라이더 인덱스
+const activeOptions = computed(() =>
+  ruleMode.value === 'ROUND_UP' ? ROUND_UP_OPTIONS : PERCENT_OPTIONS,
 )
+const activeIndex = computed<number>({
+  get: () => (ruleMode.value === 'ROUND_UP' ? roundUpIndex.value : percentIndex.value),
+  set: (v) => {
+    if (ruleMode.value === 'ROUND_UP') roundUpIndex.value = v
+    else percentIndex.value = v
+  },
+})
+
+// 제출 시 모든 카테고리에 일괄 적용할 규칙
+const selectedRule = computed<RuleType>(() => activeOptions.value[activeIndex.value].value)
+
+// 카드 상단 현재 값 + 설명
+const ruleValueLabel = computed(() =>
+  ruleMode.value === 'ROUND_UP'
+    ? `${ROUND_UP_OPTIONS[roundUpIndex.value].amount.toLocaleString('ko-KR')}원`
+    : `${PERCENT_OPTIONS[percentIndex.value].percent}%`,
+)
+const ruleDescription = computed(() =>
+  ruleMode.value === 'ROUND_UP'
+    ? `결제 후 ${ROUND_UP_OPTIONS[roundUpIndex.value].amount.toLocaleString('ko-KR')}원 단위로 올림한 잔돈을 적립합니다`
+    : `결제 금액의 ${PERCENT_OPTIONS[percentIndex.value].percent}%를 잔돈으로 자동 적립합니다`,
+)
+
+// 슬라이더 진행 막대 — 채워진 구간(파랑) / 남은 구간(회색)
+const sliderFillStyle = computed(() => {
+  const max = activeOptions.value.length - 1
+  const pct = max > 0 ? (activeIndex.value / max) * 100 : 0
+  return {
+    background: `linear-gradient(to right, #0051ff 0%, #0051ff ${pct}%, #e5e5ea ${pct}%, #e5e5ea 100%)`,
+  }
+})
 
 // ── UI state ──
 const isLoading = ref(false)
@@ -86,6 +128,15 @@ function goNext() {
 
 function goBack() {
   if (step.value > 1) step.value--
+}
+
+// ── [TEST] Skip-onboarding jump — remove before release ──
+// Target routes (/, /payments/simulator) require completed onboarding, so the
+// router guard would otherwise bounce straight back here. Mark onboarding
+// complete locally first so the guard lets the navigation through.
+function goTest(path: string) {
+  userStore.completeOnboarding()
+  router.replace(path)
 }
 
 // ── Submit (Step 3) ──
@@ -104,7 +155,7 @@ async function handleSubmit() {
       targetCardLast4:   cardLast4.value,
     })
     onboardingStore.setCategoryRules(
-      CATEGORIES.map(c => ({ category: c.type, ruleType: categoryRules[c.type] } as CategoryRule))
+      ALL_CATEGORIES.map(category => ({ category, ruleType: selectedRule.value } as CategoryRule))
     )
 
     await onboardingStore.submitOnboarding()
@@ -168,10 +219,6 @@ const RETURN_LABELS: Record<ReturnPreference, string> = {
 const DIVERS_LABELS: Record<DiversificationType, string> = {
   CONCENTRATED: '집중투자',
   DIVERSIFIED:  '분산투자',
-}
-const EXEC_LABELS: Record<ExecutionMode, string> = {
-  AUTO:   '자동 실행',
-  MANUAL: '수동 확인',
 }
 </script>
 
@@ -362,24 +409,107 @@ const EXEC_LABELS: Record<ExecutionMode, string> = {
           </div>
         </div>
 
-        <!-- Execution Mode -->
+      </div>
+
+      <!-- ── Step 2: 잔돈 규칙 & 매매 방식 ── -->
+      <div v-else-if="step === 2" class="px-6 pt-6 flex flex-col gap-7">
+
+        <span class="text-sm font-semibold text-brand">잔돈 설정</span>
+
+        <div class="flex flex-col gap-2">
+          <h2 class="text-2xl font-bold text-text-primary leading-snug">
+            잔돈 규칙과 매매<br>방식을 설정하세요
+          </h2>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            모든 결제에 공통으로 적용돼요. 카테고리별 세부 설정은 가입 후 설정 화면에서 바꿀 수 있어요.
+          </p>
+        </div>
+
+        <!-- ── 잔돈 발생 방식 ── -->
         <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">투자 실행 방식</p>
-          <div class="flex gap-2">
+          <p class="text-sm font-semibold text-text-secondary">잔돈 발생 방식</p>
+
+          <!-- Segmented toggle -->
+          <div class="bg-surface-alt rounded-2xl p-1 flex gap-1">
             <button
-              v-for="(label, key) in EXEC_LABELS" :key="key"
-              class="flex-1 py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="prefs.executionMode === key
-                ? 'bg-brand text-white border-brand'
-                : 'bg-white text-text-secondary border-surface-border'"
-              @click="prefs.executionMode = key as ExecutionMode"
-            >{{ label }}</button>
+              class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+              :class="ruleMode === 'ROUND_UP'
+                ? 'bg-white text-text-primary shadow-sm'
+                : 'text-text-tertiary'"
+              @click="ruleMode = 'ROUND_UP'"
+            >올림 잔돈 적립</button>
+            <button
+              class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+              :class="ruleMode === 'PERCENT'
+                ? 'bg-white text-text-primary shadow-sm'
+                : 'text-text-tertiary'"
+              @click="ruleMode = 'PERCENT'"
+            >비율 잔돈 적립</button>
+          </div>
+
+          <!-- Value card with slider -->
+          <div class="bg-white border border-surface-border rounded-2xl px-5 py-5 flex flex-col gap-3">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-text-tertiary">
+                {{ ruleMode === 'ROUND_UP' ? '적립 단위' : '적립 비율' }}
+              </span>
+              <span class="text-lg font-bold text-text-primary">{{ ruleValueLabel }}</span>
+            </div>
+            <p class="text-xs text-text-tertiary">{{ ruleDescription }}</p>
+
+            <!-- Discrete slider -->
+            <input
+              v-model.number="activeIndex"
+              type="range"
+              min="0"
+              :max="activeOptions.length - 1"
+              step="1"
+              class="tikkle-range w-full mt-1"
+              :style="sliderFillStyle"
+            >
+
+            <!-- Tick labels -->
+            <div class="flex justify-between">
+              <span
+                v-for="(opt, i) in activeOptions"
+                :key="opt.value"
+                class="text-xs transition-colors"
+                :class="activeIndex === i ? 'text-brand font-semibold' : 'text-text-disabled'"
+              >{{ opt.tick }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 매매 방식 ── -->
+        <div class="flex flex-col gap-3">
+          <p class="text-sm font-semibold text-text-secondary">매매 방식</p>
+          <div class="bg-surface-alt rounded-2xl p-1 flex gap-1">
+            <button
+              class="flex-1 py-2.5 rounded-xl flex flex-col items-center gap-0.5 transition-all"
+              :class="prefs.executionMode === 'AUTO'
+                ? 'bg-white shadow-sm'
+                : ''"
+              @click="prefs.executionMode = 'AUTO'"
+            >
+              <span class="text-sm font-semibold" :class="prefs.executionMode === 'AUTO' ? 'text-text-primary' : 'text-text-tertiary'">자동 매매</span>
+              <span class="text-xs2 text-text-tertiary">잔돈 자동 투자</span>
+            </button>
+            <button
+              class="flex-1 py-2.5 rounded-xl flex flex-col items-center gap-0.5 transition-all"
+              :class="prefs.executionMode === 'MANUAL'
+                ? 'bg-white shadow-sm'
+                : ''"
+              @click="prefs.executionMode = 'MANUAL'"
+            >
+              <span class="text-sm font-semibold" :class="prefs.executionMode === 'MANUAL' ? 'text-text-primary' : 'text-text-tertiary'">수동 매매</span>
+              <span class="text-xs2 text-text-tertiary">직접 종목 선택</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- ── Step 2: 증권사·카드 연동 ── -->
-      <div v-else-if="step === 2" class="px-6 pt-6 flex flex-col gap-6">
+      <!-- ── Step 3: 증권사·카드 연동 ── -->
+      <div v-else-if="step === 3" class="px-6 pt-6 flex flex-col gap-6">
 
         <span class="text-sm font-semibold text-brand">증권사 연동</span>
 
@@ -474,42 +604,6 @@ const EXEC_LABELS: Record<ExecutionMode, string> = {
             <p v-else class="text-xs2 text-text-tertiary">잔돈 적립 대상 카드의 끝 4자리 숫자를 입력하세요</p>
           </div>
         </div>
-      </div>
-
-      <!-- ── Step 3: 카테고리 규칙 ── -->
-      <div v-else-if="step === 3" class="px-6 pt-6 flex flex-col gap-6">
-
-        <span class="text-sm font-semibold text-brand">카테고리별 적립 규칙</span>
-
-        <div class="flex flex-col gap-2">
-          <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            카테고리별 잔돈<br>적립 방식을 설정하세요
-          </h2>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            결제 카테고리마다 다른 방식으로 잔돈을 모을 수 있어요.
-          </p>
-        </div>
-
-        <div class="flex flex-col gap-4">
-          <div
-            v-for="cat in CATEGORIES"
-            :key="cat.type"
-            class="bg-white rounded-xl px-5 py-4 flex flex-col gap-3"
-          >
-            <p class="text-base font-semibold text-text-primary">{{ cat.label }}</p>
-            <div class="grid grid-cols-2 gap-2">
-              <button
-                v-for="rule in RULE_OPTIONS"
-                :key="rule.value"
-                class="py-2.5 rounded-lg text-sm font-medium border transition-all"
-                :class="categoryRules[cat.type] === rule.value
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-surface text-text-secondary border-surface-border'"
-                @click="categoryRules[cat.type] = rule.value"
-              >{{ rule.label }}</button>
-            </div>
-          </div>
-        </div>
 
         <!-- Error message -->
         <p v-if="errorMsg" role="alert" class="text-sm text-danger text-center px-2">
@@ -524,13 +618,13 @@ const EXEC_LABELS: Record<ExecutionMode, string> = {
       <div class="flex gap-2">
         <button
           class="flex-1 py-2 rounded-xl text-sm font-medium text-text-tertiary border border-dashed border-surface-border active:opacity-70"
-          @click="router.replace('/')"
+          @click="goTest('/')"
         >
           [테스트] 홈
         </button>
         <button
           class="flex-1 py-2 rounded-xl text-sm font-medium text-text-tertiary border border-dashed border-surface-border active:opacity-70"
-          @click="router.replace('/payments/simulator')"
+          @click="goTest('/payments/simulator')"
         >
           [테스트] 결제 시뮬레이터
         </button>
@@ -539,8 +633,8 @@ const EXEC_LABELS: Record<ExecutionMode, string> = {
       <button
         v-if="step < TOTAL_STEPS"
         class="w-full py-4 rounded-xl text-md font-semibold text-white bg-brand active:bg-brand-hover transition-colors"
-        :disabled="step === 2 && !isStep2Valid"
-        :class="step === 2 && !isStep2Valid ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'"
+        :disabled="step === 3 && !isStep3Valid"
+        :class="step === 3 && !isStep3Valid ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'"
         @click="goNext"
       >
         다음
@@ -570,3 +664,44 @@ const EXEC_LABELS: Record<ExecutionMode, string> = {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Discrete round-up / percent slider — matches Figma range styling */
+.tikkle-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+.tikkle-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;            /* center the 22px thumb on the 6px track */
+  border-radius: 9999px;
+  background: #0051ff;
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.tikkle-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #0051ff;
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.tikkle-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: transparent;     /* fill comes from the element's inline gradient */
+}
+.tikkle-range::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: transparent;
+}
+</style>
