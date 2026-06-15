@@ -47,17 +47,18 @@ public class PaymentNotificationListener extends NotificationListenerService {
     private static final String API_BASE_URL   = BuildConfig.API_BASE_URL;
     private static final String PAYMENT_SECRET = BuildConfig.PAYMENT_SECRET_KEY;
 
-    // Capacitor Preferences stores data in "CAPPreferences" with "_cap_" key prefix
-    private static final String PREFS_NAME     = "CAPPreferences";
-    private static final String PREFS_KEY_USER = "_cap_userId";
+    // @capacitor/preferences stores values in the "CapacitorStorage" SharedPreferences
+    // file, keyed verbatim (no prefix) — verified against the plugin's Preferences.java.
+    private static final String PREFS_NAME     = "CapacitorStorage";
+    private static final String PREFS_KEY_USER = "userId";
 
     // ── Verified package whitelist ────────────────────────────────────────────
 
     private static final String PKG_KB_PAY    = "com.kbcard.cxh.appcard";
-    private static final String PKG_WOORI     = "com.wooricard.wpay";
+    private static final String PKG_WOORI     = "com.wooricard.smartapp";
     //private static final String PKG_WOORI     = "com.google.android.dialer";
     //private static final String PKG_SMS       = "com.google.android.apps.messaging"; // Google Messages (AVD default)
-    private static final String PKG_SMS       = "com.google.android.dialer"; // Google Messages (AVD default)
+    private static final String PKG_SMS       = "com.google.android.apps.messaging"; // Google Messages (AVD default). 사실상 테스트용으로 사용하지 않을 듯함
 
     // ── KB Pay patterns ───────────────────────────────────────────────────────
     //
@@ -309,19 +310,22 @@ public class PaymentNotificationListener extends NotificationListenerService {
                     return;
                 }
 
+                // userId is written by the Vue layer (fetchProfile → Preferences.set) into
+                // the @capacitor/preferences "CapacitorStorage" file. Read the real value.
                 SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
                 String userIdStr = prefs.getString(PREFS_KEY_USER, null);
-                // [TEST] fallback to userId=1 — remove before release
-                int userId = 1;
-                if (userIdStr != null) {
-                    try {
-                        userId = Integer.parseInt(userIdStr);
-                    } catch (NumberFormatException e) {
-                        Log.w(TAG, "userId parse failed, using fallback 1: " + userIdStr);
-                    }
-                } else {
-                    Log.w(TAG, "[TEST] userId not found in CAPPreferences — using fallback userId=1");
+                if (userIdStr == null) {
+                    Log.w(TAG, "userId not found in CapacitorStorage — user not logged in / profile not fetched yet.");
+                    return;
                 }
+                int userId;
+                try {
+                    userId = Integer.parseInt(userIdStr);
+                } catch (NumberFormatException e) {
+                    Log.w(TAG, "userId is not a valid integer: " + userIdStr);
+                    return;
+                }
+                Log.d(TAG, "Loaded userId from CapacitorStorage: " + userId);
 
                 // 1. Deterministic transactionId: SHA-256(merchant + amount + cardCompany + millis)
                 String transactionId = generateTransactionId(
