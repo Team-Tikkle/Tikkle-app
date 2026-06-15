@@ -2,29 +2,66 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/useUserStore'
+import { useOnboardingStore } from '@/stores/useOnboardingStore'
 
 const router = useRouter()
 const userStore = useUserStore()
+const onboardingStore = useOnboardingStore()
 
-const accountNumber = ref('')
-const appKey = ref('')
-const secretKey = ref('')
+// ── Form fields ──
+const accountNumber   = ref('')
+const appKey          = ref('')
+const secretKey       = ref('')
+const cardCompany     = ref('')
+const cardLast4       = ref('')
+
+// ── UI state ──
 const isLoading = ref(false)
+const errorMsg  = ref('')
+
+// cardLast4 must be exactly 4 numeric digits
+const isCardLast4Valid = computed(
+  () => /^\d{4}$/.test(cardLast4.value),
+)
 
 const isFormValid = computed(() =>
-  accountNumber.value.trim() && appKey.value.trim() && secretKey.value.trim(),
+  accountNumber.value.trim() &&
+  appKey.value.trim() &&
+  secretKey.value.trim() &&
+  cardCompany.value.trim() &&
+  isCardLast4Valid.value,
 )
 
 async function handleConnect() {
   if (!isFormValid.value || isLoading.value) return
+
+  errorMsg.value  = ''
   isLoading.value = true
-  // Simulate API verification delay
-  await new Promise((r) => setTimeout(r, 900))
-  if (userStore.profile) {
-    userStore.profile.kis_account_number = accountNumber.value
+
+  try {
+    // Save KIS credentials + card info to the onboarding store so the store
+    // action can assemble the complete OnboardingRequest payload.
+    onboardingStore.setCredentials({
+      kisAppKey:         appKey.value.trim(),
+      kisAppSecret:      secretKey.value.trim(),
+      kisAccountNum:     accountNumber.value.trim(),
+      targetCardCompany: cardCompany.value.trim(),
+      targetCardLast4:   cardLast4.value,
+    })
+
+    // POST /api/onboarding — throws a localized Error on business error codes
+    await onboardingStore.submitOnboarding()
+
+    // On SUCCESS (201): mark onboarding complete locally and navigate to home
+    userStore.completeOnboarding()
+    router.replace('/')
+  } catch (err: unknown) {
+    errorMsg.value = err instanceof Error
+      ? err.message
+      : '연결 중 오류가 발생했습니다. 다시 시도해 주세요.'
+  } finally {
+    isLoading.value = false
   }
-  userStore.completeOnboarding()
-  router.push('/')
 }
 </script>
 
@@ -74,12 +111,7 @@ async function handleConnect() {
           <p class="text-sm text-brand-300 leading-relaxed">
             한국투자증권 KIS Developers에서 모의 투자용 API 키를 발급받아 입력해 주세요.
           </p>
-
-          <!-- Guide link -->
-          <a
-            href="#"
-            class="inline-flex items-center gap-1 text-base font-semibold text-brand mt-1"
-          >
+          <a href="#" class="inline-flex items-center gap-1 text-base font-semibold text-brand mt-1">
             모의 투자 안내
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"/>
@@ -98,7 +130,7 @@ async function handleConnect() {
               type="text"
               placeholder="모의 투자 계좌번호를 입력하세요"
               class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-            />
+            >
           </div>
 
           <!-- App Key -->
@@ -112,7 +144,7 @@ async function handleConnect() {
               type="text"
               placeholder="App Key를 붙여넣으세요"
               class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-            />
+            >
             <p class="text-xs2 text-text-tertiary leading-relaxed">
               KIS Developers → 앱 목록 → 앱 상세 → App Key 복사
             </p>
@@ -129,12 +161,57 @@ async function handleConnect() {
               type="password"
               placeholder="Secret Key를 붙여넣으세요"
               class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-            />
+            >
             <p class="text-xs2 text-text-tertiary leading-relaxed">
               App Key와 동일한 페이지에서 확인할 수 있습니다
             </p>
           </div>
+
+          <!-- Card company -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-text-secondary">카드사</label>
+            <input
+              v-model="cardCompany"
+              type="text"
+              placeholder="예: 신한카드"
+              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
+            >
+          </div>
+
+          <!-- Card last 4 digits -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-text-secondary">카드 번호 끝 4자리</label>
+            <input
+              v-model="cardLast4"
+              type="text"
+              inputmode="numeric"
+              maxlength="4"
+              placeholder="0000"
+              class="w-full px-4 py-3.5 rounded-xl bg-white border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 transition-all"
+              :class="cardLast4 && !isCardLast4Valid
+                ? 'border-danger focus:border-danger focus:ring-danger/20'
+                : 'border-surface-border focus:border-brand focus:ring-brand/20'"
+            >
+            <p
+              v-if="cardLast4 && !isCardLast4Valid"
+              class="text-xs2 text-danger"
+            >
+              숫자 4자리를 정확히 입력해 주세요.
+            </p>
+            <p v-else class="text-xs2 text-text-tertiary leading-relaxed">
+              잔돈 적립 대상 카드의 끝 4자리 숫자를 입력하세요
+            </p>
+          </div>
         </div>
+
+        <!-- Business / network error message -->
+        <p
+          v-if="errorMsg"
+          role="alert"
+          class="text-sm text-danger text-center px-2 -mt-2"
+        >
+          {{ errorMsg }}
+        </p>
       </div>
     </div>
 
@@ -142,7 +219,7 @@ async function handleConnect() {
     <div class="sticky bottom-0 bg-surface px-6 pt-3 pb-8">
       <button
         class="w-full py-4 rounded-xl text-md font-semibold text-white transition-colors flex items-center justify-center gap-2"
-        :class="isFormValid ? 'bg-brand active:bg-brand-hover' : 'bg-text-disabled'"
+        :class="isFormValid && !isLoading ? 'bg-brand active:bg-brand-hover' : 'bg-text-disabled'"
         :disabled="!isFormValid || isLoading"
         @click="handleConnect"
       >

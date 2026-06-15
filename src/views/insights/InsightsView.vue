@@ -119,12 +119,6 @@ const bookIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
             <h3 class="text-base font-semibold text-text-primary leading-snug mb-1.5">
               {{ item.title }}
             </h3>
-            <p
-              v-if="item.summary"
-              class="text-sm text-text-tertiary leading-relaxed line-clamp-2 mb-2"
-            >
-              {{ item.summary }}
-            </p>
             <!-- Press · relative time -->
             <div class="flex items-center gap-1.5 text-xs2 text-text-disabled">
               <span v-if="item.press" class="font-medium text-text-tertiary">{{ item.press }}</span>
@@ -169,11 +163,11 @@ const bookIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
           message="등록된 글이 없습니다"
         />
 
+        <div v-else class="flex flex-col gap-2">
         <button
           v-for="item in insightStore.articles"
-          v-else
           :key="item.id"
-          class="bg-white rounded-xl p-4 text-left active:bg-surface transition-colors"
+          class="bg-white rounded-xl p-4 text-left active:bg-surface transition-colors w-full"
           @click="selectedArticleId = item.id"
         >
           <div class="flex items-start gap-3">
@@ -196,6 +190,7 @@ const bookIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
             </div>
           </div>
         </button>
+        </div>
       </section>
 
       <!-- ── Section C: Recommended videos ── -->

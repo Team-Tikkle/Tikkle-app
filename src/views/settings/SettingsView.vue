@@ -95,7 +95,7 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
         <!-- 증권사 계정 및 API 키 관리 -->
         <button
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
-          @click="router.push('/onboarding/api-key')"
+          @click="router.push('/settings/api-key')"
         >
           <div class="flex flex-col gap-1 text-left">
             <span class="text-base font-medium text-text-primary">증권사 계정 및 API 키 관리</span>

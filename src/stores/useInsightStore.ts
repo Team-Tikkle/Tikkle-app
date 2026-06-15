@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import type {
   NewsArticle,
   InsightArticle,
-  InvestmentTerm,
+  GlossaryTerm,
   RecommendedVideo,
 } from '@/types'
 
@@ -109,7 +109,7 @@ function normalizeVideo(raw: RawVideo): RecommendedVideo {
 export const useInsightStore = defineStore('insight', () => {
   // ── State ──
   const marketTopics = ref<NewsArticle[]>([])
-  const terms        = ref<InvestmentTerm[]>([])
+  const terms        = ref<GlossaryTerm[]>([])
   const articles     = ref<InsightArticle[]>([])   // list (body excluded)
   const videos       = ref<RecommendedVideo[]>([])
 

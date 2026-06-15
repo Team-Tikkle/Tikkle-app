@@ -13,6 +13,7 @@
     "@capacitor/android": "^8.4.0",
     "@capacitor/cli": "^8.4.0",
     "@capacitor/core": "^8.4.0",
+    "@capacitor/preferences": "^8.0.1",
     "@codetrix-studio/capacitor-google-auth": "^3.3.3",
     "axios": "^1.17.0",
     "pinia": "^2.2.0",

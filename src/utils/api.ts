@@ -79,6 +79,17 @@ api.interceptors.response.use(
       return Promise.reject(error)
     }
 
+    // A 401 from the reissue endpoint itself means the refresh token is dead.
+    // Bail out immediately — never feed it back into the queue/retry machinery.
+    // Because isRefreshing is already true at this point, queuing it would push
+    // a callback onto waitQueue that nothing ever resolves, hanging the caller
+    // (and bootstrap) forever on a blank screen.
+    if (originalRequest.url?.includes('/api/auth/reissue')) {
+      devWarn('Reissue endpoint returned 401 — refresh token expired, forcing logout')
+      _forceLogout()
+      return Promise.reject(error)
+    }
+
     // Refresh token itself expired → force logout immediately
     if (errorCode === REFRESH_EXPIRED_CODE) {
       devWarn('Refresh token expired (AUTH-006) — forcing logout')
