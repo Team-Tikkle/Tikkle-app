@@ -79,9 +79,14 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
     // ── Woori Card patterns ───────────────────────────────────────────────────
     //
-    // WOORI_LAST4  — 4 digits inside the trailing parenthesis in the header bracket
-    // WOORI_AMOUNT — digits-with-commas before 원 on the second line
-    // Merchant is taken directly from the third line after splitting on \n.
+    // Woori posts a multi-line body (title "승인내역" excluded), e.g.:
+    //   [일시불체크.승인(1162)]06/15 18:28
+    //   9,000원
+    //   쿠니라멘 (KUN        ← may be truncated in the collapsed view
+    //
+    // WOORI_LAST4  — 4 digits inside the (NNNN) parenthesis of the approval header
+    // WOORI_AMOUNT — digits-with-commas before 원
+    // Merchant is the last non-empty line (truncated "(..." tail stripped).
 
     private static final Pattern WOORI_LAST4  = Pattern.compile("\\((\\d{4})\\)");
     private static final Pattern WOORI_AMOUNT = Pattern.compile("([\\d,]+)원");
@@ -228,26 +233,21 @@ public class PaymentNotificationListener extends NotificationListenerService {
      * @return ParsedPayment, or null if a required field could not be extracted.
      */
     private ParsedPayment parseWooriCard(String body) {
-        String[] lines = body.split("\\n");
+        // Search across the whole body rather than fixed line indices, so a leading
+        // "승인내역" title line (if it ends up in the body) does not shift everything.
 
-        // Require at least 3 lines
-        if (lines.length < 3) {
-            Log.d(TAG, "[Woori] expected 3 lines, got " + lines.length);
-            return null;
-        }
-
-        // Last 4 digits — 4 digits inside parentheses in line 0
-        Matcher last4Matcher = WOORI_LAST4.matcher(lines[0]);
+        // Last 4 digits — inside the (NNNN) parenthesis of the approval header
+        Matcher last4Matcher = WOORI_LAST4.matcher(body);
         if (!last4Matcher.find()) {
-            Log.d(TAG, "[Woori] could not extract card last4 from: " + lines[0]);
+            Log.d(TAG, "[Woori] could not extract card last4 from body");
             return null;
         }
         String cardLast4 = last4Matcher.group(1);
 
-        // Amount — from line 1
-        Matcher amountMatcher = WOORI_AMOUNT.matcher(lines[1]);
+        // Amount
+        Matcher amountMatcher = WOORI_AMOUNT.matcher(body);
         if (!amountMatcher.find()) {
-            Log.d(TAG, "[Woori] could not extract amount from: " + lines[1]);
+            Log.d(TAG, "[Woori] could not extract amount from body");
             return null;
         }
         int amount;
@@ -258,8 +258,16 @@ public class PaymentNotificationListener extends NotificationListenerService {
             return null;
         }
 
-        // Merchant — line 2 verbatim
-        String merchant = lines[2].trim();
+        // Merchant — the last non-empty line (Woori puts the merchant name on its own
+        // line after the header and amount). A trailing truncated "(..." fragment from
+        // the collapsed notification view is stripped; properly closed parens are kept.
+        String merchant = "";
+        String[] lines = body.split("\\n");
+        for (int i = lines.length - 1; i >= 0; i--) {
+            String line = lines[i].trim();
+            if (!line.isEmpty()) { merchant = line; break; }
+        }
+        merchant = merchant.replaceAll("\\s*\\([^)]*$", "").trim();
         if (merchant.isEmpty()) {
             Log.d(TAG, "[Woori] merchant line is empty");
             return null;
