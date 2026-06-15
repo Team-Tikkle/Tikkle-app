@@ -3,34 +3,41 @@
  * PaymentSimulatorView.vue
  *
  * Debug-only view that simulates an Android push-notification payment event.
- * Constructs the signed POST /api/payments request that the scraping service
- * would normally produce, allowing end-to-end testing without a real device.
+ * Builds a spec-compliant PaymentRequest, signs it via paymentCrypto, and
+ * dispatches it to POST /api/payments for end-to-end testing without a real device.
  *
  * Route: /payments/simulator
- * Auth : requiresAuth (same guard as the rest of the app)
+ * Auth : requiresAuth (JWT guard), but the API call itself is HMAC-only (no JWT).
  */
 import { ref, reactive } from 'vue'
 import AppHeader from '@/components/common/AppHeader.vue'
-import { generatePaymentSignature } from '@/utils/paymentSigner'
+import {
+  generateTransactionId,
+  generateTikkleSignature,
+  submitScrapedPayment,
+} from '@/utils/paymentCrypto'
+import type { PaymentRequest } from '@/types'
 
-// ── Form state ──
+// ── Form state — mirrors the PaymentRequest interface ──
 const form = reactive({
-  userId:   1,
-  merchant: '테스트 가맹점',
-  amount:   10000,
-  balance:  50000,
+  userId:          1,
+  cardCompany:     '신한카드',
+  cardNumberLast4: '1234',
+  merchant:        '테스트 가맹점',
+  amount:          10000,
 })
 
-// ── Resiliency state ──
-// transactionId is preserved across network failures so the same ID is
-// reused on retry, preventing duplicate transactions on the backend.
+// ── Resiliency: preserve transactionId across network failures ──
+// pushReceivedTimeMillis is captured once per new payment event and reused on
+// retry so generateTransactionId always produces the same deterministic hash.
+const pushReceivedTimeMillis = ref<number>(0)
 const transactionId = ref<string>('')
 
 // ── UI state ──
-const isLoading  = ref(false)
-const toast      = ref<{ message: string; type: 'success' | 'error' } | null>(null)
-const lastSig    = ref<string>('')     // shown in dev for signature inspection
-const lastPayload = ref<string>('')   // shown in dev for payload inspection
+const isLoading   = ref(false)
+const toast       = ref<{ message: string; type: 'success' | 'error' } | null>(null)
+const lastSig     = ref('')
+const lastPayload = ref('')
 
 let toastTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -46,73 +53,64 @@ async function triggerPayment() {
   isLoading.value = true
 
   try {
-    // Step 1: Reuse existing transactionId on retry, generate new one otherwise
+    // Step 1: Capture push-received time once per new event; reuse on retry
+    // so the deterministic transactionId stays identical across retries.
     if (!transactionId.value) {
-      transactionId.value = crypto.randomUUID()
+      pushReceivedTimeMillis.value = Date.now()
+      transactionId.value = await generateTransactionId(
+        form.merchant,
+        form.amount,
+        form.cardCompany,
+        pushReceivedTimeMillis.value,
+      )
     }
 
-    // Step 2: Unix timestamp in seconds
-    const timestamp = Math.floor(Date.now() / 1000)
-
-    // Step 3: Build the exact request body
-    const body = {
-      userId:        form.userId,
-      merchant:      form.merchant,
-      amount:        form.amount,
-      balance:       form.balance,
-      transactionId: transactionId.value,
+    // Step 2: Assemble the exact PaymentRequest payload (no extra fields)
+    const payload: PaymentRequest = {
+      userId:          form.userId,
+      cardCompany:     form.cardCompany,
+      cardNumberLast4: form.cardNumberLast4,
+      merchant:        form.merchant,
+      amount:          form.amount,
+      transactionId:   transactionId.value,
     }
 
-    // Step 4: Generate HMAC-SHA256 signature
-    const signature = await generatePaymentSignature(body, timestamp)
+    // Step 3: Pre-generate signature for the dev inspector panel.
+    // submitScrapedPayment will independently sign with its own timestamp,
+    // so a small delta between these two is expected in dev — the signed
+    // request that reaches the server is always self-consistent.
+    const devTimestamp = Math.floor(Date.now() / 1000)
+    const devSignature = await generateTikkleSignature(payload, devTimestamp)
 
-    // Dev inspection: show the payload and signature that will be sent
-    lastPayload.value = JSON.stringify(body, null, 2)
-    lastSig.value     = signature
+    lastPayload.value = JSON.stringify(payload, null, 2)
+    lastSig.value     = devSignature
+
     if (import.meta.env.DEV) {
-      console.log('[simulator] payload:', JSON.stringify(body))
-      console.log('[simulator] timestamp:', timestamp)
-      console.log('[simulator] X-Tikkle-Signature:', signature)
+      console.log('[simulator] payload:', JSON.stringify(payload))
+      console.log('[simulator] dev-timestamp:', devTimestamp)
+      console.log('[simulator] dev-signature:', devSignature)
     }
 
-    // Step 5: POST to /api/payments with signing headers
-    const response = await fetch(
-      `${import.meta.env.VITE_API_BASE_URL}/api/payments`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type':      'application/json',
-          'X-Tikkle-Timestamp': String(timestamp),
-          'X-Tikkle-Signature': signature,
-        },
-        body: JSON.stringify(body),
-      },
-    )
+    // Step 4: Dispatch — HMAC signed, no JWT, handles 200 / 400 / 401 internally
+    await submitScrapedPayment(payload)
 
-    // Step 6: Handle response
-    if (response.status === 201) {
-      // SUCCESS: clear transactionId so next trigger generates a fresh one
-      transactionId.value = ''
-      showToast('결제 이벤트 전송 성공! (201)', 'success')
-    } else {
-      const errorText = await response.text().catch(() => '')
-      showToast(`서버 오류 ${response.status}: ${errorText.slice(0, 80)}`, 'error')
-      // Preserve transactionId so the user can retry with the same ID
-    }
-  } catch (err) {
-    // Network error: preserve transactionId for retry
+    // SUCCESS: clear state so next trigger starts a fresh payment event
+    transactionId.value       = ''
+    pushReceivedTimeMillis.value = 0
+    showToast('결제 이벤트 전송 성공! (200 SUCCESS)', 'success')
+  } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error('[simulator] network error:', message)
-    showToast(`네트워크 오류 — transactionId 보존됨 (재시도 가능)`, 'error')
-    // transactionId.value is intentionally NOT cleared here
+    if (import.meta.env.DEV) console.error('[simulator] error:', message)
+    showToast(message, 'error')
+    // transactionId is preserved for retry — intentional
   } finally {
     isLoading.value = false
   }
 }
 
-// Reset the transactionId manually (useful after inspecting a failure)
 function resetTransactionId() {
-  transactionId.value = ''
+  transactionId.value          = ''
+  pushReceivedTimeMillis.value = 0
 }
 </script>
 
@@ -131,47 +129,59 @@ function resetTransactionId() {
 
       <!-- userId -->
       <div class="px-5 py-4 flex items-center justify-between gap-4">
-        <label class="text-sm font-semibold text-text-secondary w-24 shrink-0">User ID</label>
+        <label class="text-sm font-semibold text-text-secondary w-28 shrink-0">User ID</label>
         <input
           v-model.number="form.userId"
           type="number"
           class="flex-1 text-right text-base text-text-primary bg-transparent focus:outline-none"
-        />
+        >
+      </div>
+
+      <!-- cardCompany -->
+      <div class="px-5 py-4 flex items-center justify-between gap-4">
+        <label class="text-sm font-semibold text-text-secondary w-28 shrink-0">카드사</label>
+        <select
+          v-model="form.cardCompany"
+          class="flex-1 text-right text-base text-text-primary bg-transparent focus:outline-none appearance-none"
+        >
+          <option value="신한카드">신한카드</option>
+          <option value="국민카드">국민카드</option>
+          <option value="현대카드">현대카드</option>
+        </select>
+      </div>
+
+      <!-- cardNumberLast4 -->
+      <div class="px-5 py-4 flex items-center justify-between gap-4">
+        <label class="text-sm font-semibold text-text-secondary w-28 shrink-0">카드 끝 4자리</label>
+        <input
+          v-model="form.cardNumberLast4"
+          type="text"
+          maxlength="4"
+          inputmode="numeric"
+          class="flex-1 text-right text-base text-text-primary bg-transparent focus:outline-none"
+        >
       </div>
 
       <!-- merchant -->
       <div class="px-5 py-4 flex items-center justify-between gap-4">
-        <label class="text-sm font-semibold text-text-secondary w-24 shrink-0">가맹점</label>
+        <label class="text-sm font-semibold text-text-secondary w-28 shrink-0">가맹점</label>
         <input
           v-model="form.merchant"
           type="text"
           class="flex-1 text-right text-base text-text-primary bg-transparent focus:outline-none"
-        />
+        >
       </div>
 
       <!-- amount -->
       <div class="px-5 py-4 flex items-center justify-between gap-4">
-        <label class="text-sm font-semibold text-text-secondary w-24 shrink-0">결제 금액</label>
+        <label class="text-sm font-semibold text-text-secondary w-28 shrink-0">결제 금액</label>
         <div class="flex items-center gap-1">
           <span class="text-sm text-text-tertiary">₩</span>
           <input
             v-model.number="form.amount"
             type="number"
             class="text-right text-base text-text-primary bg-transparent focus:outline-none w-28"
-          />
-        </div>
-      </div>
-
-      <!-- balance -->
-      <div class="px-5 py-4 flex items-center justify-between gap-4">
-        <label class="text-sm font-semibold text-text-secondary w-24 shrink-0">잔액</label>
-        <div class="flex items-center gap-1">
-          <span class="text-sm text-text-tertiary">₩</span>
-          <input
-            v-model.number="form.balance"
-            type="number"
-            class="text-right text-base text-text-primary bg-transparent focus:outline-none w-28"
-          />
+          >
         </div>
       </div>
     </div>
@@ -182,7 +192,7 @@ function resetTransactionId() {
         <div class="flex-1 min-w-0">
           <p class="text-sm font-semibold text-text-secondary mb-1">Transaction ID</p>
           <p class="text-xs font-mono text-text-tertiary break-all leading-relaxed">
-            {{ transactionId || '(자동 생성됨)' }}
+            {{ transactionId || '(자동 생성됨 — SHA-256)' }}
           </p>
         </div>
         <button

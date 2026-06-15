@@ -1,8 +1,20 @@
 apply plugin: 'com.android.application'
 
+// Load local.properties so payment listener config can be injected into BuildConfig.
+// Gradle's findProperty() does NOT read local.properties automatically — only sdk.dir
+// is consumed by the Android plugin — so we parse the file explicitly here.
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+
 android {
     namespace = "com.tikkle.app"
     compileSdk = rootProject.ext.compileSdkVersion
+    buildFeatures {
+        buildConfig = true
+    }
     defaultConfig {
         applicationId "com.tikkle.app"
         minSdkVersion rootProject.ext.minSdkVersion
@@ -10,6 +22,10 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        // Injected from local.properties (falls back to CI env / gradle property) — keep out of version control
+        buildConfigField "String", "API_BASE_URL",        "\"${localProps.getProperty('API_BASE_URL') ?: project.findProperty('API_BASE_URL') ?: 'https://api.tikkle.com'}\""
+        buildConfigField "String", "PAYMENT_SECRET_KEY",  "\"${localProps.getProperty('PAYMENT_SECRET_KEY') ?: project.findProperty('PAYMENT_SECRET_KEY') ?: ''}\""
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
