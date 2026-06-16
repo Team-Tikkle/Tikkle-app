@@ -85,9 +85,7 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
         >
           <div class="flex flex-col gap-1 text-left">
             <span class="text-base font-medium text-text-primary">투자 규칙 변경</span>
-            <span class="text-sm text-text-tertiary">
-              올림 잔돈 / 1,000원 단위 · {{ userStore.profile?.is_auto ? '자동 매매' : '수동 매매' }}
-            </span>
+            <span class="text-sm text-text-tertiary">잔돈 규칙 · 매매 방식 설정</span>
           </div>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
@@ -97,10 +95,7 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
           @click="router.push('/settings/api-key')"
         >
-          <div class="flex flex-col gap-1 text-left">
-            <span class="text-base font-medium text-text-primary">증권사 계정 및 API 키 관리</span>
-            <span class="text-sm text-text-tertiary">KIS 모의 투자 계정 연결됨</span>
-          </div>
+          <span class="text-base font-medium text-text-primary">증권사 계정 및 API 키 관리</span>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
         </button>
