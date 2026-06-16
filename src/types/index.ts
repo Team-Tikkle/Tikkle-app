@@ -20,6 +20,7 @@ export type CategoryType = 'CAFE' | 'MART' | 'FOOD' | 'SHOPPING' | 'TRAFFIC' | '
 export type RuleType =
   | 'ROUND_UP_1000' | 'ROUND_UP_5000' | 'ROUND_UP_10000' | 'ROUND_UP_50000'
   | 'PERCENT_5' | 'PERCENT_10' | 'PERCENT_20' | 'PERCENT_30'
+  | 'NONE'
 
 export interface CategoryRule {
   category: CategoryType
