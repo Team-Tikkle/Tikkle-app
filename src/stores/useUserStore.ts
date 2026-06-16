@@ -16,6 +16,7 @@ interface UserMeData {
   email: string
   status: string
   createdAt: string
+  isNewUser: boolean  // true → 온보딩 미완료
 }
 interface UserMeEnvelope {
   code: string
@@ -217,10 +218,11 @@ export const useUserStore = defineStore('user', () => {
     const fetched = envelope.data
     profile.value = {
       // Preserve login-seeded investment prefs (defaults if not yet available)
-      risk_type:            profile.value?.risk_type           ?? 'NEUTRAL',
-      rule:                 profile.value?.rule                ?? 'UNDER_1000',
-      is_auto:              profile.value?.is_auto             ?? true,
-      onboarding_completed: profile.value?.onboarding_completed ?? false,
+      risk_type: profile.value?.risk_type ?? 'NEUTRAL',
+      rule:      profile.value?.rule      ?? 'UNDER_1000',
+      is_auto:   profile.value?.is_auto   ?? true,
+      // isNewUser is the canonical onboarding flag — always trust the server value
+      onboarding_completed: !fetched.isNewUser,
       // Fields owned by GET /api/users/me
       id:    String(fetched.id),
       name:  fetched.name,

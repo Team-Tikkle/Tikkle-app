@@ -181,12 +181,12 @@ const bookIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
               <h3 class="text-base font-semibold text-text-primary leading-snug mb-1.5">
                 {{ item.title }}
               </h3>
-              <span
+              <div
                 v-if="timeAgo(item.published_at)"
-                class="text-xs2 text-text-disabled"
+                class="flex items-center text-xs2 text-text-disabled"
               >
                 {{ timeAgo(item.published_at) }}
-              </span>
+              </div>
             </div>
           </div>
         </button>
