@@ -97,14 +97,13 @@ export const useUserStore = defineStore('user', () => {
       console.log('[login] accessToken type:', typeof googleAccessToken, '| length:', googleAccessToken.length)
     }
 
-    // Backend wraps tokens in an envelope: { code, message, data: { accessToken, refreshToken } }
     const { data: envelope } = await api.post<{
       code: string
       message: string
       data: {
         accessToken: string
         refreshToken: string
-        onboardingCompleted?: boolean  // not yet implemented by backend — defaults to true
+        isNewUser: boolean  // true → 온보딩 미완료, false → 기존 사용자
         userId?: string
       }
     }>(
@@ -115,17 +114,14 @@ export const useUserStore = defineStore('user', () => {
     const tokenData = envelope.data
     _persistTokens(tokenData.accessToken, tokenData.refreshToken)
 
-    // Seed a minimal profile so isOnboardingComplete is immediately correct.
-    // onboardingCompleted is not yet returned by the backend — default to false
-    // so a fresh login sends the user through onboarding. Once the backend adds
-    // the flag this becomes accurate; until then repeated onboarding is expected.
+    // isNewUser=true → 온보딩 화면으로 보내야 하므로 onboarding_completed=false
     profile.value = {
       id:   tokenData.userId ?? '',
       name: '',
       risk_type: 'NEUTRAL',
       rule: 'UNDER_1000',
       is_auto: true,
-      onboarding_completed: tokenData.onboardingCompleted ?? false,
+      onboarding_completed: !tokenData.isNewUser,
     }
   }
 
@@ -162,13 +158,25 @@ export const useUserStore = defineStore('user', () => {
       throw new Error('[reissueTokens] No refresh token available')
     }
     const { default: api } = await import('@/utils/api')
-    // Send EXACTLY { "refreshToken": "string_value" } — never null
-    const { data } = await api.post<{ accessToken: string; refreshToken: string }>(
+    const { data: envelope } = await api.post<{
+      code: string
+      message: string
+      data: {
+        accessToken: string
+        refreshToken: string
+        isNewUser: boolean
+      }
+    }>(
       '/api/auth/reissue',
       { refreshToken: token },
     )
-    _persistTokens(data.accessToken, data.refreshToken)
-    return data
+    const tokenData = envelope.data
+    _persistTokens(tokenData.accessToken, tokenData.refreshToken)
+    // Sync onboarding status in case it changed server-side
+    if (profile.value) {
+      profile.value.onboarding_completed = !tokenData.isNewUser
+    }
+    return tokenData
   }
 
   // ── Dev-only: issue a JWT for an existing user by email (POST /api/auth/test-token) ──

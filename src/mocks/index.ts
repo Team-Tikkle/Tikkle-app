@@ -141,7 +141,6 @@ export const mockNewsArticles: NewsArticle[] = [
   {
     id: 'news-001',
     title: '반도체 업종 강세 이어져…삼성전자·SK하이닉스 동반 상승',
-    summary: 'AI 수요 증가에 힘입어 반도체 대형주가 나란히 52주 신고가에 근접했습니다.',
     thumbnail_url: 'https://placehold.co/400x200/4F46E5/white?text=반도체',
     source_url: '#',
     published_at: '2026-06-01T06:00:00Z',
@@ -149,7 +148,6 @@ export const mockNewsArticles: NewsArticle[] = [
   {
     id: 'news-002',
     title: '한국은행, 기준금리 동결…시장 예상에 부합',
-    summary: '한국은행 금통위가 기준금리를 3.50%로 동결하며 관망세를 유지했습니다.',
     thumbnail_url: 'https://placehold.co/400x200/0EA5E9/white?text=금리',
     source_url: '#',
     published_at: '2026-05-31T10:30:00Z',
@@ -157,7 +155,6 @@ export const mockNewsArticles: NewsArticle[] = [
   {
     id: 'news-003',
     title: 'NAVER, AI 검색 고도화로 광고 매출 반등 기대',
-    summary: '네이버가 생성형 AI 기반 검색 서비스를 강화하며 광고 시장 회복을 이끌 전망입니다.',
     thumbnail_url: 'https://placehold.co/400x200/10B981/white?text=NAVER',
     source_url: '#',
     published_at: '2026-05-30T14:00:00Z',

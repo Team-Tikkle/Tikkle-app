@@ -105,7 +105,6 @@ export interface PortfolioSummary {
 export interface NewsArticle {
   id: string
   title: string
-  summary: string
   press?: string            // publishing news outlet name
   thumbnail_url: string
   source_url: string

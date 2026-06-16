@@ -22,7 +22,6 @@ interface Envelope<T> {
 interface RawMarketTopic {
   id: number | string
   title?: string
-  summary?: string
   press?: string
   // External article URL — the backend names this field "link"
   link?: string
@@ -54,7 +53,6 @@ function normalizeMarketTopic(raw: RawMarketTopic): NewsArticle {
   return {
     id: String(raw.id),
     title: cleanNewsText(raw.title),
-    summary: cleanNewsText(raw.summary),
     press: cleanNewsText(raw.press),
     published_at: raw.publishedAt ?? raw.published_at ?? '',
     thumbnail_url: raw.thumbnailUrl ?? raw.thumbnail_url ?? '',
