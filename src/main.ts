@@ -17,16 +17,14 @@ import './style.css'
   const pinia = createPinia()
 
   app.use(pinia)
-  app.use(router)
 
-  // bootstrap() resolves auth state:
-  //   - Token present → GET /api/users/me → profile populated
-  //   - Token expired → Axios interceptor retries with refreshToken
-  //   - Both expired  → tokens cleared, isAuthenticated = false
-  //   - No token      → no-op, isAuthenticated = false
+  // bootstrap() must complete BEFORE app.use(router) because Vue Router 4
+  // triggers the initial navigation inside router.install() (app.use call).
+  // If the router is installed first, the guard runs with profile=null and
+  // always redirects to onboarding regardless of actual server state.
   const userStore = useUserStore()
   await userStore.bootstrap()
 
-  // Mount after bootstrap — router guard sees definitive state on first navigation
+  app.use(router)
   app.mount('#app')
 })()

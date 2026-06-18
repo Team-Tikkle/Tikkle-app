@@ -130,15 +130,6 @@ function goBack() {
   if (step.value > 1) step.value--
 }
 
-// ── [TEST] Skip-onboarding jump — remove before release ──
-// Target routes (/, /payments/simulator) require completed onboarding, so the
-// router guard would otherwise bounce straight back here. Mark onboarding
-// complete locally first so the guard lets the navigation through.
-function goTest(path: string) {
-  userStore.completeOnboarding()
-  router.replace(path)
-}
-
 // ── Submit (Step 3) ──
 async function handleSubmit() {
   if (isLoading.value) return
@@ -614,21 +605,6 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
 
     <!-- Sticky bottom navigation -->
     <div class="fixed bottom-0 left-0 right-0 bg-surface px-6 pt-3 pb-8 flex flex-col gap-2 max-w-mobile mx-auto">
-      <!-- [TEST] Skip buttons — remove before release -->
-      <div class="flex gap-2">
-        <button
-          class="flex-1 py-2 rounded-xl text-sm font-medium text-text-tertiary border border-dashed border-surface-border active:opacity-70"
-          @click="goTest('/')"
-        >
-          [테스트] 홈
-        </button>
-        <button
-          class="flex-1 py-2 rounded-xl text-sm font-medium text-text-tertiary border border-dashed border-surface-border active:opacity-70"
-          @click="goTest('/payments/simulator')"
-        >
-          [테스트] 결제 시뮬레이터
-        </button>
-      </div>
       <!-- Main CTA -->
       <button
         v-if="step < TOTAL_STEPS"

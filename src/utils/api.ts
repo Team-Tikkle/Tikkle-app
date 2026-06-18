@@ -120,28 +120,35 @@ api.interceptors.response.use(
 
     try {
       devLog('Attempting token reissue...')
-      // Send EXACTLY { "refreshToken": "string_value" } — never null
-      const { data } = await api.post<{ accessToken: string; refreshToken: string }>(
+      const { data: envelope } = await api.post<{
+        code: string
+        message: string
+        data: { accessToken: string; refreshToken: string; isNewUser: boolean }
+      }>(
         '/api/auth/reissue',
         { refreshToken: storedRefresh },
       )
+      const tokens = envelope.data
 
       devLog('Reissue succeeded — storing new tokens')
-      localStorage.setItem(LS_ACCESS,  data.accessToken)
-      localStorage.setItem(LS_REFRESH, data.refreshToken)
+      localStorage.setItem(LS_ACCESS,  tokens.accessToken)
+      localStorage.setItem(LS_REFRESH, tokens.refreshToken)
 
       // Sync the Pinia store if it is already initialised
       try {
         const { useUserStore } = await import('@/stores/useUserStore')
         const store = useUserStore()
-        store.accessToken  = data.accessToken
-        store.refreshToken = data.refreshToken
+        store.accessToken  = tokens.accessToken
+        store.refreshToken = tokens.refreshToken
+        if (store.profile) {
+          store.profile.onboarding_completed = !tokens.isNewUser
+        }
       } catch {
         // Store not yet available — localStorage update above is sufficient
       }
 
-      processQueue(data.accessToken)
-      originalRequest.headers.Authorization = `Bearer ${data.accessToken}`
+      processQueue(tokens.accessToken)
+      originalRequest.headers.Authorization = `Bearer ${tokens.accessToken}`
       return api(originalRequest)
     } catch (refreshError) {
       devWarn('Reissue failed — forcing logout')
