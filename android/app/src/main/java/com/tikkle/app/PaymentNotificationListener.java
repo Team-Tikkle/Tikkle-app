@@ -55,27 +55,25 @@ public class PaymentNotificationListener extends NotificationListenerService {
     // ── Verified package whitelist ────────────────────────────────────────────
 
     private static final String PKG_KB_PAY    = "com.kbcard.cxh.appcard";
+    //private static final String PKG_KB_PAY    = "com.google.android.apps.messaging";
     private static final String PKG_WOORI     = "com.wooricard.smartapp";
     //private static final String PKG_WOORI     = "com.google.android.dialer";
     //private static final String PKG_SMS       = "com.google.android.apps.messaging"; // Google Messages (AVD default)
-    private static final String PKG_SMS       = "com.google.android.apps.messaging"; // Google Messages (AVD default). 사실상 테스트용으로 사용하지 않을 듯함
+    private static final String PKG_SMS       = "com.google.android.dialer"; // Google Messages (AVD default). 사실상 테스트용으로 사용하지 않을 듯함
 
     // ── KB Pay patterns ───────────────────────────────────────────────────────
     //
-    // KB Pay posts a multi-line notification body, e.g.:
-    //   KB국민체크(1082)
-    //   김*윤님
-    //   06/15 17:53
-    //   32,580원
-    //   주식회사 무신사페이 사용
+    // KB Pay posts a single-line, space-separated body, e.g.:
+    //   KB국민체크 1082 김*윤 31,250원 06/03 18:33 주식회사 무신사페이(잔액 151,854)
+    //   └─카드명──┘ └4자리┘ └이름┘ └금액─┘ └날짜─┘└시간┘ └─사용처명──────┘└─잔액──────┘
     //
-    // KB_LAST4    — 4 digits inside the parenthesis on the card-name line
+    // KB_LAST4    — 4 digits following the card-name word (e.g. "KB국민체크 1082")
     // KB_AMOUNT   — digits-with-commas immediately before 원
-    // KB_MERCHANT — a line ending in "사용"; the trailing marker is stripped off
+    // KB_MERCHANT — text between the HH:MM time and the trailing "(잔액 …)" marker
 
-    private static final Pattern KB_LAST4    = Pattern.compile("\\((\\d{4})\\)");
+    private static final Pattern KB_LAST4    = Pattern.compile("KB\\S+\\s+(\\d{4})");
     private static final Pattern KB_AMOUNT   = Pattern.compile("([\\d,]+)원");
-    private static final Pattern KB_MERCHANT = Pattern.compile("(?m)^\\s*(.+?)\\s*사용\\s*$");
+    private static final Pattern KB_MERCHANT = Pattern.compile("\\d{1,2}:\\d{2}\\s+(.+?)(?:\\(잔액|$)");
 
     // ── Woori Card patterns ───────────────────────────────────────────────────
     //
@@ -188,7 +186,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
      * @return ParsedPayment, or null if a required field could not be extracted.
      */
     private ParsedPayment parseKbPay(String body) {
-        // Last 4 digits — inside the parenthesis on the card-name line
+        // Last 4 digits — the 4-digit token following the card-name word
         Matcher last4Matcher = KB_LAST4.matcher(body);
         if (!last4Matcher.find()) {
             Log.d(TAG, "[KB] could not extract card last4");
@@ -210,7 +208,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
             return null;
         }
 
-        // Merchant — the line ending in "사용" (trailing marker stripped by the pattern)
+        // Merchant — text between the HH:MM time and the trailing "(잔액 …)" marker
         Matcher merchantMatcher = KB_MERCHANT.matcher(body);
         if (!merchantMatcher.find()) {
             Log.d(TAG, "[KB] could not extract merchant");
