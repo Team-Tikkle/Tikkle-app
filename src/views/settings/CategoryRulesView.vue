@@ -55,9 +55,9 @@ async function toggleExecutionMode() {
 }
 
 // ── UI 상태 ──
-const isLoading  = ref(true)
-const isSaving   = ref(false)
-const errorMsg   = ref('')
+const isLoading    = ref(true)
+const isSaving     = ref(false)
+const errorMsg     = ref('')
 const openCategory = ref<CategoryType | null>(null)
 
 // 시트 안에서 올림/비율 탭 — 열 때 현재 ruleType에서 파생
@@ -117,15 +117,16 @@ function ruleSummary(rule: RuleType): string {
   return rule.startsWith('ROUND_UP') ? `${found.label} 단위 올림` : `${found.label} 적립`
 }
 
-// ── 저장 ──
-async function saveAll() {
-  if (isSaving.value) return
+// ── 확인 버튼: 해당 카테고리 규칙만 즉시 저장 ──
+async function confirmRule() {
+  if (!openCategory.value || isSaving.value) return
   isSaving.value = true
   errorMsg.value = ''
+  const category = openCategory.value
+  const ruleType = localRules[category]
   try {
-    await settingsStore.updateSpareChangeRules(
-      CATEGORIES.map(c => ({ category: c.type, ruleType: localRules[c.type] }))
-    )
+    await settingsStore.updateSpareChangeRules([{ category, ruleType }])
+    openCategory.value = null
   } catch (err) {
     errorMsg.value = err instanceof Error ? err.message : '저장에 실패했습니다.'
   } finally {
@@ -177,7 +178,7 @@ async function saveAll() {
       </div>
 
       <!-- Category list -->
-      <div class="flex-1 overflow-y-auto px-4 pt-3 pb-36">
+      <div class="flex-1 overflow-y-auto px-4 pt-3 pb-6">
         <p class="text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2 px-1">카테고리별 잔돈 규칙</p>
         <div class="bg-white rounded-xl overflow-hidden divide-y divide-surface-border">
           <button
@@ -207,21 +208,6 @@ async function saveAll() {
         </div>
       </div>
 
-      <!-- Save button -->
-      <div class="fixed bottom-0 left-0 right-0 max-w-mobile mx-auto bg-surface px-6 pt-3 pb-8 border-t border-surface-border">
-        <button
-          class="w-full py-4 rounded-xl text-md font-semibold text-white flex items-center justify-center gap-2 transition-colors"
-          :class="isSaving ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'"
-          :disabled="isSaving"
-          @click="saveAll"
-        >
-          <span
-            v-if="isSaving"
-            class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
-          />
-          {{ isSaving ? '저장 중...' : '저장' }}
-        </button>
-      </div>
     </template>
 
     <!-- ── 바텀 시트 ── -->
@@ -330,10 +316,16 @@ async function saveAll() {
               </div>
 
               <button
-                class="w-full py-4 rounded-xl bg-brand text-white text-md font-semibold active:bg-brand-hover"
-                @click="closeSheet"
+                class="w-full py-4 rounded-xl text-md font-semibold text-white flex items-center justify-center gap-2 transition-colors"
+                :class="isSaving ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'"
+                :disabled="isSaving"
+                @click="confirmRule"
               >
-                확인
+                <span
+                  v-if="isSaving"
+                  class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+                />
+                {{ isSaving ? '저장 중...' : '확인' }}
               </button>
             </div>
           </Transition>
