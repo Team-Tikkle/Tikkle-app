@@ -75,7 +75,7 @@ const router = createRouter({
       // Manage KIS securities account & API keys — reached from Settings
       path: '/settings/api-key',
       name: 'settings-api-key',
-      component: () => import('@/views/onboarding/OnboardingApiKeyView.vue'),
+      component: () => import('@/views/settings/LinkedAccountView.vue'),
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
     {
