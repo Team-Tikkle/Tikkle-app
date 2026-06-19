@@ -1,10 +1,12 @@
 package com.tikkle.app;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.text.TextUtils;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -14,6 +16,18 @@ public class MainActivity extends BridgeActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         promptNotificationAccessIfNeeded();
+        requestPostNotificationsIfNeeded();
+    }
+
+    /**
+     * On Android 13+ (API 33), posting our own result notifications requires the
+     * runtime POST_NOTIFICATIONS permission. Request it once if not yet granted.
+     */
+    private void requestPostNotificationsIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+            && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{ Manifest.permission.POST_NOTIFICATIONS }, 1001);
+        }
     }
 
     /**

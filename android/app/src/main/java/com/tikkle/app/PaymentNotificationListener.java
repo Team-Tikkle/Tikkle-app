@@ -1,12 +1,18 @@
 package com.tikkle.app;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 import android.util.Base64;
 import android.util.Log;
+
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
 import org.json.JSONObject;
 
@@ -52,10 +58,13 @@ public class PaymentNotificationListener extends NotificationListenerService {
     private static final String PREFS_NAME     = "CapacitorStorage";
     private static final String PREFS_KEY_USER = "userId";
 
+    // Channel for the result notifications we post back to the user
+    private static final String FEEDBACK_CHANNEL_ID = "tikkle_payment_feedback";
+
     // ── Verified package whitelist ────────────────────────────────────────────
 
     private static final String PKG_KB_PAY    = "com.kbcard.cxh.appcard";
-    //private static final String PKG_KB_PAY    = "com.google.android.apps.messaging";
+//    private static final String PKG_KB_PAY    = "com.android.shell";
     private static final String PKG_WOORI     = "com.wooricard.smartapp";
     //private static final String PKG_WOORI     = "com.google.android.dialer";
     //private static final String PKG_SMS       = "com.google.android.apps.messaging"; // Google Messages (AVD default)
@@ -353,13 +362,65 @@ public class PaymentNotificationListener extends NotificationListenerService {
                 String compactJson = payload.toString();
                 String signature = generateTikkleSignature(compactJson, timestampSeconds);
 
-                // 4. POST to backend
-                postPayment(compactJson, timestampSeconds, signature);
+                // 4. POST to backend, then notify the user of the result
+                boolean success = postPayment(compactJson, timestampSeconds, signature);
+                if (success) {
+                    postFeedback(
+                        "잔돈이 적립되었어요 🪙",
+                        payment.merchant + "에서 결제한 "
+                            + String.format("%,d", payment.amount) + "원의 잔돈이 적립되었어요."
+                    );
+                } else {
+                    postFeedback(
+                        "잔돈 적립에 실패했어요",
+                        "결제 내역은 확인했지만 잔돈 적립 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요."
+                    );
+                }
 
             } catch (Exception e) {
                 Log.e(TAG, "Error in dispatchPayment", e);
+                postFeedback(
+                    "잔돈 적립에 실패했어요",
+                    "잔돈 적립 처리 중 문제가 발생했어요. 네트워크 상태를 확인해 주세요."
+                );
             }
         });
+    }
+
+    // ── User feedback notifications ─────────────────────────────────────────────
+
+    /**
+     * Posts a result notification back to the user after a scrape attempt.
+     * Requires POST_NOTIFICATIONS (Android 13+); silently logs if not granted.
+     */
+    private void postFeedback(String title, String text) {
+        // Create the channel once (Android 8+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager mgr = getSystemService(NotificationManager.class);
+            if (mgr != null && mgr.getNotificationChannel(FEEDBACK_CHANNEL_ID) == null) {
+                NotificationChannel channel = new NotificationChannel(
+                    FEEDBACK_CHANNEL_ID, "잔돈 적립 알림", NotificationManager.IMPORTANCE_DEFAULT);
+                channel.setDescription("결제 알림을 읽어 잔돈을 적립한 결과를 알려줍니다.");
+                mgr.createNotificationChannel(channel);
+            }
+        }
+
+        Notification notification = new NotificationCompat.Builder(this, FEEDBACK_CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build();
+
+        // Unique id so success/failure notifications don't overwrite each other
+        int notificationId = (int) (System.currentTimeMillis() & 0x7fffffff);
+        try {
+            NotificationManagerCompat.from(this).notify(notificationId, notification);
+        } catch (SecurityException e) {
+            Log.w(TAG, "POST_NOTIFICATIONS not granted — cannot show feedback notification.", e);
+        }
     }
 
     // ── Crypto helpers ────────────────────────────────────────────────────────
@@ -392,7 +453,8 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
     // ── HTTP client ───────────────────────────────────────────────────────────
 
-    private void postPayment(String body, long timestampSeconds, String signature) throws Exception {
+    /** @return true only when the server responds HTTP 200 with code "SUCCESS". */
+    private boolean postPayment(String body, long timestampSeconds, String signature) throws Exception {
         URL url = new URL(API_BASE_URL + "/api/payments");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         try {
@@ -432,6 +494,15 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
             if (status != 200) {
                 Log.w(TAG, "Non-200 response from payment endpoint: " + status);
+                return false;
+            }
+
+            // Success only when the business code is SUCCESS (mirrors the web client)
+            try {
+                return "SUCCESS".equals(new JSONObject(responseBody).optString("code"));
+            } catch (Exception e) {
+                Log.w(TAG, "Could not parse response body as JSON", e);
+                return false;
             }
         } finally {
             conn.disconnect();
