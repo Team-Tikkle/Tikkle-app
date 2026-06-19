@@ -21,7 +21,7 @@ import type { PaymentRequest } from '@/types'
 // ── Form state — mirrors the PaymentRequest interface ──
 const form = reactive({
   userId:          1,
-  cardCompany:     '신한카드',
+  cardCompany:     '국민카드',
   cardNumberLast4: '1234',
   merchant:        '테스트 가맹점',
   amount:          10000,
@@ -144,9 +144,9 @@ function resetTransactionId() {
           v-model="form.cardCompany"
           class="flex-1 text-right text-base text-text-primary bg-transparent focus:outline-none appearance-none"
         >
-          <option value="신한카드">신한카드</option>
           <option value="국민카드">국민카드</option>
-          <option value="현대카드">현대카드</option>
+          <option value="우리카드">우리카드</option>
+          <option value="하나카드">하나카드</option>
         </select>
       </div>
 

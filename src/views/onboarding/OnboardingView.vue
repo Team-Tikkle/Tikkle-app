@@ -38,7 +38,7 @@ const prefs = reactive({
 const kisAccountNum = ref('')
 const kisAppKey     = ref('')
 const kisAppSecret  = ref('')
-const cardCompany   = ref('신한카드')
+const cardCompany   = ref('국민카드')
 const cardLast4     = ref('')
 
 const isCardLast4Valid = computed(() => /^\d{4}$/.test(cardLast4.value))
@@ -569,9 +569,9 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
               v-model="cardCompany"
               class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all appearance-none"
             >
-              <option value="신한카드">신한카드</option>
               <option value="국민카드">국민카드</option>
-              <option value="현대카드">현대카드</option>
+              <option value="우리카드">우리카드</option>
+              <option value="하나카드">하나카드</option>
             </select>
           </div>
 
