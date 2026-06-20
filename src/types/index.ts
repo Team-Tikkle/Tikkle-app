@@ -163,10 +163,31 @@ export interface PaymentRequest {
   transactionId:   string   // deterministic SHA-256 hex hash (idempotency key)
 }
 
+// 결제 1건 처리 결과의 행동 유형.
+// 앞 4종은 로컬 푸시 발생 대상(투자 정보 유효), 뒤 IGNORE_* 3종은 무시 대상
+// (ticker/stockName = null, spareChange = 0 — 파싱 말고 조기 종료).
+export type PaymentActionType =
+  | 'ORDER_REQUESTED'        // 자동 + 장중 → 즉시 매수 접수
+  | 'NEED_APPROVAL'          // 수동 + 장중 → 매수 제안
+  | 'SCHEDULED_AUTO'         // 자동 + 장외 → 익일 9시 예약 매수
+  | 'SCHEDULED_MANUAL'       // 수동 + 장외 → 익일 9시 예약 매수 제안
+  | 'IGNORE_DUPLICATE'       // 중복 transactionId
+  | 'IGNORE_CARD_MISMATCH'   // 등록된 대상 카드와 불일치
+  | 'IGNORE_NO_SPARE_CHANGE' // 잔돈 0원
+
+export interface PaymentResult {
+  actionType:    PaymentActionType
+  merchant:      string
+  paymentAmount: number          // 결제 금액
+  spareChange:   number          // 발생한 잔돈 (IGNORE_* 케이스는 0)
+  ticker:        string | null   // 매수 종목 코드 (IGNORE_* 케이스는 null)
+  stockName:     string | null   // 매수 종목명 (IGNORE_* 케이스는 null)
+}
+
 export interface PaymentResponse {
   code:    string   // "SUCCESS" | "COMMON-001" | "PAYMENT-001"
   message: string
-  data:    null
+  data:    PaymentResult
 }
 
 // AI Stock Recommendation

@@ -9,7 +9,7 @@
  *   NO JWT : Bypasses Axios so the Authorization header interceptor is not applied.
  */
 
-import type { PaymentRequest, PaymentResponse } from '@/types'
+import type { PaymentRequest, PaymentResponse, PaymentResult } from '@/types'
 
 const SECRET_KEY = import.meta.env.VITE_PAYMENT_SECRET_KEY as string
 const API_BASE   = import.meta.env.VITE_API_BASE_URL as string
@@ -116,6 +116,7 @@ export async function generateTikkleSignature(
 const PAYMENT_ERROR_MESSAGES: Record<string, string> = {
   'COMMON-001':  '잘못된 요청입니다. 결제 정보를 확인해 주세요.',
   'PAYMENT-001': '유효하지 않은 보안 서명입니다.',
+  'PAYMENT-002': '요청 시간이 만료되었습니다. (타임스탬프 5분 초과)',
 }
 
 /**
@@ -130,15 +131,19 @@ const PAYMENT_ERROR_MESSAGES: Record<string, string> = {
  *   X-Tikkle-Signature : Base64 HMAC-SHA256 of (compact JSON + timestamp)
  *
  * Status handling:
- *   200 + code SUCCESS    → resolves normally
+ *   200 + code SUCCESS    → resolves with the PaymentResult (잔돈 매수 결과)
  *   400 + code COMMON-001 → throws with localized UI message
  *   401 + code PAYMENT-001→ throws with localized UI message
  *   other                 → throws with HTTP status code
  *
+ * Note: duplicate / card-mismatch / zero-spare-change cases also return 200 with
+ * an actionType — they resolve normally, not throw. Inspect result.actionType.
+ *
  * @param payload - Complete PaymentRequest (transactionId must already be set)
+ * @returns The PaymentResult describing what was purchased (or why not)
  * @throws Error with a Korean user-facing message on all failure paths
  */
-export async function submitScrapedPayment(payload: PaymentRequest): Promise<void> {
+export async function submitScrapedPayment(payload: PaymentRequest): Promise<PaymentResult> {
   // Capture the current Unix timestamp in seconds
   const timestamp = Math.floor(Date.now() / 1000)
 
@@ -167,7 +172,7 @@ export async function submitScrapedPayment(payload: PaymentRequest): Promise<voi
   }
 
   if (response.ok && result?.code === 'SUCCESS') {
-    return // 200 OK — payment event accepted
+    return result.data // 200 OK — 잔돈 매수 결과 반환 (actionType 포함)
   }
 
   // Map business error code to Korean UI message, fall back to HTTP status

@@ -362,32 +362,71 @@ public class PaymentNotificationListener extends NotificationListenerService {
                 String compactJson = payload.toString();
                 String signature = generateTikkleSignature(compactJson, timestampSeconds);
 
-                // 4. POST to backend, then notify the user of the result
-                boolean success = postPayment(compactJson, timestampSeconds, signature);
-                if (success) {
-                    postFeedback(
-                        "잔돈이 적립되었어요 🪙",
-                        payment.merchant + "에서 결제한 "
-                            + String.format("%,d", payment.amount) + "원의 잔돈이 적립되었어요."
-                    );
-                } else {
-                    postFeedback(
-                        "잔돈 적립에 실패했어요",
-                        "결제 내역은 확인했지만 잔돈 적립 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요."
-                    );
+                // 4. POST to backend. The response carries an actionType describing
+                //    what was done with the spare change. Only "push" action types
+                //    surface a notification — IGNORE_* cases and structural errors
+                //    (400/401, network, parse) stay silent per the API spec.
+                JSONObject data = postPayment(compactJson, timestampSeconds, signature);
+                if (data != null) {
+                    notifyForAction(data);
                 }
 
             } catch (Exception e) {
+                // Structural/network errors are system-level exceptions and must not
+                // be surfaced to the user — log only.
                 Log.e(TAG, "Error in dispatchPayment", e);
-                postFeedback(
-                    "잔돈 적립에 실패했어요",
-                    "잔돈 적립 처리 중 문제가 발생했어요. 네트워크 상태를 확인해 주세요."
-                );
             }
         });
     }
 
     // ── User feedback notifications ─────────────────────────────────────────────
+
+    /**
+     * Posts a result notification tailored to the response actionType.
+     *
+     * Push action types each get their own phrasing built from the response's
+     * merchant / spareChange / stockName fields. The IGNORE_* action types
+     * (duplicate, card mismatch, zero spare change) and any unrecognised type
+     * are intentionally silent — no notification is shown.
+     */
+    private void notifyForAction(JSONObject data) {
+        String actionType = data.optString("actionType", "");
+        String merchant   = data.optString("merchant", "");
+        int    spareChange = data.optInt("spareChange", 0);
+        String stockName  = data.optString("stockName", "");
+        String change = String.format("%,d", spareChange);
+
+        String title;
+        String text;
+        switch (actionType) {
+            case "ORDER_REQUESTED":   // 자동 매매 + 장중 → 즉시 매수 접수
+                title = "잔돈으로 주식을 샀어요 📈";
+                text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
+                      + stockName + " 매수를 요청했어요!";
+                break;
+            case "NEED_APPROVAL":     // 수동 매매 + 장중 → 매수 제안
+                title = "잔돈으로 투자할까요? 🤔";
+                text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
+                      + stockName + " 주식을 매수할까요? 앱에서 확인해 주세요.";
+                break;
+            case "SCHEDULED_AUTO":    // 자동 매매 + 장외 → 익일 9시 예약 매수
+                title = "내일 아침 매수를 예약했어요 ⏰";
+                text  = merchant + "에서 결제한 잔돈 " + change + "원으로 내일 오전 9시에 "
+                      + stockName + " 주식을 매수할게요!";
+                break;
+            case "SCHEDULED_MANUAL":  // 수동 매매 + 장외 → 익일 9시 예약 매수 제안
+                title = "내일 아침 매수할까요? ⏰";
+                text  = merchant + "에서 결제한 잔돈 " + change + "원으로 내일 오전 9시에 "
+                      + stockName + " 주식을 매수할까요?";
+                break;
+            default:
+                // IGNORE_DUPLICATE / IGNORE_CARD_MISMATCH / IGNORE_NO_SPARE_CHANGE
+                // 및 알 수 없는 타입 → 알림 없이 조용히 종료
+                Log.d(TAG, "actionType '" + actionType + "' is non-notifying — skipping feedback.");
+                return;
+        }
+        postFeedback(title, text);
+    }
 
     /**
      * Posts a result notification back to the user after a scrape attempt.
@@ -453,8 +492,11 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
     // ── HTTP client ───────────────────────────────────────────────────────────
 
-    /** @return true only when the server responds HTTP 200 with code "SUCCESS". */
-    private boolean postPayment(String body, long timestampSeconds, String signature) throws Exception {
+    /**
+     * @return the response "data" object on HTTP 200 + code "SUCCESS",
+     *         or null on any non-success / structural error.
+     */
+    private JSONObject postPayment(String body, long timestampSeconds, String signature) throws Exception {
         URL url = new URL(API_BASE_URL + "/api/payments");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         try {
@@ -494,15 +536,20 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
             if (status != 200) {
                 Log.w(TAG, "Non-200 response from payment endpoint: " + status);
-                return false;
+                return null;
             }
 
             // Success only when the business code is SUCCESS (mirrors the web client)
             try {
-                return "SUCCESS".equals(new JSONObject(responseBody).optString("code"));
+                JSONObject json = new JSONObject(responseBody);
+                if (!"SUCCESS".equals(json.optString("code"))) {
+                    Log.w(TAG, "Response code not SUCCESS: " + json.optString("code"));
+                    return null;
+                }
+                return json.optJSONObject("data");
             } catch (Exception e) {
                 Log.w(TAG, "Could not parse response body as JSON", e);
-                return false;
+                return null;
             }
         } finally {
             conn.disconnect();
