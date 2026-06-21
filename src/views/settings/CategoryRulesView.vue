@@ -61,10 +61,9 @@ const errorMsg     = ref('')
 const openCategory = ref<CategoryType | null>(null)
 
 // 시트 안에서 올림/비율 탭 — 열 때 현재 ruleType에서 파생
-const sheetMode = ref<'ROUND_UP' | 'PERCENT' | 'NONE'>('ROUND_UP')
+const sheetMode = ref<'ROUND_UP' | 'PERCENT'>('ROUND_UP')
 
-function ruleToMode(r: RuleType): 'ROUND_UP' | 'PERCENT' | 'NONE' {
-  if (r === 'NONE') return 'NONE'
+function ruleToMode(r: RuleType): 'ROUND_UP' | 'PERCENT' {
   if (r.startsWith('PERCENT')) return 'PERCENT'
   return 'ROUND_UP'
 }
@@ -100,18 +99,10 @@ function selectRule(rule: RuleType) {
   if (openCategory.value) localRules[openCategory.value] = rule
 }
 
-function setNone() {
-  if (openCategory.value) {
-    localRules[openCategory.value] = 'NONE'
-    sheetMode.value = 'NONE'
-  }
-}
-
 // ── 규칙 요약 라벨 ──
 const ALL_OPTIONS = [...ROUND_UP_OPTIONS, ...PERCENT_OPTIONS]
 
 function ruleSummary(rule: RuleType): string {
-  if (rule === 'NONE') return '적립 안 함'
   const found = ALL_OPTIONS.find(o => o.value === rule)
   if (!found) return rule
   return rule.startsWith('ROUND_UP') ? `${found.label} 단위 올림` : `${found.label} 적립`
@@ -192,12 +183,7 @@ async function confirmRule() {
               <span class="text-base font-medium text-text-primary">{{ cat.label }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <span
-                class="text-sm font-semibold px-2.5 py-1 rounded-pill"
-                :class="localRules[cat.type] === 'NONE'
-                  ? 'bg-surface-alt text-text-tertiary'
-                  : 'bg-brand-bg text-brand'"
-              >
+              <span class="text-sm font-semibold px-2.5 py-1 rounded-pill bg-brand-bg text-brand">
                 {{ ruleSummary(localRules[cat.type]) }}
               </span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2.5" stroke-linecap="round">
@@ -265,13 +251,6 @@ async function confirmRule() {
                     : 'text-text-tertiary'"
                   @click="sheetMode = 'PERCENT'; selectRule('PERCENT_5')"
                 >비율</button>
-                <button
-                  class="flex-1 py-2.5 rounded-lg text-base font-semibold transition-all"
-                  :class="sheetMode === 'NONE'
-                    ? 'bg-white text-text-primary shadow-sm'
-                    : 'text-text-tertiary'"
-                  @click="setNone"
-                >끄기</button>
               </div>
 
               <!-- 올림 옵션 -->
@@ -308,11 +287,6 @@ async function confirmRule() {
                     {{ opt.label }}
                   </button>
                 </div>
-              </div>
-
-              <!-- 끄기 안내 -->
-              <div v-else class="py-2 text-center text-sm text-text-tertiary">
-                이 카테고리의 잔돈 적립을 사용하지 않습니다.
               </div>
 
               <button

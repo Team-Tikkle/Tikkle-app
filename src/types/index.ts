@@ -20,7 +20,6 @@ export type CategoryType = 'CAFE' | 'MART' | 'FOOD' | 'SHOPPING' | 'TRAFFIC' | '
 export type RuleType =
   | 'ROUND_UP_1000' | 'ROUND_UP_5000' | 'ROUND_UP_10000' | 'ROUND_UP_50000'
   | 'PERCENT_5' | 'PERCENT_10' | 'PERCENT_20' | 'PERCENT_30'
-  | 'NONE'
 
 export interface CategoryRule {
   category: CategoryType
@@ -164,13 +163,12 @@ export interface PaymentRequest {
 }
 
 // 결제 1건 처리 결과의 행동 유형.
-// 앞 4종은 로컬 푸시 발생 대상(투자 정보 유효), 뒤 IGNORE_* 3종은 무시 대상
+// 앞 2종은 로컬 푸시 발생 대상(투자 정보 유효), 뒤 IGNORE_* 3종은 무시 대상
 // (ticker/stockName = null, spareChange = 0 — 파싱 말고 조기 종료).
+// 코인은 24시간 거래되므로 예약 매매(SCHEDULED_*) 유형은 없다.
 export type PaymentActionType =
-  | 'ORDER_REQUESTED'        // 자동 + 장중 → 즉시 매수 접수
-  | 'NEED_APPROVAL'          // 수동 + 장중 → 매수 제안
-  | 'SCHEDULED_AUTO'         // 자동 + 장외 → 익일 9시 예약 매수
-  | 'SCHEDULED_MANUAL'       // 수동 + 장외 → 익일 9시 예약 매수 제안
+  | 'ORDER_REQUESTED'        // 자동 → 즉시 매수 접수
+  | 'NEED_APPROVAL'          // 수동 → 매수 제안
   | 'IGNORE_DUPLICATE'       // 중복 transactionId
   | 'IGNORE_CARD_MISMATCH'   // 등록된 대상 카드와 불일치
   | 'IGNORE_NO_SPARE_CHANGE' // 잔돈 0원

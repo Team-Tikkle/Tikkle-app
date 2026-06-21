@@ -399,25 +399,15 @@ public class PaymentNotificationListener extends NotificationListenerService {
         String title;
         String text;
         switch (actionType) {
-            case "ORDER_REQUESTED":   // 자동 매매 + 장중 → 즉시 매수 접수
-                title = "잔돈으로 주식을 샀어요 📈";
+            case "ORDER_REQUESTED":   // 자동 매매 → 즉시 매수 접수
+                title = "잔돈으로 코인을 샀어요 📈";
                 text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
                       + stockName + " 매수를 요청했어요!";
                 break;
-            case "NEED_APPROVAL":     // 수동 매매 + 장중 → 매수 제안
+            case "NEED_APPROVAL":     // 수동 매매 → 매수 제안
                 title = "잔돈으로 투자할까요? 🤔";
                 text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
-                      + stockName + " 주식을 매수할까요? 앱에서 확인해 주세요.";
-                break;
-            case "SCHEDULED_AUTO":    // 자동 매매 + 장외 → 익일 9시 예약 매수
-                title = "내일 아침 매수를 예약했어요 ⏰";
-                text  = merchant + "에서 결제한 잔돈 " + change + "원으로 내일 오전 9시에 "
-                      + stockName + " 주식을 매수할게요!";
-                break;
-            case "SCHEDULED_MANUAL":  // 수동 매매 + 장외 → 익일 9시 예약 매수 제안
-                title = "내일 아침 매수할까요? ⏰";
-                text  = merchant + "에서 결제한 잔돈 " + change + "원으로 내일 오전 9시에 "
-                      + stockName + " 주식을 매수할까요?";
+                      + stockName + " 매수를 진행할까요? 앱에서 확인해 주세요.";
                 break;
             default:
                 // IGNORE_DUPLICATE / IGNORE_CARD_MISMATCH / IGNORE_NO_SPARE_CHANGE
