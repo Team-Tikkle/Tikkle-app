@@ -3,7 +3,10 @@ package com.tikkle.app;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.service.notification.NotificationListenerService;
@@ -398,16 +401,18 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
         String title;
         String text;
+        PendingIntent contentIntent = null;
         switch (actionType) {
             case "ORDER_REQUESTED":   // 자동 매매 → 즉시 매수 접수
                 title = "잔돈으로 코인을 샀어요 📈";
                 text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
                       + stockName + " 매수를 요청했어요!";
                 break;
-            case "NEED_APPROVAL":     // 수동 매매 → 매수 제안
+            case "NEED_APPROVAL":     // 수동 매매 → 매수 제안 (탭하면 검토 화면으로)
                 title = "잔돈으로 투자할까요? 🤔";
                 text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
-                      + stockName + " 매수를 진행할까요? 앱에서 확인해 주세요.";
+                      + stockName + " 매수를 진행할까요? 눌러서 확인해 주세요.";
+                contentIntent = buildReviewIntent(data);
                 break;
             default:
                 // IGNORE_DUPLICATE / IGNORE_CARD_MISMATCH / IGNORE_NO_SPARE_CHANGE
@@ -415,14 +420,51 @@ public class PaymentNotificationListener extends NotificationListenerService {
                 Log.d(TAG, "actionType '" + actionType + "' is non-notifying — skipping feedback.");
                 return;
         }
-        postFeedback(title, text);
+        postFeedback(title, text, contentIntent);
+    }
+
+    /**
+     * Builds a PendingIntent that opens the in-app review screen via a deep link,
+     * carrying the eventId (for approve/reject) plus display fields. Returns null
+     * if the response has no eventId (the approve/reject endpoints need it).
+     */
+    private PendingIntent buildReviewIntent(JSONObject data) {
+        String eventId = data.optString("eventId", "");
+        if (eventId.isEmpty()) {
+            Log.w(TAG, "NEED_APPROVAL response has no eventId — review notification will not be tappable.");
+            return null;
+        }
+
+        Uri uri = new Uri.Builder()
+            .scheme("tikkle").authority("payments").appendPath("review")
+            .appendQueryParameter("eventId",     eventId)
+            .appendQueryParameter("merchant",    data.optString("merchant", ""))
+            .appendQueryParameter("amount",      String.valueOf(data.optInt("paymentAmount", 0)))
+            .appendQueryParameter("spareChange", String.valueOf(data.optInt("spareChange", 0)))
+            .appendQueryParameter("ticker",      data.optString("ticker", ""))
+            .appendQueryParameter("stockName",   data.optString("stockName", ""))
+            .build();
+
+        Intent intent = new Intent(this, MainActivity.class)
+            .setAction(Intent.ACTION_VIEW)
+            .setData(uri)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
+                    | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        // Distinct request code per event so concurrent proposals get distinct intents
+        int requestCode = eventId.hashCode();
+        return PendingIntent.getActivity(
+            this, requestCode, intent,
+            PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
     }
 
     /**
      * Posts a result notification back to the user after a scrape attempt.
      * Requires POST_NOTIFICATIONS (Android 13+); silently logs if not granted.
      */
-    private void postFeedback(String title, String text) {
+    private void postFeedback(String title, String text, PendingIntent contentIntent) {
         // Create the channel once (Android 8+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager mgr = getSystemService(NotificationManager.class);
@@ -434,14 +476,17 @@ public class PaymentNotificationListener extends NotificationListenerService {
             }
         }
 
-        Notification notification = new NotificationCompat.Builder(this, FEEDBACK_CHANNEL_ID)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, FEEDBACK_CHANNEL_ID)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle(title)
             .setContentText(text)
             .setStyle(new NotificationCompat.BigTextStyle().bigText(text))
             .setAutoCancel(true)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-            .build();
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT);
+        if (contentIntent != null) {
+            builder.setContentIntent(contentIntent);
+        }
+        Notification notification = builder.build();
 
         // Unique id so success/failure notifications don't overwrite each other
         int notificationId = (int) (System.currentTimeMillis() & 0x7fffffff);

@@ -46,6 +46,13 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
     {
+      // Reached by tapping a NEED_APPROVAL feedback notification (deep link)
+      path: '/payments/review',
+      name: 'payment-review',
+      component: () => import('@/views/payments/PaymentReviewView.vue'),
+      meta: { requiresAuth: true, requiresOnboarding: true },
+    },
+    {
       // Debug/dev route — simulates Android payment push-notification scraping
       path: '/payments/simulator',
       name: 'payment-simulator',

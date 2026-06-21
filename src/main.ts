@@ -1,9 +1,28 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+import { App as CapApp } from '@capacitor/app'
 import App from './App.vue'
 import router from './router'
 import { useUserStore } from './stores/useUserStore'
 import './style.css'
+
+// ── Deep-link handler ──
+// Native payment-approval notifications open tikkle://payments/review?...
+// Parse the URL and route to the in-app review screen.
+function navigateFromDeepLink(url: string) {
+  try {
+    const parsed = new URL(url)
+    const path = parsed.pathname.replace(/\/$/, '')
+    if (parsed.hostname === 'payments' && path === '/review') {
+      router.push({
+        path: '/payments/review',
+        query: Object.fromEntries(parsed.searchParams.entries()),
+      })
+    }
+  } catch (e) {
+    console.warn('[deeplink] could not parse url:', url, e)
+  }
+}
 
 // ── Bootstrap sequence ──
 // Wrapped in an async IIFE to avoid top-level await (not supported in ES2020).
@@ -27,4 +46,10 @@ import './style.css'
 
   app.use(router)
   app.mount('#app')
+
+  // Deep links (native only; no-ops on web). Handle both warm (appUrlOpen)
+  // and cold-start (getLaunchUrl) cases.
+  CapApp.addListener('appUrlOpen', ({ url }) => navigateFromDeepLink(url))
+  const launch = await CapApp.getLaunchUrl()
+  if (launch?.url) navigateFromDeepLink(launch.url)
 })()

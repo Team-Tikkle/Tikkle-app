@@ -32,6 +32,18 @@ export const usePaymentStore = defineStore('payment', () => {
     if (tx) tx.status = 'CANCELED'
   }
 
+  // ── Spare-change proposal approval (from NEED_APPROVAL notification) ──
+  // Both endpoints take no body and authenticate via the JWT interceptor.
+  async function approvePaymentEvent(eventId: string) {
+    const { default: api } = await import('@/utils/api')
+    await api.post(`/api/payments/${eventId}/approve`)
+  }
+
+  async function rejectPaymentEvent(eventId: string) {
+    const { default: api } = await import('@/utils/api')
+    await api.post(`/api/payments/${eventId}/reject`)
+  }
+
   return {
     transactions,
     summary,
@@ -40,5 +52,7 @@ export const usePaymentStore = defineStore('payment', () => {
     fetchSummary,
     selectStockForPending,
     cancelPendingTransaction,
+    approvePaymentEvent,
+    rejectPaymentEvent,
   }
 })
