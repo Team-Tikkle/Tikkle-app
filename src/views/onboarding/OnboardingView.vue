@@ -25,9 +25,9 @@ const userStore = useUserStore();
 const onboardingStore = useOnboardingStore();
 
 // ── Step tracking ──
-// 1: 투자 성향  2: 카테고리 규칙  3: 거래소·카드 연동
+// 1: 투자 성향  2: 잔돈 설정  3: 거래소 연동  4: 카드 등록
 const step = ref(1);
-const TOTAL_STEPS = 3;
+const TOTAL_STEPS = 4;
 
 // ── Step 1 state ──
 const prefs = reactive({
@@ -52,11 +52,14 @@ const cardLast4 = ref('');
 
 const isCardLast4Valid = computed(() => /^\d{4}$/.test(cardLast4.value));
 
+// Step 3: 업비트 Open API 키만 검증 (카드 정보는 Step 4로 분리)
 const isStep3Valid = computed(
-  () =>
-    kisAppKey.value.trim() &&
-    kisAppSecret.value.trim() &&
-    isCardLast4Valid.value,
+  () => kisAppKey.value.trim() && kisAppSecret.value.trim(),
+);
+
+// Step 4: 결제 카드 정보 검증
+const isStep4Valid = computed(
+  () => cardCompany.value.trim() && isCardLast4Valid.value,
 );
 
 // ── Step 2 state: 잔돈 규칙 ──
@@ -554,7 +557,7 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
         </div>
       </div>
 
-      <!-- ── Step 3: 거래소·카드 연동 ── -->
+      <!-- ── Step 3: 거래소 연동 ── -->
       <div v-else-if="step === 3" class="px-6 pt-6 flex flex-col gap-6">
         <span class="text-sm font-semibold text-brand">거래소 연동</span>
 
@@ -626,6 +629,23 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
             />
           </div>
 
+        </div>
+      </div>
+
+      <!-- ── Step 4: 카드 등록 ── -->
+      <div v-else-if="step === 4" class="px-6 pt-6 flex flex-col gap-6">
+        <span class="text-sm font-semibold text-brand">카드 등록</span>
+
+        <div class="flex flex-col gap-2">
+          <h2 class="text-2xl font-bold text-text-primary leading-snug">
+            잔돈 적립에 사용할<br />카드를 등록해 주세요
+          </h2>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            업비트와는 별개로, 잔돈을 모을 결제 카드를 등록합니다.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-5">
           <!-- Card company -->
           <div class="flex flex-col gap-2">
             <label class="text-sm font-semibold text-text-secondary"
@@ -704,9 +724,11 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
         v-else
         class="w-full py-4 rounded-xl text-md font-semibold text-white transition-colors flex items-center justify-center gap-2"
         :class="
-          isLoading ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'
+          isLoading || !isStep4Valid
+            ? 'bg-text-disabled'
+            : 'bg-brand active:bg-brand-hover'
         "
-        :disabled="isLoading"
+        :disabled="isLoading || !isStep4Valid"
         @click="handleSubmit"
       >
         <span
