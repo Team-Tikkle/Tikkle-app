@@ -44,7 +44,7 @@ function fmt(n: number) {
 
 <template>
   <div class="min-h-screen bg-surface pb-8">
-    <AppHeader title="종목 선택" :show-back="true" />
+    <AppHeader title="코인 선택" :show-back="true" />
 
     <!-- Transaction info card -->
     <div v-if="transaction" class="mx-4 mt-4 bg-brand-bg rounded-xl p-4 border border-brand-50">
@@ -65,7 +65,7 @@ function fmt(n: number) {
 
     <!-- AI recommendations -->
     <div class="mx-4 mt-5">
-      <p class="text-base font-bold text-text-primary mb-3">🤖 AI 추천 종목</p>
+      <p class="text-base font-bold text-text-primary mb-3">🤖 AI 추천 코인</p>
       <div class="flex flex-col gap-3">
         <div
           v-for="stock in mockStockRecommendations"
@@ -83,7 +83,7 @@ function fmt(n: number) {
             class="w-full py-3 bg-brand text-white text-base font-semibold rounded-xl active:bg-brand-hover"
             @click="selectStock(stock.ticker)"
           >
-            이 종목에 투자하기
+            이 코인에 투자하기
           </button>
         </div>
       </div>

@@ -140,7 +140,7 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
               <!-- Center text -->
               <text x="60" y="55" text-anchor="middle" font-size="11" fill="#8e8e93" font-family="Inter">보유</text>
               <text x="60" y="71" text-anchor="middle" font-size="13" fill="#1c1c1e" font-weight="700" font-family="Inter">
-                {{ portfolioStore.summary.holdings.length }}종목
+                {{ portfolioStore.summary.holdings.length }}개 코인
               </text>
             </svg>
 
@@ -164,7 +164,7 @@ function polarToCartesian(cx: number, cy: number, r: number, deg: number) {
 
         <!-- ── Holdings list ── -->
         <div class="bg-white rounded-xl px-6 py-5">
-          <h2 class="text-md font-bold text-text-primary mb-4">보유 종목</h2>
+          <h2 class="text-md font-bold text-text-primary mb-4">보유 코인</h2>
 
           <div class="flex flex-col divide-y divide-surface-border">
             <div

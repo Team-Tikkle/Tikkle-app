@@ -128,6 +128,13 @@ function goBack() {
   if (step.value > 1) step.value--
 }
 
+// TEMP(스킵): 백엔드 API 미연동 상태에서 온보딩을 건너뛰고 홈으로 이동한다.
+// 백엔드 준비 후 이 함수와 템플릿의 스킵 버튼 블록을 함께 삭제하면 된다.
+function skipOnboarding() {
+  userStore.completeOnboarding()
+  router.replace('/')
+}
+
 // ── Submit (Step 3) ──
 async function handleSubmit() {
   if (isLoading.value) return
@@ -216,6 +223,16 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
 
     <!-- Status bar placeholder -->
     <div class="bg-white h-12 shrink-0" />
+
+    <!-- TEMP(스킵): 백엔드 준비 후 이 블록 삭제 -->
+    <div class="bg-white px-6 pb-2 flex justify-end">
+      <button
+        class="px-3 py-1 rounded-pill bg-surface-alt text-text-tertiary text-xs2 font-semibold active:opacity-70"
+        @click="skipOnboarding"
+      >
+        스킵하고 홈으로 →
+      </button>
+    </div>
 
     <!-- Progress bar -->
     <div class="bg-white px-6 pt-1 pb-4">
@@ -491,7 +508,7 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
               @click="prefs.executionMode = 'MANUAL'"
             >
               <span class="text-sm font-semibold" :class="prefs.executionMode === 'MANUAL' ? 'text-text-primary' : 'text-text-tertiary'">수동 매매</span>
-              <span class="text-xs2 text-text-tertiary">직접 종목 선택</span>
+              <span class="text-xs2 text-text-tertiary">직접 코인 선택</span>
             </button>
           </div>
         </div>
