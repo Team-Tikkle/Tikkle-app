@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import type { CategoryType, RuleType } from '@/types'
@@ -17,16 +17,21 @@ const CATEGORIES: { type: CategoryType; label: string; icon: string }[] = [
   { type: 'ETC',      label: '기타',         icon: '📦' },
 ]
 
-const ROUND_UP_OPTIONS: { value: RuleType; label: string }[] = [
-  { value: 'ROUND_UP_10000', label: '10,000원' },
-  { value: 'ROUND_UP_50000', label: '50,000원' },
+// 슬라이더 옵션 — value는 백엔드 RuleType과 1:1 대응
+const ROUND_UP_OPTIONS: { value: RuleType; amount: number; tick: string }[] = [
+  { value: 'ROUND_UP_10000', amount: 10000, tick: '1만' },
+  { value: 'ROUND_UP_20000', amount: 20000, tick: '2만' },
+  { value: 'ROUND_UP_30000', amount: 30000, tick: '3만' },
+  { value: 'ROUND_UP_40000', amount: 40000, tick: '4만' },
+  { value: 'ROUND_UP_50000', amount: 50000, tick: '5만' },
 ]
 
-const PERCENT_OPTIONS: { value: RuleType; label: string }[] = [
-  { value: 'PERCENT_5',  label: '5%' },
-  { value: 'PERCENT_10', label: '10%' },
-  { value: 'PERCENT_20', label: '20%' },
-  { value: 'PERCENT_30', label: '30%' },
+const PERCENT_OPTIONS: { value: RuleType; percent: number; tick: string }[] = [
+  { value: 'PERCENT_10', percent: 10, tick: '10%' },
+  { value: 'PERCENT_15', percent: 15, tick: '15%' },
+  { value: 'PERCENT_20', percent: 20, tick: '20%' },
+  { value: 'PERCENT_25', percent: 25, tick: '25%' },
+  { value: 'PERCENT_30', percent: 30, tick: '30%' },
 ]
 
 // ── 로컬 편집 상태 ──
@@ -97,13 +102,57 @@ function selectRule(rule: RuleType) {
   if (openCategory.value) localRules[openCategory.value] = rule
 }
 
+// ── 슬라이더 상태 ── (현재 시트 모드의 옵션 목록 / 선택 인덱스)
+const activeOptions = computed(() =>
+  sheetMode.value === 'ROUND_UP' ? ROUND_UP_OPTIONS : PERCENT_OPTIONS,
+)
+
+const activeIndex = computed<number>({
+  get: () => {
+    if (!openCategory.value) return 0
+    const i = activeOptions.value.findIndex(o => o.value === localRules[openCategory.value!])
+    return i >= 0 ? i : 0
+  },
+  set: (v) => {
+    if (openCategory.value) localRules[openCategory.value] = activeOptions.value[v].value
+  },
+})
+
+// 카드 상단 현재 값 + 설명
+const ruleValueLabel = computed(() => {
+  const opt = activeOptions.value[activeIndex.value]
+  return sheetMode.value === 'ROUND_UP'
+    ? `${(opt as { amount: number }).amount.toLocaleString('ko-KR')}원`
+    : `${(opt as { percent: number }).percent}%`
+})
+
+const ruleDescription = computed(() => {
+  const opt = activeOptions.value[activeIndex.value]
+  return sheetMode.value === 'ROUND_UP'
+    ? `결제 후 ${(opt as { amount: number }).amount.toLocaleString('ko-KR')}원 단위로 올림한 잔돈을 적립합니다`
+    : `결제 금액의 ${(opt as { percent: number }).percent}%를 잔돈으로 자동 적립합니다`
+})
+
+// 슬라이더 진행 막대 — 채워진 구간(파랑) / 남은 구간(회색)
+const sliderFillStyle = computed(() => {
+  const max = activeOptions.value.length - 1
+  const pct = max > 0 ? (activeIndex.value / max) * 100 : 0
+  return {
+    background: `linear-gradient(to right, #0051ff 0%, #0051ff ${pct}%, #e5e5ea ${pct}%, #e5e5ea 100%)`,
+  }
+})
+
 // ── 규칙 요약 라벨 ──
-const ALL_OPTIONS = [...ROUND_UP_OPTIONS, ...PERCENT_OPTIONS]
+function ruleLabel(rule: RuleType): string {
+  const r = ROUND_UP_OPTIONS.find(o => o.value === rule)
+  if (r) return `${r.amount.toLocaleString('ko-KR')}원`
+  const p = PERCENT_OPTIONS.find(o => o.value === rule)
+  if (p) return `${p.percent}%`
+  return rule
+}
 
 function ruleSummary(rule: RuleType): string {
-  const found = ALL_OPTIONS.find(o => o.value === rule)
-  if (!found) return rule
-  return rule.startsWith('ROUND_UP') ? `${found.label} 단위 올림` : `${found.label} 적립`
+  return rule.startsWith('ROUND_UP') ? `${ruleLabel(rule)} 단위 올림` : `${ruleLabel(rule)} 적립`
 }
 
 // ── 확인 버튼: 해당 카테고리 규칙만 즉시 저장 ──
@@ -250,43 +299,39 @@ async function confirmRule() {
                   :class="sheetMode === 'PERCENT'
                     ? 'bg-white text-text-primary shadow-sm'
                     : 'text-text-tertiary'"
-                  @click="sheetMode = 'PERCENT'; selectRule('PERCENT_5')"
+                  @click="sheetMode = 'PERCENT'; selectRule('PERCENT_10')"
                 >비율</button>
               </div>
 
-              <!-- 올림 옵션 -->
-              <div v-if="sheetMode === 'ROUND_UP'">
-                <p class="text-sm font-semibold text-text-secondary mb-3">올림 단위</p>
-                <div class="grid grid-cols-2 gap-2">
-                  <button
-                    v-for="opt in ROUND_UP_OPTIONS"
-                    :key="opt.value"
-                    class="py-3 rounded-xl border-2 text-base font-semibold transition-all"
-                    :class="localRules[openCategory!] === opt.value
-                      ? 'border-brand bg-brand-bg text-brand'
-                      : 'border-surface-border text-text-tertiary'"
-                    @click="selectRule(opt.value)"
-                  >
-                    {{ opt.label }}
-                  </button>
+              <!-- 슬라이더 값 카드 -->
+              <div class="bg-white border border-surface-border rounded-2xl px-5 py-5 flex flex-col gap-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-text-tertiary">
+                    {{ sheetMode === 'ROUND_UP' ? '올림 단위' : '적립 비율' }}
+                  </span>
+                  <span class="text-lg font-bold text-text-primary">{{ ruleValueLabel }}</span>
                 </div>
-              </div>
+                <p class="text-xs text-text-tertiary">{{ ruleDescription }}</p>
 
-              <!-- 비율 옵션 -->
-              <div v-else-if="sheetMode === 'PERCENT'">
-                <p class="text-sm font-semibold text-text-secondary mb-3">적립 비율</p>
-                <div class="grid grid-cols-2 gap-2">
-                  <button
-                    v-for="opt in PERCENT_OPTIONS"
+                <!-- 단계형 슬라이더 -->
+                <input
+                  v-model.number="activeIndex"
+                  type="range"
+                  min="0"
+                  :max="activeOptions.length - 1"
+                  step="1"
+                  class="tikkle-range w-full mt-1"
+                  :style="sliderFillStyle"
+                >
+
+                <!-- 눈금 라벨 -->
+                <div class="flex justify-between">
+                  <span
+                    v-for="(opt, i) in activeOptions"
                     :key="opt.value"
-                    class="py-3 rounded-xl border-2 text-base font-semibold transition-all"
-                    :class="localRules[openCategory!] === opt.value
-                      ? 'border-brand bg-brand-bg text-brand'
-                      : 'border-surface-border text-text-tertiary'"
-                    @click="selectRule(opt.value)"
-                  >
-                    {{ opt.label }}
-                  </button>
+                    class="text-xs transition-colors"
+                    :class="activeIndex === i ? 'text-brand font-semibold' : 'text-text-disabled'"
+                  >{{ opt.tick }}</span>
                 </div>
               </div>
 
@@ -309,3 +354,44 @@ async function confirmRule() {
     </Teleport>
   </div>
 </template>
+
+<style scoped>
+/* 단계형 올림/비율 슬라이더 — Figma range 스타일 */
+.tikkle-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+.tikkle-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;            /* center the 22px thumb on the 6px track */
+  border-radius: 9999px;
+  background: #0051ff;
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.tikkle-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #0051ff;
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.tikkle-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: transparent;     /* fill comes from the element's inline gradient */
+}
+.tikkle-range::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: transparent;
+}
+</style>

@@ -75,19 +75,64 @@ const ALL_CATEGORIES: CategoryType[] = [
   'ETC',
 ];
 
-// 잔돈 적립 방식 — 6개 옵션을 한 화면에서 버튼으로 선택한다.
-// value는 백엔드 RuleType과 1:1 대응.
-const RULE_OPTIONS: { value: RuleType; label: string; desc: string }[] = [
-  { value: 'ROUND_UP_10000', label: '1만원 올림', desc: '1만원 단위 올림 잔돈' },
-  { value: 'ROUND_UP_50000', label: '5만원 올림', desc: '5만원 단위 올림 잔돈' },
-  { value: 'PERCENT_5', label: '5%', desc: '결제액의 5%' },
-  { value: 'PERCENT_10', label: '10%', desc: '결제액의 10%' },
-  { value: 'PERCENT_20', label: '20%', desc: '결제액의 20%' },
-  { value: 'PERCENT_30', label: '30%', desc: '결제액의 30%' },
+// 잔돈 발생 방식 토글 (올림 / 비율)
+const ruleMode = ref<'ROUND_UP' | 'PERCENT'>('ROUND_UP');
+
+// 각 방식의 슬라이더 옵션 — 백엔드 RuleType과 1:1 대응
+const ROUND_UP_OPTIONS: { value: RuleType; amount: number; tick: string }[] = [
+  { value: 'ROUND_UP_10000', amount: 10000, tick: '1만' },
+  { value: 'ROUND_UP_20000', amount: 20000, tick: '2만' },
+  { value: 'ROUND_UP_30000', amount: 30000, tick: '3만' },
+  { value: 'ROUND_UP_40000', amount: 40000, tick: '4만' },
+  { value: 'ROUND_UP_50000', amount: 50000, tick: '5만' },
+];
+const PERCENT_OPTIONS: { value: RuleType; percent: number; tick: string }[] = [
+  { value: 'PERCENT_10', percent: 10, tick: '10%' },
+  { value: 'PERCENT_15', percent: 15, tick: '15%' },
+  { value: 'PERCENT_20', percent: 20, tick: '20%' },
+  { value: 'PERCENT_25', percent: 25, tick: '25%' },
+  { value: 'PERCENT_30', percent: 30, tick: '30%' },
 ];
 
+// 방식별 슬라이더 위치 — 토글을 오가도 각자의 선택이 보존된다
+const roundUpIndex = ref(0);
+const percentIndex = ref(0);
+
+// 현재 활성화된 옵션 목록 / 슬라이더 인덱스
+const activeOptions = computed(() =>
+  ruleMode.value === 'ROUND_UP' ? ROUND_UP_OPTIONS : PERCENT_OPTIONS,
+);
+const activeIndex = computed<number>({
+  get: () => (ruleMode.value === 'ROUND_UP' ? roundUpIndex.value : percentIndex.value),
+  set: (v) => {
+    if (ruleMode.value === 'ROUND_UP') roundUpIndex.value = v;
+    else percentIndex.value = v;
+  },
+});
+
 // 제출 시 모든 카테고리에 일괄 적용할 규칙
-const selectedRule = ref<RuleType>('ROUND_UP_10000');
+const selectedRule = computed<RuleType>(() => activeOptions.value[activeIndex.value].value);
+
+// 카드 상단 현재 값 + 설명
+const ruleValueLabel = computed(() =>
+  ruleMode.value === 'ROUND_UP'
+    ? `${ROUND_UP_OPTIONS[roundUpIndex.value].amount.toLocaleString('ko-KR')}원`
+    : `${PERCENT_OPTIONS[percentIndex.value].percent}%`,
+);
+const ruleDescription = computed(() =>
+  ruleMode.value === 'ROUND_UP'
+    ? `결제 후 ${ROUND_UP_OPTIONS[roundUpIndex.value].amount.toLocaleString('ko-KR')}원 단위로 올림한 잔돈을 적립합니다`
+    : `결제 금액의 ${PERCENT_OPTIONS[percentIndex.value].percent}%를 잔돈으로 자동 적립합니다`,
+);
+
+// 슬라이더 진행 막대 — 채워진 구간(파랑) / 남은 구간(회색)
+const sliderFillStyle = computed(() => {
+  const max = activeOptions.value.length - 1;
+  const pct = max > 0 ? (activeIndex.value / max) * 100 : 0;
+  return {
+    background: `linear-gradient(to right, #0051ff 0%, #0051ff ${pct}%, #e5e5ea ${pct}%, #e5e5ea 100%)`,
+  };
+});
 
 // ── UI state ──
 const isLoading = ref(false);
@@ -470,38 +515,71 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
             잔돈 적립 방식
           </p>
 
-          <!-- 6개 규칙을 한 화면에서 버튼으로 선택 -->
-          <div class="grid grid-cols-2 gap-2">
+          <!-- 방식 토글 -->
+          <div class="bg-surface-alt rounded-2xl p-1 flex gap-1">
             <button
-              v-for="opt in RULE_OPTIONS"
-              :key="opt.value"
-              class="py-3 rounded-xl border transition-all flex flex-col items-center gap-0.5"
+              class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
               :class="
-                selectedRule === opt.value
-                  ? 'bg-brand border-brand'
-                  : 'bg-white border-surface-border'
+                ruleMode === 'ROUND_UP'
+                  ? 'bg-white text-text-primary shadow-sm'
+                  : 'text-text-tertiary'
               "
-              @click="selectedRule = opt.value"
+              @click="ruleMode = 'ROUND_UP'"
             >
-              <span
-                class="text-sm font-semibold"
-                :class="
-                  selectedRule === opt.value
-                    ? 'text-white'
-                    : 'text-text-secondary'
-                "
-                >{{ opt.label }}</span
-              >
-              <span
-                class="text-xs2"
-                :class="
-                  selectedRule === opt.value
-                    ? 'text-white/80'
-                    : 'text-text-tertiary'
-                "
-                >{{ opt.desc }}</span
-              >
+              올림 잔돈 적립
             </button>
+            <button
+              class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+              :class="
+                ruleMode === 'PERCENT'
+                  ? 'bg-white text-text-primary shadow-sm'
+                  : 'text-text-tertiary'
+              "
+              @click="ruleMode = 'PERCENT'"
+            >
+              비율 잔돈 적립
+            </button>
+          </div>
+
+          <!-- 슬라이더 값 카드 -->
+          <div
+            class="bg-white border border-surface-border rounded-2xl px-5 py-5 flex flex-col gap-3"
+          >
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-text-tertiary">
+                {{ ruleMode === 'ROUND_UP' ? '적립 단위' : '적립 비율' }}
+              </span>
+              <span class="text-lg font-bold text-text-primary">{{
+                ruleValueLabel
+              }}</span>
+            </div>
+            <p class="text-xs text-text-tertiary">{{ ruleDescription }}</p>
+
+            <!-- 단계형 슬라이더 -->
+            <input
+              v-model.number="activeIndex"
+              type="range"
+              min="0"
+              :max="activeOptions.length - 1"
+              step="1"
+              class="tikkle-range w-full mt-1"
+              :style="sliderFillStyle"
+            />
+
+            <!-- 눈금 라벨 -->
+            <div class="flex justify-between">
+              <span
+                v-for="(opt, i) in activeOptions"
+                :key="opt.value"
+                class="text-xs transition-colors"
+                :class="
+                  activeIndex === i
+                    ? 'text-brand font-semibold'
+                    : 'text-text-disabled'
+                "
+                >{{ opt.tick }}</span
+              >
+            </div>
           </div>
 
           <p class="text-xs2 text-text-tertiary leading-relaxed">
@@ -749,3 +827,44 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
     </div>
   </div>
 </template>
+
+<style scoped>
+/* 단계형 올림/비율 슬라이더 — Figma range 스타일 */
+.tikkle-range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 9999px;
+  outline: none;
+  cursor: pointer;
+}
+.tikkle-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-top: -8px;            /* center the 22px thumb on the 6px track */
+  border-radius: 9999px;
+  background: #0051ff;
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.tikkle-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #0051ff;
+  border: 3px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.tikkle-range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: transparent;     /* fill comes from the element's inline gradient */
+}
+.tikkle-range::-moz-range-track {
+  height: 6px;
+  border-radius: 9999px;
+  background: transparent;
+}
+</style>

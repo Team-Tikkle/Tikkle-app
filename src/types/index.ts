@@ -18,8 +18,8 @@ export type ExecutionMode     = 'AUTO' | 'MANUAL'
 // Exactly 7 unique categories required by the backend
 export type CategoryType = 'CAFE' | 'MART' | 'FOOD' | 'SHOPPING' | 'TRAFFIC' | 'CULTURE' | 'ETC'
 export type RuleType =
-  | 'ROUND_UP_10000' | 'ROUND_UP_50000'
-  | 'PERCENT_5' | 'PERCENT_10' | 'PERCENT_20' | 'PERCENT_30'
+  | 'ROUND_UP_10000' | 'ROUND_UP_20000' | 'ROUND_UP_30000' | 'ROUND_UP_40000' | 'ROUND_UP_50000'
+  | 'PERCENT_10' | 'PERCENT_15' | 'PERCENT_20' | 'PERCENT_25' | 'PERCENT_30'
 
 export interface CategoryRule {
   category: CategoryType
@@ -174,12 +174,15 @@ export type PaymentActionType =
   | 'IGNORE_NO_SPARE_CHANGE' // 잔돈 0원
 
 export interface PaymentResult {
-  actionType:    PaymentActionType
-  merchant:      string
-  paymentAmount: number          // 결제 금액
-  spareChange:   number          // 발생한 잔돈 (IGNORE_* 케이스는 0)
-  ticker:        string | null   // 매수 종목 코드 (IGNORE_* 케이스는 null)
-  stockName:     string | null   // 매수 종목명 (IGNORE_* 케이스는 null)
+  paymentEventId:    number | null  // 승인/거부 대상 식별자 (NEED_APPROVAL 시 존재)
+  actionType:        PaymentActionType
+  cleanMerchantName: string         // 정제된 가맹점명
+  paymentAmount:     number         // 결제 금액
+  spareChange:       number         // 발생한 잔돈 (IGNORE_* 케이스는 0)
+  market:            string | null  // 매수 종목 코드 (IGNORE_* 케이스는 null)
+  coinName:          string | null  // 매수 종목명 (IGNORE_* 케이스는 null)
+  executedPrice:     number | null  // 체결가 (ORDER_REQUESTED 시)
+  executedVolume:    number | null  // 체결 수량 (ORDER_REQUESTED 시)
 }
 
 export interface PaymentResponse {

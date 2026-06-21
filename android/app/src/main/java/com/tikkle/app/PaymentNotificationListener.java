@@ -69,9 +69,13 @@ public class PaymentNotificationListener extends NotificationListenerService {
     private static final String PKG_KB_PAY    = "com.kbcard.cxh.appcard";
 //    private static final String PKG_KB_PAY    = "com.android.shell";
     private static final String PKG_WOORI     = "com.wooricard.smartapp";
-//    private static final String PKG_WOORI     = "com.android.shell";
+//    private static final String PKG_WOORI     = "com.google.android.dialer";
     //private static final String PKG_SMS       = "com.google.android.apps.messaging"; // Google Messages (AVD default)
     private static final String PKG_SMS       = "com.google.android.dialer"; // Google Messages (AVD default). 사실상 테스트용으로 사용하지 않을 듯함
+
+    // [TEST] adb `cmd notification post` posts as com.android.shell. Routing it to a
+    // parser lets us inject test notifications. Remove this block before release.
+    private static final String PKG_TEST = "com.android.shell";
 
     // ── KB Pay patterns ───────────────────────────────────────────────────────
     //
@@ -142,7 +146,9 @@ public class PaymentNotificationListener extends NotificationListenerService {
         Log.v(TAG, "onNotificationPosted pkg=" + pkg);
 
         // Hard whitelist — drop everything that is not a verified target
-        if (!PKG_KB_PAY.equals(pkg) && !PKG_WOORI.equals(pkg) && !PKG_SMS.equals(pkg)) return;
+        // ([TEST] PKG_TEST allows adb-injected notifications — remove before release)
+        if (!PKG_KB_PAY.equals(pkg) && !PKG_WOORI.equals(pkg)
+            && !PKG_SMS.equals(pkg) && !PKG_TEST.equals(pkg)) return;
 
         Notification notification = sbn.getNotification();
         if (notification == null) return;
@@ -179,6 +185,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
                 case PKG_KB_PAY: return parseKbPay(body);
                 case PKG_WOORI:  return parseWooriCard(body);
                 case PKG_SMS:    return parseSms(body);
+                case PKG_TEST:   return parseKbPay(body); // [TEST] adb-injected → KB format
                 default:         return null;
             }
         } catch (IndexOutOfBoundsException e) {
@@ -393,10 +400,10 @@ public class PaymentNotificationListener extends NotificationListenerService {
      * are intentionally silent — no notification is shown.
      */
     private void notifyForAction(JSONObject data) {
-        String actionType = data.optString("actionType", "");
-        String merchant   = data.optString("merchant", "");
+        String actionType  = data.optString("actionType", "");
+        String merchant    = data.optString("cleanMerchantName", "");
         int    spareChange = data.optInt("spareChange", 0);
-        String stockName  = data.optString("stockName", "");
+        String stockName   = data.optString("coinName", "");
         String change = String.format("%,d", spareChange);
 
         String title;
@@ -429,20 +436,20 @@ public class PaymentNotificationListener extends NotificationListenerService {
      * if the response has no eventId (the approve/reject endpoints need it).
      */
     private PendingIntent buildReviewIntent(JSONObject data) {
-        String eventId = data.optString("eventId", "");
-        if (eventId.isEmpty()) {
-            Log.w(TAG, "NEED_APPROVAL response has no eventId — review notification will not be tappable.");
+        String eventId = data.optString("paymentEventId", "");
+        if (eventId.isEmpty() || "null".equals(eventId)) {
+            Log.w(TAG, "NEED_APPROVAL response has no paymentEventId — review notification will not be tappable.");
             return null;
         }
 
         Uri uri = new Uri.Builder()
             .scheme("tikkle").authority("payments").appendPath("review")
             .appendQueryParameter("eventId",     eventId)
-            .appendQueryParameter("merchant",    data.optString("merchant", ""))
+            .appendQueryParameter("merchant",    data.optString("cleanMerchantName", ""))
             .appendQueryParameter("amount",      String.valueOf(data.optInt("paymentAmount", 0)))
             .appendQueryParameter("spareChange", String.valueOf(data.optInt("spareChange", 0)))
-            .appendQueryParameter("ticker",      data.optString("ticker", ""))
-            .appendQueryParameter("stockName",   data.optString("stockName", ""))
+            .appendQueryParameter("ticker",      data.optString("market", ""))
+            .appendQueryParameter("stockName",   data.optString("coinName", ""))
             .build();
 
         Intent intent = new Intent(this, MainActivity.class)
