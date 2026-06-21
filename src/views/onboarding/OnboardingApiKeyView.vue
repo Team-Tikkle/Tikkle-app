@@ -9,7 +9,6 @@ const userStore = useUserStore()
 const onboardingStore = useOnboardingStore()
 
 // ── Form fields ──
-const accountNumber   = ref('')
 const appKey          = ref('')
 const secretKey       = ref('')
 const cardCompany     = ref('')
@@ -25,7 +24,6 @@ const isCardLast4Valid = computed(
 )
 
 const isFormValid = computed(() =>
-  accountNumber.value.trim() &&
   appKey.value.trim() &&
   secretKey.value.trim() &&
   cardCompany.value.trim() &&
@@ -39,12 +37,12 @@ async function handleConnect() {
   isLoading.value = true
 
   try {
-    // Save KIS credentials + card info to the onboarding store so the store
+    // Save Upbit credentials + card info to the onboarding store so the store
     // action can assemble the complete OnboardingRequest payload.
     onboardingStore.setCredentials({
       kisAppKey:         appKey.value.trim(),
       kisAppSecret:      secretKey.value.trim(),
-      kisAccountNum:     accountNumber.value.trim(),
+      kisAccountNum:     '',
       targetCardCompany: cardCompany.value.trim(),
       targetCardLast4:   cardLast4.value,
     })
@@ -88,15 +86,15 @@ async function handleConnect() {
       <div class="px-6 pt-6 pb-28 flex flex-col gap-6">
 
         <!-- Section label -->
-        <span class="text-sm font-semibold text-brand">증권사 연동</span>
+        <span class="text-sm font-semibold text-brand">거래소 연동</span>
 
         <!-- Title + description -->
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            한국투자증권 계정을<br>연결해 주세요
+            업비트 계정을<br>연결해 주세요
           </h2>
           <p class="text-base text-text-tertiary leading-relaxed">
-            모의 투자 계정을 연동합니다. 실제 계좌에는 영향이 없습니다.
+            업비트 Open API 키를 연동합니다. 키 발급 시 출금 권한은 켜지 않아도 됩니다.
           </p>
         </div>
 
@@ -106,13 +104,13 @@ async function handleConnect() {
             <svg class="text-brand shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <span class="text-base font-semibold text-brand">모의 투자 전용</span>
+            <span class="text-base font-semibold text-brand">Open API 키 연동</span>
           </div>
           <p class="text-sm text-brand-300 leading-relaxed">
-            한국투자증권 KIS Developers에서 모의 투자용 API 키를 발급받아 입력해 주세요.
+            업비트 [마이페이지 → Open API 관리]에서 API 키를 발급받아 입력해 주세요.
           </p>
           <a href="#" class="inline-flex items-center gap-1 text-base font-semibold text-brand mt-1">
-            모의 투자 안내
+            Open API 발급 안내
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="9 18 15 12 9 6"/>
             </svg>
@@ -122,31 +120,20 @@ async function handleConnect() {
         <!-- Form fields -->
         <div class="flex flex-col gap-5">
 
-          <!-- Account number -->
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary">계좌번호</label>
-            <input
-              v-model="accountNumber"
-              type="text"
-              placeholder="모의 투자 계좌번호를 입력하세요"
-              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-            >
-          </div>
-
-          <!-- App Key -->
+          <!-- Access Key -->
           <div class="flex flex-col gap-2">
             <div class="flex items-center justify-between">
-              <label class="text-sm font-semibold text-text-secondary">App Key</label>
+              <label class="text-sm font-semibold text-text-secondary">Access Key</label>
               <a href="#" class="text-xs2 font-medium text-brand">발급 방법 안내</a>
             </div>
             <input
               v-model="appKey"
               type="text"
-              placeholder="App Key를 붙여넣으세요"
+              placeholder="Access Key를 붙여넣으세요"
               class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
             >
             <p class="text-xs2 text-text-tertiary leading-relaxed">
-              KIS Developers → 앱 목록 → 앱 상세 → App Key 복사
+              업비트 → 마이페이지 → Open API 관리 → Access Key 복사
             </p>
           </div>
 
@@ -163,7 +150,7 @@ async function handleConnect() {
               class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
             >
             <p class="text-xs2 text-text-tertiary leading-relaxed">
-              App Key와 동일한 페이지에서 확인할 수 있습니다
+              Access Key 발급 시 함께 표시되며, 이때만 확인할 수 있습니다
             </p>
           </div>
 

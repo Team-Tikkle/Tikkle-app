@@ -212,7 +212,7 @@ onMounted(async () => {
       <div class="flex flex-col items-center gap-1.5">
         <h1 class="text-4xl font-bold text-text-primary tracking-tight">Tikkle</h1>
         <p class="text-base text-text-tertiary text-center leading-relaxed">
-          잔돈으로 시작하는<br>나만의 주식 투자
+          잔돈으로 시작하는<br>나만의 코인 투자
         </p>
       </div>
     </div>

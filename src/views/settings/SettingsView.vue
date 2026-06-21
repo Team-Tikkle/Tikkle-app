@@ -90,12 +90,12 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
         </button>
-        <!-- 증권사 계정 및 API 키 관리 -->
+        <!-- 업비트 계정 및 API 키 관리 -->
         <button
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
           @click="router.push('/settings/api-key')"
         >
-          <span class="text-base font-medium text-text-primary">증권사 계정 및 API 키 관리</span>
+          <span class="text-base font-medium text-text-primary">업비트 계정 및 API 키 관리</span>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
         </button>
@@ -155,7 +155,7 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
           @click="showWithdrawalModal = true"
         >
           <span class="text-base font-medium text-danger">서비스 탈퇴</span>
-          <span class="text-sm text-danger-light">탈퇴 시 보유 주식이 즉시 매도됩니다</span>
+          <span class="text-sm text-danger-light">탈퇴 시 보유 코인이 즉시 매도됩니다</span>
         </button>
       </div>
 
@@ -206,7 +206,7 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
                   <span class="text-base font-semibold text-danger">⚠️ 주의</span>
                 </div>
                 <p class="text-sm text-text-tertiary leading-relaxed">
-                  보유 중인 주식이 즉시 시장가로 일괄 매도됩니다.<br>
+                  보유 중인 코인이 즉시 시장가로 일괄 매도됩니다.<br>
                   이 작업은 되돌릴 수 없습니다.
                 </p>
               </div>

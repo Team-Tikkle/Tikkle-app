@@ -15,7 +15,7 @@ const userStore = useUserStore()
 const onboardingStore = useOnboardingStore()
 
 // ── Step tracking ──
-// 1: 투자 성향  2: 카테고리 규칙  3: 증권사·카드 연동
+// 1: 투자 성향  2: 카테고리 규칙  3: 거래소·카드 연동
 const step = ref(1)
 const TOTAL_STEPS = 3
 
@@ -35,7 +35,6 @@ const prefs = reactive({
 })
 
 // ── Step 2 state ──
-const kisAccountNum = ref('')
 const kisAppKey     = ref('')
 const kisAppSecret  = ref('')
 const cardCompany   = ref('국민카드')
@@ -44,7 +43,6 @@ const cardLast4     = ref('')
 const isCardLast4Valid = computed(() => /^\d{4}$/.test(cardLast4.value))
 
 const isStep3Valid = computed(() =>
-  kisAccountNum.value.trim() &&
   kisAppKey.value.trim() &&
   kisAppSecret.value.trim() &&
   isCardLast4Valid.value,
@@ -141,7 +139,7 @@ async function handleSubmit() {
     onboardingStore.setCredentials({
       kisAppKey:         kisAppKey.value.trim(),
       kisAppSecret:      kisAppSecret.value.trim(),
-      kisAccountNum:     kisAccountNum.value.trim(),
+      kisAccountNum:     '',
       targetCardCompany: cardCompany.value,
       targetCardLast4:   cardLast4.value,
     })
@@ -499,17 +497,17 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
         </div>
       </div>
 
-      <!-- ── Step 3: 증권사·카드 연동 ── -->
+      <!-- ── Step 3: 거래소·카드 연동 ── -->
       <div v-else-if="step === 3" class="px-6 pt-6 flex flex-col gap-6">
 
-        <span class="text-sm font-semibold text-brand">증권사 연동</span>
+        <span class="text-sm font-semibold text-brand">거래소 연동</span>
 
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            한국투자증권 계정을<br>연결해 주세요
+            업비트 계정을<br>연결해 주세요
           </h2>
           <p class="text-base text-text-tertiary leading-relaxed">
-            모의 투자 계정을 연동합니다. 실제 계좌에는 영향이 없습니다.
+            업비트 Open API 키를 연동합니다. 키 발급 시 출금 권한은 켜지 않아도 됩니다.
           </p>
         </div>
 
@@ -519,36 +517,25 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
             <svg class="text-brand shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
             </svg>
-            <span class="text-base font-semibold text-brand">모의 투자 전용</span>
+            <span class="text-base font-semibold text-brand">Open API 키 연동</span>
           </div>
           <p class="text-sm text-brand-300 leading-relaxed">
-            한국투자증권 KIS Developers에서 모의 투자용 API 키를 발급받아 입력해 주세요.
+            업비트 [마이페이지 → Open API 관리]에서 API 키를 발급받아 입력해 주세요.
           </p>
         </div>
 
         <div class="flex flex-col gap-5">
 
-          <!-- Account number -->
+          <!-- Access Key -->
           <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary">계좌번호</label>
-            <input
-              v-model="kisAccountNum"
-              type="text"
-              placeholder="모의투자 종합계좌번호 예시: 50012345-01"
-              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-            >
-          </div>
-
-          <!-- App Key -->
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary">App Key</label>
+            <label class="text-sm font-semibold text-text-secondary">Access Key</label>
             <input
               v-model="kisAppKey"
               type="text"
-              placeholder="App Key를 붙여넣으세요"
+              placeholder="Access Key를 붙여넣으세요"
               class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
             >
-            <p class="text-xs2 text-text-tertiary">KIS Developers → 앱 목록 → 앱 상세 → App Key 복사</p>
+            <p class="text-xs2 text-text-tertiary">업비트 → 마이페이지 → Open API 관리 → Access Key 복사</p>
           </div>
 
           <!-- Secret Key -->
@@ -604,7 +591,7 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
     </div>
 
     <!-- Sticky bottom navigation -->
-    <div class="fixed bottom-0 left-0 right-0 bg-surface px-6 pt-3 pb-8 flex flex-col gap-2 max-w-mobile mx-auto">
+    <div class="fixed bottom-0 left-0 right-0 bg-surface px-6 pt-3 pb-5 flex flex-col gap-2 max-w-mobile mx-auto">
       <!-- Main CTA -->
       <button
         v-if="step < TOTAL_STEPS"
