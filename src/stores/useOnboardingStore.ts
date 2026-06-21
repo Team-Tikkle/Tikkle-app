@@ -28,13 +28,13 @@ const ERROR_MESSAGES: Record<string, string> = {
 // The API requires exactly 7 CategoryRule entries. These defaults are applied
 // until the user explicitly configures per-category rules in the flow.
 const DEFAULT_CATEGORY_RULES: CategoryRule[] = [
-  { category: 'CAFE',     ruleType: 'ROUND_UP_1000' },
-  { category: 'MART',     ruleType: 'ROUND_UP_1000' },
-  { category: 'FOOD',     ruleType: 'ROUND_UP_1000' },
-  { category: 'SHOPPING', ruleType: 'ROUND_UP_1000' },
-  { category: 'TRAFFIC',  ruleType: 'ROUND_UP_1000' },
-  { category: 'CULTURE',  ruleType: 'ROUND_UP_1000' },
-  { category: 'ETC',      ruleType: 'ROUND_UP_1000' },
+  { category: 'CAFE',     ruleType: 'ROUND_UP_10000' },
+  { category: 'MART',     ruleType: 'ROUND_UP_10000' },
+  { category: 'FOOD',     ruleType: 'ROUND_UP_10000' },
+  { category: 'SHOPPING', ruleType: 'ROUND_UP_10000' },
+  { category: 'TRAFFIC',  ruleType: 'ROUND_UP_10000' },
+  { category: 'CULTURE',  ruleType: 'ROUND_UP_10000' },
+  { category: 'ETC',      ruleType: 'ROUND_UP_10000' },
 ]
 
 export const useOnboardingStore = defineStore('onboarding', () => {

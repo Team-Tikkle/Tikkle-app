@@ -18,8 +18,6 @@ const CATEGORIES: { type: CategoryType; label: string; icon: string }[] = [
 ]
 
 const ROUND_UP_OPTIONS: { value: RuleType; label: string }[] = [
-  { value: 'ROUND_UP_1000',  label: '1,000원' },
-  { value: 'ROUND_UP_5000',  label: '5,000원' },
   { value: 'ROUND_UP_10000', label: '10,000원' },
   { value: 'ROUND_UP_50000', label: '50,000원' },
 ]
@@ -33,7 +31,7 @@ const PERCENT_OPTIONS: { value: RuleType; label: string }[] = [
 
 // ── 로컬 편집 상태 ──
 const localRules = reactive<Record<CategoryType, RuleType>>(
-  Object.fromEntries(CATEGORIES.map(c => [c.type, 'ROUND_UP_1000'])) as Record<CategoryType, RuleType>
+  Object.fromEntries(CATEGORIES.map(c => [c.type, 'ROUND_UP_10000'])) as Record<CategoryType, RuleType>
 )
 
 // ── 자동/수동 매매 로컬 상태 ──
@@ -171,6 +169,9 @@ async function confirmRule() {
       <!-- Category list -->
       <div class="flex-1 overflow-y-auto px-4 pt-3 pb-6">
         <p class="text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2 px-1">카테고리별 잔돈 규칙</p>
+        <p class="text-xs2 text-text-tertiary mb-2 px-1 leading-relaxed">
+          ※ 5,000원 미만의 잔돈이 발생하면 투자가 진행되지 않습니다.
+        </p>
         <div class="bg-white rounded-xl overflow-hidden divide-y divide-surface-border">
           <button
             v-for="cat in CATEGORIES"
@@ -242,7 +243,7 @@ async function confirmRule() {
                   :class="sheetMode === 'ROUND_UP'
                     ? 'bg-white text-text-primary shadow-sm'
                     : 'text-text-tertiary'"
-                  @click="sheetMode = 'ROUND_UP'; selectRule('ROUND_UP_1000')"
+                  @click="sheetMode = 'ROUND_UP'; selectRule('ROUND_UP_10000')"
                 >올림</button>
                 <button
                   class="flex-1 py-2.5 rounded-lg text-base font-semibold transition-all"

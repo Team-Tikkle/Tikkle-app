@@ -18,7 +18,7 @@ export type ExecutionMode     = 'AUTO' | 'MANUAL'
 // Exactly 7 unique categories required by the backend
 export type CategoryType = 'CAFE' | 'MART' | 'FOOD' | 'SHOPPING' | 'TRAFFIC' | 'CULTURE' | 'ETC'
 export type RuleType =
-  | 'ROUND_UP_1000' | 'ROUND_UP_5000' | 'ROUND_UP_10000' | 'ROUND_UP_50000'
+  | 'ROUND_UP_10000' | 'ROUND_UP_50000'
   | 'PERCENT_5' | 'PERCENT_10' | 'PERCENT_20' | 'PERCENT_30'
 
 export interface CategoryRule {
