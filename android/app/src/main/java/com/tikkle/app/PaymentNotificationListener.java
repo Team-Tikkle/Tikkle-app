@@ -185,7 +185,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
                 case PKG_KB_PAY: return parseKbPay(body);
                 case PKG_WOORI:  return parseWooriCard(body);
                 case PKG_SMS:    return parseSms(body);
-                case PKG_TEST:   return parseKbPay(body); // [TEST] adb-injected → KB format
+                case PKG_TEST:   return parseWooriCard(body); // [TEST] adb-injected → KB format
                 default:         return null;
             }
         } catch (IndexOutOfBoundsException e) {
@@ -415,7 +415,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
                 text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
                       + stockName + " 매수를 요청했어요!";
                 break;
-            case "NEED_APPROVAL":     // 수동 매매 → 매수 제안 (탭하면 검토 화면으로)
+            case "WAITING_APPROVAL":     // 수동 매매 → 매수 제안 (탭하면 검토 화면으로)
                 title = "잔돈으로 투자할까요? 🤔";
                 text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
                       + stockName + " 매수를 진행할까요? 눌러서 확인해 주세요.";
