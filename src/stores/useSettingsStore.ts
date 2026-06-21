@@ -75,11 +75,10 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   // PATCH /api/settings/linked-account
-  // KIS 증권사 계정 정보(앱 키·시크릿키·계좌번호)를 변경한다.
+  // 업비트 Open API 키(Access Key·Secret Key)를 변경한다.
   async function updateLinkedAccount(params: {
-    kisAppKey: string
-    kisAppSecret: string
-    kisAccountNum: string
+    upbitAccessKey: string
+    upbitSecretKey: string
   }): Promise<void> {
     const { default: api } = await import('@/utils/api')
     try {
