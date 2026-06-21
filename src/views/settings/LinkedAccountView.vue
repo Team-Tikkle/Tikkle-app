@@ -5,8 +5,8 @@ import { useSettingsStore } from '@/stores/useSettingsStore'
 
 const settingsStore = useSettingsStore()
 
-const kisAppKey     = ref('')
-const kisAppSecret  = ref('')
+const accessKey = ref('')
+const secretKey = ref('')
 
 const isLoading = ref(false)
 const errorMsg  = ref('')
@@ -14,7 +14,7 @@ const successMsg = ref('')
 
 async function handleSave() {
   if (isLoading.value) return
-  if (!kisAppKey.value.trim() || !kisAppSecret.value.trim()) {
+  if (!accessKey.value.trim() || !secretKey.value.trim()) {
     errorMsg.value = '모든 항목을 입력해 주세요.'
     return
   }
@@ -25,12 +25,11 @@ async function handleSave() {
 
   try {
     await settingsStore.updateLinkedAccount({
-      kisAppKey:    kisAppKey.value.trim(),
-      kisAppSecret: kisAppSecret.value.trim(),
-      kisAccountNum: '',
+      upbitAccessKey: accessKey.value.trim(),
+      upbitSecretKey: secretKey.value.trim(),
     })
     successMsg.value = '업비트 계정 정보가 업데이트되었습니다.'
-    kisAppSecret.value = ''
+    secretKey.value = ''
   } catch (err: unknown) {
     errorMsg.value = err instanceof Error ? err.message : '저장에 실패했습니다. 다시 시도해 주세요.'
   } finally {
@@ -74,7 +73,7 @@ async function handleSave() {
         <div class="flex flex-col gap-2">
           <label class="text-sm font-semibold text-text-secondary">Access Key</label>
           <input
-            v-model="kisAppKey"
+            v-model="accessKey"
             type="text"
             placeholder="Access Key를 붙여넣으세요"
             class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
@@ -86,7 +85,7 @@ async function handleSave() {
         <div class="flex flex-col gap-2">
           <label class="text-sm font-semibold text-text-secondary">Secret Key</label>
           <input
-            v-model="kisAppSecret"
+            v-model="secretKey"
             type="password"
             placeholder="Secret Key를 붙여넣으세요"
             class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
