@@ -66,7 +66,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
     private static final String PKG_KB_PAY    = "com.kbcard.cxh.appcard";
 //    private static final String PKG_KB_PAY    = "com.android.shell";
     private static final String PKG_WOORI     = "com.wooricard.smartapp";
-    //private static final String PKG_WOORI     = "com.google.android.dialer";
+//    private static final String PKG_WOORI     = "com.android.shell";
     //private static final String PKG_SMS       = "com.google.android.apps.messaging"; // Google Messages (AVD default)
     private static final String PKG_SMS       = "com.google.android.dialer"; // Google Messages (AVD default). 사실상 테스트용으로 사용하지 않을 듯함
 
