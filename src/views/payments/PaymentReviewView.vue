@@ -10,6 +10,7 @@
  * API  : POST /api/payments/{eventId}/approve | /reject  (JWT, no body)
  */
 import { computed, ref } from 'vue'
+import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
 import { usePaymentStore } from '@/stores/usePaymentStore'
 import AppHeader from '@/components/common/AppHeader.vue'
@@ -48,12 +49,26 @@ async function handle(decision: 'approve' | 'reject') {
     }
     router.replace('/payments')
   } catch (err: unknown) {
-    errorMsg.value = err instanceof Error
-      ? err.message
-      : '처리 중 오류가 발생했어요. 다시 시도해 주세요.'
+    errorMsg.value = extractErrorMessage(err)
   } finally {
     isLoading.value = false
   }
+}
+
+/**
+ * Surfaces the backend's error message. The API wraps errors in
+ * { code, message, data }, so prefer response.data.message over the generic
+ * Axios "Request failed with status code 500".
+ */
+function extractErrorMessage(err: unknown): string {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data as { code?: string; message?: string } | undefined
+    if (data?.message) {
+      return data.code ? `${data.message} (${data.code})` : data.message
+    }
+    return err.message
+  }
+  return err instanceof Error ? err.message : '처리 중 오류가 발생했어요. 다시 시도해 주세요.'
 }
 </script>
 
