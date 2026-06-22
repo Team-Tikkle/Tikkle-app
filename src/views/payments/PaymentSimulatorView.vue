@@ -147,6 +147,7 @@ function resetTransactionId() {
           <option value="국민카드">국민카드</option>
           <option value="우리카드">우리카드</option>
           <option value="하나카드">하나카드</option>
+          <option value="케이뱅크">케이뱅크</option>
         </select>
       </div>
 
