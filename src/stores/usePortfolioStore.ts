@@ -1,25 +1,31 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { PortfolioSummary } from '@/types'
-import { mockPortfolioSummary } from '@/mocks'
+import type { Portfolio, ApiEnvelope } from '@/types'
 
 export const usePortfolioStore = defineStore('portfolio', () => {
-  const summary = ref<PortfolioSummary | null>(null)
+  const portfolio = ref<Portfolio | null>(null)
   const isLoading = ref(false)
-  const lastUpdatedAt = ref<string | null>(null)
+  const error     = ref<string | null>(null)
 
-  function fetchPortfolio() {
+  // GET /api/portfolios — 보유 코인 + 실시간 시세 결합 스냅샷
+  async function fetchPortfolio(): Promise<void> {
     isLoading.value = true
-    setTimeout(() => {
-      summary.value = mockPortfolioSummary
-      lastUpdatedAt.value = new Date().toISOString()
+    error.value = null
+    try {
+      const { default: api } = await import('@/utils/api')
+      const { data: envelope } = await api.get<ApiEnvelope<Portfolio>>('/api/portfolios')
+      portfolio.value = envelope.data
+    } catch {
+      error.value = '자산 정보를 불러오지 못했어요.'
+    } finally {
       isLoading.value = false
-    }, 500)
+    }
   }
 
-  function refreshPortfolio() {
-    fetchPortfolio()
+  return {
+    portfolio,
+    isLoading,
+    error,
+    fetchPortfolio,
   }
-
-  return { summary, isLoading, lastUpdatedAt, fetchPortfolio, refreshPortfolio }
 })

@@ -11,13 +11,6 @@ export interface MarketTicker {
   accTradePrice24h: number   // 24시간 누적 거래대금
 }
 
-// 구독할 주요 KRW 페어
-const TRACKED_CODES = [
-  'KRW-BTC', 'KRW-ETH', 'KRW-XRP', 'KRW-SOL',
-  'KRW-ADA', 'KRW-DOGE', 'KRW-AVAX', 'KRW-DOT',
-  'KRW-LINK', 'KRW-ATOM',
-]
-
 const CURRENCY_NAMES: Record<string, string> = {
   BTC:  '비트코인',
   ETH:  '이더리움',
@@ -42,8 +35,9 @@ export const useUpbitMarketStore = defineStore('upbitMarket', () => {
   let ws: WebSocket | null = null
   let pingTimer: ReturnType<typeof setInterval> | null = null
 
-  function connect() {
-    if (ws?.readyState === WebSocket.OPEN) return
+  // 구독할 페어 코드 목록(보유 코인 등)을 받아 실시간 시세를 구독한다.
+  function connect(codes: string[]) {
+    if (codes.length === 0) return
     _cleanup()
 
     ws = new WebSocket(UPBIT_WS)
@@ -54,7 +48,7 @@ export const useUpbitMarketStore = defineStore('upbitMarket', () => {
 
       ws!.send(JSON.stringify([
         { ticket: crypto.randomUUID() },
-        { type: 'ticker', codes: TRACKED_CODES },
+        { type: 'ticker', codes },
         { format: 'DEFAULT' },
       ]))
 
@@ -114,11 +108,5 @@ export const useUpbitMarketStore = defineStore('upbitMarket', () => {
     _cleanup()
   }
 
-  // 정렬된 ticker 목록 (24h 거래대금 기준 내림차순)
-  function getSortedTickers(): MarketTicker[] {
-    return [...tickers.value.values()]
-      .sort((a, b) => b.accTradePrice24h - a.accTradePrice24h)
-  }
-
-  return { tickers, isConnected, error, connect, disconnect, getSortedTickers }
+  return { tickers, isConnected, error, connect, disconnect }
 })

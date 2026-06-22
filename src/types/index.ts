@@ -127,25 +127,22 @@ export interface ApiEnvelope<T> {
   data:    T
 }
 
-// Portfolio & Investment
-export interface StockHolding {
-  ticker: string
-  name: string
-  shares: number
-  avg_buy_price: number
-  current_price: number
-  evaluated_amount: number
-  profit_loss: number
-  profit_loss_rate: number
-  weight_percent: number
+// Portfolio (GET /api/portfolios) — coin holdings combined with live Upbit prices
+export interface PortfolioHolding {
+  market:               string  // 페어 코드, e.g. "KRW-BTC"
+  coinName:             string  // 코인명, e.g. "비트코인"
+  quantity:             number  // 보유 수량
+  averagePurchasePrice: number  // 평균 매입 단가
+  principalAmount:      number  // 매입 원금
+  currentPrice:         number  // 현재가 (실시간 시세)
+  evaluationAmount:     number  // 평가 금액
 }
 
-export interface PortfolioSummary {
-  total_invested: number
-  total_evaluated: number
-  total_profit_loss: number
-  profit_loss_rate: number
-  holdings: StockHolding[]
+export interface Portfolio {
+  totalPrincipalAmount:  number   // 총 투자금
+  totalEvaluationAmount: number   // 총 평가금 (= 총 자산)
+  holdingMarketCodes:    string[] // 보유 코인 페어 코드 목록
+  holdings:              PortfolioHolding[]
 }
 
 // News & Insights
