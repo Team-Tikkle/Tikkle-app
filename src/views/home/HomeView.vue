@@ -48,15 +48,43 @@ const totalPrincipal = computed(() => portfolioStore.portfolio?.totalPrincipalAm
 const liveTotalProfitLoss = computed(() => liveTotalEvaluation.value - totalPrincipal.value)
 
 // ── 포트폴리오 도넛 차트 (보유 금액 비중, 실시간) ──
-const DONUT_COLORS = ['#0051ff', '#3380ff', '#66aaff', '#99c2ff', '#b3d4ff', '#cce0ff', '#e0ecff']
+// 브랜드 블루를 앵커로 한 analogous(청록↔남보라) 팔레트 — 색상(hue)으로 구분.
+const DONUT_COLORS = ['#0051ff', '#3b82f6', '#06b6d4', '#6366f1', '#0ea5e9', '#8b5cf6', '#14b8a6']
+const ETC_COLOR = '#d1d5db'        // 옅은 회색 — 기타 묶음
+const DONUT_THRESHOLD = 80         // 누적 비중이 이 %에 도달할 때까지만 개별 표시
 
 const donutSegments = computed(() => {
   const rows = [...holdingRows.value].sort((a, b) => b.evaluation - a.evaluation)
   const total = rows.reduce((s, r) => s + r.evaluation, 0)
+  if (total <= 0) return []
+
+  // 누적 80%에 도달할 때까지 개별 표시, 그 다음부터는 '기타'로 묶는다.
+  const shown: { name: string; value: number }[] = []
+  const rest:  { name: string; value: number }[] = []
+  let cumulative = 0
+  for (const r of rows) {
+    if (cumulative < DONUT_THRESHOLD) {
+      shown.push({ name: r.h.coinName, value: r.evaluation })
+      cumulative += (r.evaluation / total) * 100
+    } else {
+      rest.push({ name: r.h.coinName, value: r.evaluation })
+    }
+  }
+
+  // 남은 항목이 1개뿐이면 기타로 가리지 않고 그대로 표시한다.
+  if (rest.length === 1) {
+    shown.push(rest.pop()!)
+  }
+
+  const items = shown.map((s, i) => ({ ...s, color: DONUT_COLORS[i % DONUT_COLORS.length] }))
+  if (rest.length >= 2) {
+    items.push({ name: '기타', value: rest.reduce((s, r) => s + r.value, 0), color: ETC_COLOR })
+  }
+
   let offset = 0
-  return rows.map((r, i) => {
-    const pct = total > 0 ? (r.evaluation / total) * 100 : 0
-    const seg = { name: r.h.coinName, pct, color: DONUT_COLORS[i % DONUT_COLORS.length], offset }
+  return items.map((it) => {
+    const pct = (it.value / total) * 100
+    const seg = { name: it.name, pct, color: it.color, offset }
     offset += pct
     return seg
   })

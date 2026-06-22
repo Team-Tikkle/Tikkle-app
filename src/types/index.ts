@@ -68,14 +68,16 @@ export type PaymentFeedStatus = 'ALL' | 'PENDING' | 'INVESTED' | 'CANCELED'
 
 // One row in the paged payment feed.
 export interface PaymentFeedItem {
-  id:            number
-  merchant:      string
-  amount:        number
-  roundUpAmount: number
-  category:      CategoryType
-  status:        TransactionStatus
-  expiredAt:     string  // ISO-8601, e.g. "2026-06-22T10:30:00"
-  createdAt:     string
+  id:               number
+  merchant:         string
+  amount:           number
+  roundUpAmount:    number
+  category:         CategoryType
+  status:           TransactionStatus
+  expiredAt:        string  // ISO-8601, e.g. "2026-06-22T10:30:00"
+  targetCoinMarket: string | null  // e.g. "KRW-BTC" (PENDING 상태에서만 존재)
+  targetCoinName:   string | null  // e.g. "비트코인"
+  createdAt:        string
 }
 
 // ── Spring Data Page envelope ──

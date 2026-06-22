@@ -49,7 +49,12 @@ async function handle(decision: 'approve' | 'reject') {
     }
     router.replace('/payments')
   } catch (err: unknown) {
-    errorMsg.value = extractErrorMessage(err)
+    if (import.meta.env.DEV) console.error('[review]', extractErrorMessage(err))
+    if (decision === 'approve') {
+      errorMsg.value = '오류가 발생해 투자가 취소되었어요.'
+    } else {
+      errorMsg.value = '오류가 발생했어요. 다시 시도해 주세요.'
+    }
   } finally {
     isLoading.value = false
   }
@@ -77,26 +82,49 @@ function extractErrorMessage(err: unknown): string {
     <AppHeader title="잔돈 투자 확인" :show-back="true" />
 
     <!-- Proposal summary -->
-    <div class="mx-4 mt-4 bg-brand-bg rounded-xl p-4 border border-brand-50">
-      <p class="text-xs2 text-brand-300 mb-1">투자할 잔돈</p>
-      <p class="text-2xl font-bold text-brand">₩{{ fmt(spareChange) }}</p>
-      <p class="text-sm text-text-tertiary mt-1">
-        {{ merchant }} · ₩{{ fmt(amount) }} 결제
-      </p>
+    <div class="mx-4 mt-4 bg-brand-bg rounded-xl px-5 py-4 border border-brand-50 flex items-center justify-between gap-3">
+      <span class="text-base font-semibold text-text-primary truncate">{{ merchant }}</span>
+      <div class="text-right shrink-0">
+        <p class="text-2xl font-bold text-brand leading-none">₩{{ fmt(spareChange) }}</p>
+        <p class="text-xs2 text-brand-300 mt-1">₩{{ fmt(amount) }} 결제</p>
+      </div>
     </div>
 
     <!-- Proposed coin -->
-    <div v-if="stockName" class="mx-4 mt-5 bg-white rounded-xl p-4">
-      <p class="text-base font-bold text-text-primary mb-1">제안 코인</p>
-      <p class="text-lg font-bold text-text-primary">{{ stockName }}</p>
-      <p v-if="ticker" class="text-sm text-text-tertiary">{{ ticker }}</p>
-      <p class="text-sm text-text-secondary leading-relaxed mt-3">
-        결제 잔돈 ₩{{ fmt(spareChange) }}으로 {{ stockName }} 매수를 진행할까요?
-      </p>
+    <div
+      v-if="stockName"
+      class="mx-4 mt-3 rounded-2xl px-5 py-5 bg-brand-bg border border-brand-50"
+    >
+      <!-- AI 추천 배지 -->
+      <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-brand/10 text-xs font-semibold text-brand mb-4">
+        AI 추천
+      </span>
+
+      <!-- 코인 정보 -->
+      <div class="flex items-center justify-between gap-4">
+        <!-- 로고 -->
+        <img
+          v-if="ticker"
+          :src="`https://static.upbit.com/logos/${ticker.replace('KRW-', '')}.png`"
+          :alt="stockName"
+          class="w-14 h-14 rounded-full object-contain bg-white shrink-0 p-1"
+          @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')"
+        >
+        <!-- 텍스트 -->
+        <div class="text-right">
+          <p class="text-2xl font-bold text-text-primary leading-tight">{{ stockName }}</p>
+          <p v-if="ticker" class="text-xs font-medium text-text-tertiary mt-0.5">{{ ticker }}</p>
+        </div>
+      </div>
     </div>
 
+    <!-- 매수 안내 문구 -->
+    <p v-if="stockName" class="mx-4 mt-4 text-sm text-text-secondary text-center">
+      매수를 진행할까요?
+    </p>
+
     <!-- Error -->
-    <p v-if="errorMsg" role="alert" class="mx-4 mt-4 text-sm text-danger text-center">
+    <p v-if="errorMsg" role="alert" class="mx-4 mt-3 text-sm text-danger text-center">
       {{ errorMsg }}
     </p>
     <p v-if="!isActionable" class="mx-4 mt-4 text-sm text-danger text-center">
@@ -104,7 +132,7 @@ function extractErrorMessage(err: unknown): string {
     </p>
 
     <!-- Approve / Reject -->
-    <div class="mx-4 mt-6 flex flex-col gap-2">
+    <div class="mx-4 mt-5 flex flex-col gap-2">
       <button
         class="w-full py-4 rounded-xl text-white text-md font-semibold transition-colors flex items-center justify-center gap-2"
         :class="(isLoading || !isActionable) ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'"
