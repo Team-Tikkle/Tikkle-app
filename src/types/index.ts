@@ -60,26 +60,6 @@ export interface UserProfile {
 // Payments & Transactions
 export type TransactionStatus = 'PENDING' | 'INVESTED' | 'CANCELED' | 'EXPIRED'
 
-export interface Transaction {
-  id: string
-  merchant: string
-  amount: number
-  round_up_amount: number
-  category: string
-  status: TransactionStatus
-  created_at: string
-  expired_at?: string
-}
-
-export interface PaymentSummary {
-  total_payment: number
-  monthly_payment: number
-  total_invested_change: number
-  monthly_invested: number
-  total_uninvested: number
-  monthly_uninvested: number
-}
-
 // ── Payment feed & dashboard (GET /api/payments, /api/payments/dashboard) ──
 // These endpoints return camelCase fields straight from the backend.
 
@@ -178,14 +158,6 @@ export interface NewsArticle {
   published_at: string
 }
 
-export interface EducationContent {
-  id: string
-  title: string
-  body: string
-  target_risk_types: RiskType[]
-  tags: string[]
-}
-
 // Category-specific round-up rule (overrides global rule per spending category)
 export interface CategoryRoundUpRule {
   category: string
@@ -256,12 +228,4 @@ export interface PaymentResponse {
   code:    string   // "SUCCESS" | "COMMON-001" | "PAYMENT-001"
   message: string
   data:    PaymentResult
-}
-
-// AI Stock Recommendation
-export interface StockRecommendation {
-  ticker: string
-  name: string
-  reason: string
-  category: string
 }
