@@ -40,12 +40,6 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
     {
-      path: '/payments/:id/select-stock',
-      name: 'stock-select',
-      component: () => import('@/views/payments/StockSelectView.vue'),
-      meta: { requiresAuth: true, requiresOnboarding: true },
-    },
-    {
       // Reached by tapping a NEED_APPROVAL feedback notification (deep link)
       path: '/payments/review',
       name: 'payment-review',

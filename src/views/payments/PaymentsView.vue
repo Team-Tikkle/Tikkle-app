@@ -1,57 +1,83 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { usePaymentStore } from '@/stores/usePaymentStore'
 import AppHeader from '@/components/common/AppHeader.vue'
 import BottomNav from '@/components/common/BottomNav.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
-import type { TransactionStatus } from '@/types'
+import RemainingTime from '@/components/common/RemainingTime.vue'
+import type { TransactionStatus, PaymentFeedStatus, CategoryType, PaymentFeedItem } from '@/types'
 
 const paymentStore = usePaymentStore()
+const router = useRouter()
+
+// PENDING 결제 항목 → 결제 승인 페이지. 피드 항목의 id가 곧 eventId.
+function goReview(tx: PaymentFeedItem) {
+  router.push({
+    name: 'payment-review',
+    query: {
+      eventId:     tx.id,
+      merchant:    tx.merchant,
+      amount:      tx.amount,
+      spareChange: tx.roundUpAmount,
+    },
+  })
+}
 onMounted(() => {
-  paymentStore.fetchTransactions()
-  paymentStore.fetchSummary()
+  paymentStore.loadFeed()
+  paymentStore.loadDashboard()
 })
 
-// ── Remaining time for PENDING items ──
-// A reactive tick counter — increments every 60s to force re-evaluation
-const tick = ref(0)
-let tickTimer: ReturnType<typeof setInterval> | null = null
-onMounted(() => { tickTimer = setInterval(() => tick.value++, 60_000) })
-onUnmounted(() => { if (tickTimer) clearInterval(tickTimer) })
-
-function getRemainingTime(expiredAt: string | undefined): { label: string; colorClass: string } | null {
-  if (!expiredAt) return null
-  // Reading tick.value makes this expression reactive to the 60s timer
-  void tick.value
-  const diffMs = new Date(expiredAt).getTime() - Date.now()
-  if (diffMs <= 0) return { label: '만료됨', colorClass: 'text-gray-400' }
-  const totalMinutes = Math.floor(diffMs / 60_000)
-  const hours   = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  if (hours >= 1) {
-    const label = minutes > 0 ? `${hours}시간 ${minutes}분 남음` : `${hours}시간 남음`
-    return { label, colorClass: 'text-amber-500' }
-  }
-  return { label: `${minutes}분 남음`, colorClass: 'text-red-500' }
+// ── Month selector (drives both feed and dashboard) ──
+function ym(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
-// ── Filter ──
-type FilterKey = 'ALL' | TransactionStatus
-const activeFilter = ref<FilterKey>('ALL')
-
-const filteredTx = computed(() => {
-  if (activeFilter.value === 'ALL') return paymentStore.transactions
-  return paymentStore.transactions.filter((t) => t.status === activeFilter.value)
+// Last 12 months, newest first.
+const monthOptions = computed(() => {
+  const now = new Date()
+  return Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    return { value: ym(d), label: `${d.getFullYear()}년 ${d.getMonth() + 1}월` }
+  })
 })
 
-// ── Bar chart mock data (category spending) ──
-const categories = [
-  { label: '식비',  amount: 18500, color: '#0051ff' },
-  { label: '교통',  amount: 8200,  color: '#3380ff' },
-  { label: '쇼핑',  amount: 23600, color: '#66aaff' },
-  { label: '기타',  amount: 5850,  color: '#b3d4ff' },
-]
-const maxAmount = Math.max(...categories.map((c) => c.amount))
+function onMonthChange(e: Event) {
+  const month = (e.target as HTMLSelectElement).value
+  if (month === paymentStore.feedMonth) return
+  paymentStore.loadFeed({ month })   // keeps the current status filter
+  paymentStore.loadDashboard(month)
+}
+
+// ── Filter (server-side: changing it refetches the feed) ──
+type FilterKey = 'ALL' | Extract<PaymentFeedStatus, 'INVESTED' | 'PENDING' | 'CANCELED'>
+const activeFilter = computed<FilterKey>(() => paymentStore.feedStatus as FilterKey)
+
+function setFilter(f: FilterKey) {
+  if (paymentStore.feedStatus === f) return
+  paymentStore.loadFeed({ status: f })
+}
+
+// ── Category metadata (enum → Korean label + chart color) ──
+const CATEGORY_META: Record<CategoryType, { label: string; color: string }> = {
+  CAFE:     { label: '카페', color: '#0051ff' },
+  FOOD:     { label: '식비', color: '#3380ff' },
+  MART:     { label: '마트', color: '#66aaff' },
+  SHOPPING: { label: '쇼핑', color: '#99c2ff' },
+  TRAFFIC:  { label: '교통', color: '#b3d4ff' },
+  CULTURE:  { label: '문화', color: '#cce0ff' },
+  ETC:      { label: '기타', color: '#e0ecff' },
+}
+
+// ── Category bar chart (from dashboard) ──
+const categories = computed(() =>
+  (paymentStore.dashboard?.categorySpending ?? []).map((c) => ({
+    label:  CATEGORY_META[c.category]?.label ?? c.category,
+    amount: c.amount,
+    color:  CATEGORY_META[c.category]?.color ?? '#b3d4ff',
+  })),
+)
+const maxAmount = computed(() => Math.max(1, ...categories.value.map((c) => c.amount)))
 
 // ── Status badge config ──
 const statusConfig: Record<TransactionStatus, { label: string; class: string }> = {
@@ -72,6 +98,17 @@ function fmtDate(iso: string) {
 
 // Category icon SVGs (simple, inline)
 const categoryIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>`
+
+// ── Infinite scroll: observe a sentinel at the end of the list ──
+const sentinel = ref<HTMLElement | null>(null)
+let observer: IntersectionObserver | null = null
+onMounted(() => {
+  observer = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) paymentStore.loadMoreFeed()
+  }, { rootMargin: '200px' })
+  if (sentinel.value) observer.observe(sentinel.value)
+})
+onUnmounted(() => observer?.disconnect())
 </script>
 
 <template>
@@ -80,38 +117,50 @@ const categoryIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none
 
     <div class="px-4 pt-3 flex flex-col gap-3">
 
+      <!-- ── Month selector — governs every amount/stat on this page ── -->
+      <div class="relative self-start">
+        <select
+          :value="paymentStore.feedMonth"
+          class="appearance-none bg-white rounded-xl pl-4 pr-10 py-2.5 text-xl font-bold text-text-primary cursor-pointer focus:outline-none"
+          aria-label="조회할 월 선택"
+          @change="onMonthChange"
+        >
+          <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
+        </select>
+        <svg
+          class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2.5"
+        >
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </div>
+
       <!-- ── Summary stats ── -->
-      <div v-if="paymentStore.summary" class="grid grid-cols-3 gap-2">
+      <div v-if="paymentStore.dashboard" class="grid grid-cols-3 gap-2">
         <!-- Total payment -->
         <div class="bg-white rounded-xl p-3 flex flex-col gap-1.5">
           <span class="text-xs2 text-text-tertiary leading-none">총 결제 금액</span>
-          <span class="text-base font-bold text-text-primary">₩{{ fmt(paymentStore.summary.total_payment) }}</span>
+          <span class="text-base font-bold text-text-primary">₩{{ fmt(paymentStore.dashboard.totalPayment) }}</span>
         </div>
         <!-- Invested -->
         <div class="bg-brand-bg rounded-xl p-3 flex flex-col gap-1.5">
           <span class="text-xs2 text-brand-300 leading-none">투자된 잔돈</span>
-          <span class="text-base font-bold text-brand">₩{{ fmt(paymentStore.summary.total_invested_change) }}</span>
+          <span class="text-base font-bold text-brand">₩{{ fmt(paymentStore.dashboard.totalInvestedChange) }}</span>
         </div>
         <!-- Uninvested -->
         <div class="bg-warning-bg rounded-xl p-3 flex flex-col gap-1.5">
           <span class="text-xs2 text-warning leading-none">미투자 잔돈</span>
-          <span class="text-base font-bold text-warning">₩{{ fmt(paymentStore.summary.total_uninvested) }}</span>
+          <span class="text-base font-bold text-warning">₩{{ fmt(paymentStore.dashboard.totalUninvested) }}</span>
         </div>
       </div>
 
       <!-- ── Category bar chart ── -->
       <div class="bg-white rounded-xl px-5 py-5">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="text-md font-bold text-text-primary">소비 카테고리</h2>
-          <div class="bg-surface-alt rounded-lg px-3 py-1.5 flex items-center gap-1">
-            <span class="text-sm font-semibold text-text-primary">2026년 5월</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2.5">
-              <polyline points="6 9 12 15 18 9"/>
-            </svg>
-          </div>
-        </div>
+        <h2 class="text-md font-bold text-text-primary mb-4">소비 카테고리</h2>
 
-        <div class="flex flex-col gap-3">
+        <EmptyState v-if="categories.length === 0" message="이번 달 소비 내역이 없어요." />
+
+        <div v-else class="flex flex-col gap-3">
           <div v-for="cat in categories" :key="cat.label" class="flex items-center gap-3">
             <!-- Color dot legend -->
             <div class="w-2 h-2 rounded-full shrink-0" :style="{ background: cat.color }" />
@@ -143,30 +192,30 @@ const categoryIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none
             :class="activeFilter === f
               ? 'bg-brand text-white border-brand font-semibold'
               : 'bg-white text-text-tertiary border-surface-border font-medium'"
-            @click="activeFilter = f"
+            @click="setFilter(f)"
           >
             {{ f === 'ALL' ? '전체' : f === 'INVESTED' ? '투자 완료' : f === 'PENDING' ? '대기 중' : '취소' }}
 
-            <!-- Count badge on PENDING chip — shows count up to 9, then "9+" -->
+            <!-- Count badge on PENDING chip — from dashboard pendingCount (max 9, then "9+") -->
             <span
-              v-if="f === 'PENDING' && paymentStore.pendingTransactions.length > 0"
+              v-if="f === 'PENDING' && (paymentStore.dashboard?.pendingCount ?? 0) > 0"
               class="min-w-[18px] h-[18px] px-1 rounded-full text-xs2 font-bold flex items-center justify-center leading-none"
               :class="activeFilter === 'PENDING' ? 'bg-white text-brand' : 'bg-danger text-white'"
             >
-              {{ paymentStore.pendingTransactions.length > 9 ? '9+' : paymentStore.pendingTransactions.length }}
+              {{ (paymentStore.dashboard!.pendingCount) > 9 ? '9+' : paymentStore.dashboard!.pendingCount }}
             </span>
           </button>
         </div>
 
-        <EmptyState v-if="filteredTx.length === 0" message="해당하는 결제 내역이 없어요." />
+        <EmptyState v-if="paymentStore.feed.length === 0 && !paymentStore.feedLoading" message="해당하는 결제 내역이 없어요." />
 
         <div class="flex flex-col divide-y divide-surface-border">
           <div
-            v-for="tx in filteredTx"
+            v-for="tx in paymentStore.feed"
             :key="tx.id"
             class="py-3.5 flex items-center gap-3 first:pt-0"
             :class="tx.status === 'PENDING' ? 'cursor-pointer' : ''"
-            @click="tx.status === 'PENDING' && $router.push(`/payments/${tx.id}/select-stock`)"
+            @click="tx.status === 'PENDING' && goReview(tx)"
           >
             <!-- Merchant icon placeholder -->
             <div class="w-10 h-10 rounded-lg bg-brand-bg flex items-center justify-center shrink-0 text-brand">
@@ -180,8 +229,8 @@ const categoryIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none
                 <span class="text-base font-medium text-text-primary truncate">{{ tx.merchant }}</span>
               </div>
               <div class="flex items-center gap-2">
-                <span class="text-xs2 text-text-tertiary">{{ tx.category }}</span>
-                <span class="text-xs2 text-text-disabled">{{ fmtDate(tx.created_at) }}</span>
+                <span class="text-xs2 text-text-tertiary">{{ CATEGORY_META[tx.category]?.label ?? tx.category }}</span>
+                <span class="text-xs2 text-text-disabled">{{ fmtDate(tx.createdAt) }}</span>
               </div>
             </div>
 
@@ -189,7 +238,7 @@ const categoryIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none
             <div class="flex flex-col items-end gap-1.5 shrink-0">
               <span class="text-base font-semibold text-text-primary">₩{{ fmt(tx.amount) }}</span>
               <div class="flex items-center gap-1.5">
-                <span class="text-xs2 text-text-tertiary">잔돈 ₩{{ fmt(tx.round_up_amount) }}</span>
+                <span class="text-xs2 text-text-tertiary">잔돈 ₩{{ fmt(tx.roundUpAmount) }}</span>
                 <span
                   class="text-xs2 font-medium px-2 py-0.5 rounded-pill"
                   :class="statusConfig[tx.status].class"
@@ -197,19 +246,15 @@ const categoryIcon = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none
                   {{ statusConfig[tx.status].label }}
                 </span>
               </div>
-              <!-- Remaining time — only shown for PENDING items -->
-              <template v-if="tx.status === 'PENDING'">
-                <span
-                  v-if="getRemainingTime(tx.expired_at)"
-                  class="text-xs2 font-medium"
-                  :class="getRemainingTime(tx.expired_at)!.colorClass"
-                >
-                  {{ getRemainingTime(tx.expired_at)!.label }}
-                </span>
-              </template>
+              <!-- Remaining time until the approval deadline — PENDING only -->
+              <RemainingTime v-if="tx.status === 'PENDING' && tx.expiredAt" :expired-at="tx.expiredAt" />
             </div>
           </div>
         </div>
+
+        <!-- Infinite-scroll sentinel + loading indicator -->
+        <div ref="sentinel" class="h-px" />
+        <p v-if="paymentStore.feedLoading" class="text-center text-xs2 text-text-tertiary py-3">불러오는 중…</p>
       </div>
 
     </div>

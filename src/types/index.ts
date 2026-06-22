@@ -80,6 +80,73 @@ export interface PaymentSummary {
   monthly_uninvested: number
 }
 
+// ── Payment feed & dashboard (GET /api/payments, /api/payments/dashboard) ──
+// These endpoints return camelCase fields straight from the backend.
+
+// Status filter for the feed; mirrors the 결제 내역 tab. 'ALL' = no filter.
+export type PaymentFeedStatus = 'ALL' | 'PENDING' | 'INVESTED' | 'CANCELED'
+
+// One row in the paged payment feed.
+export interface PaymentFeedItem {
+  id:            number
+  merchant:      string
+  amount:        number
+  roundUpAmount: number
+  category:      CategoryType
+  status:        TransactionStatus
+  expiredAt:     string  // ISO-8601, e.g. "2026-06-22T10:30:00"
+  createdAt:     string
+}
+
+// ── Spring Data Page envelope ──
+export interface PageSort {
+  empty:    boolean
+  sorted:   boolean
+  unsorted: boolean
+}
+
+export interface Pageable {
+  offset:     number
+  sort:       PageSort
+  paged:      boolean
+  pageNumber: number
+  pageSize:   number
+  unpaged:    boolean
+}
+
+export interface Page<T> {
+  first:            boolean
+  last:             boolean
+  size:             number
+  content:          T[]
+  number:           number
+  sort:             PageSort
+  numberOfElements: number
+  pageable:         Pageable
+  empty:            boolean
+}
+
+// ── Dashboard (GET /api/payments/dashboard) ──
+export interface CategorySpending {
+  category: CategoryType
+  amount:   number
+}
+
+export interface PaymentDashboard {
+  totalPayment:        number  // 총 결제 금액
+  totalInvestedChange: number  // 투자된 잔돈 합계
+  totalUninvested:     number  // 미투자 잔돈 합계
+  pendingCount:        number  // 대기 중 건수
+  categorySpending:    CategorySpending[]
+}
+
+// Generic backend response envelope: { code, message, data }
+export interface ApiEnvelope<T> {
+  code:    string
+  message: string
+  data:    T
+}
+
 // Portfolio & Investment
 export interface StockHolding {
   ticker: string

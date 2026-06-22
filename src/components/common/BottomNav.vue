@@ -1,13 +1,20 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { usePaymentStore } from '@/stores/usePaymentStore'
 
 const route = useRoute()
 const paymentStore = usePaymentStore()
 
-// Reactive pending count — drives the red dot on the payments tab
-const hasPending = computed(() => paymentStore.pendingTransactions.length > 0)
+// Reactive pending count — drives the red dot on the payments tab.
+// Source: dashboard.pendingCount (GET /api/payments/dashboard).
+const hasPending = computed(() => (paymentStore.dashboard?.pendingCount ?? 0) > 0)
+
+// BottomNav renders on every tab, so load the dashboard once if no view has yet,
+// otherwise the dot wouldn't appear until the 결제 내역 tab is opened.
+onMounted(() => {
+  if (!paymentStore.dashboard) paymentStore.loadDashboard()
+})
 
 const tabs = [
   {
