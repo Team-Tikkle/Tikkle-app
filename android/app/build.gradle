@@ -9,6 +9,29 @@ if (localPropsFile.exists()) {
     localPropsFile.withInputStream { localProps.load(it) }
 }
 
+// Fall back to the project-root .env (VITE_* keys) so a fresh clone that only
+// filled in .env still builds with the correct payment config — no need to also
+// duplicate the secret into local.properties. (rootProject is android/, so .env
+// is one level up.) Parsed manually: skip blanks/comments, split on first '='.
+def envProps = new Properties()
+def envFile = rootProject.file('../.env')
+if (envFile.exists()) {
+    envFile.eachLine { line ->
+        def t = line.trim()
+        if (t.isEmpty() || t.startsWith('#')) return
+        def i = t.indexOf('=')
+        if (i > 0) envProps.setProperty(t.substring(0, i).trim(), t.substring(i + 1).trim())
+    }
+}
+
+// Resolution order: local.properties → .env (VITE_*) → gradle property → default
+def resolveApiBase = localProps.getProperty('API_BASE_URL') ?:
+        envProps.getProperty('VITE_API_BASE_URL') ?:
+        project.findProperty('API_BASE_URL') ?: 'https://api.tikkle.com'
+def resolvePaymentSecret = localProps.getProperty('PAYMENT_SECRET_KEY') ?:
+        envProps.getProperty('VITE_PAYMENT_SECRET_KEY') ?:
+        project.findProperty('PAYMENT_SECRET_KEY') ?: ''
+
 android {
     namespace = "com.tikkle.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -23,9 +46,9 @@ android {
         versionName "1.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        // Injected from local.properties (falls back to CI env / gradle property) — keep out of version control
-        buildConfigField "String", "API_BASE_URL",        "\"${localProps.getProperty('API_BASE_URL') ?: project.findProperty('API_BASE_URL') ?: 'https://api.tikkle.com'}\""
-        buildConfigField "String", "PAYMENT_SECRET_KEY",  "\"${localProps.getProperty('PAYMENT_SECRET_KEY') ?: project.findProperty('PAYMENT_SECRET_KEY') ?: ''}\""
+        // Resolved from local.properties → .env (VITE_*) → gradle property → default
+        buildConfigField "String", "API_BASE_URL",        "\"${resolveApiBase}\""
+        buildConfigField "String", "PAYMENT_SECRET_KEY",  "\"${resolvePaymentSecret}\""
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
