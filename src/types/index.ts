@@ -3,17 +3,13 @@ export type RiskType = 'STABLE' | 'NEUTRAL' | 'AGGRESSIVE'
 export type RoundUpRule = 'UNDER_1000' | 'UNDER_500' | 'UNDER_100'
 
 // ── Onboarding API payload types (POST /api/onboarding) ──
-export type RiskTolerance     = 'SAFE' | 'MODERATE' | 'AGGRESSIVE'
-export type InvestmentTerm    = 'SHORT_TERM' | 'LONG_TERM'
-export type InvestmentStyle   = 'VALUE' | 'MOMENTUM'
-export type PreferredTheme    = 'TECH' | 'BIO' | 'SEMICONDUCTOR' | 'GREEN' | 'ENTERTAINMENT' | 'NONE'
-export type StockCapPref      = 'BLUE_CHIP' | 'NEW_LISTING'
-export type MarketPreference  = 'DOMESTIC' | 'FOREIGN' | 'BOTH'
-export type EsgFocus          = 'NONE' | 'ESG_DRIVEN'
-export type SinIndustryFilter = 'NONE' | 'WEAPON' | 'TOBACCO' | 'FOSSIL_FUEL'
-export type ReturnPreference  = 'DIVIDEND' | 'GROWTH'
-export type DiversificationType = 'CONCENTRATED' | 'DIVERSIFIED'
-export type ExecutionMode     = 'AUTO' | 'MANUAL'
+// 코인 투자 성향 설문 Q1~Q5
+export type RiskTolerance       = 'SELL_IMMEDIATELY' | 'HOLD' | 'BUY_MORE'        // Q1. 하락장 방어 심리
+export type TrendSensitivity    = 'FUNDAMENTAL_ONLY' | 'PARTIAL_TREND' | 'FULL_TREND' // Q2. 트렌드 민감도
+export type CryptoTheme         = 'LAYER_1' | 'DEFI' | 'AI' | 'WEB3_GAMING' | 'RWA' | 'MEME' // Q3. 관심 테마 (다중)
+export type DiversificationType = 'CONCENTRATED' | 'BALANCED' | 'DIVERSIFIED'     // Q4. 포트폴리오 분산도
+export type MemeAcceptance      = 'NONE' | 'SMALL' | 'ACTIVE'                     // Q5. 밈 코인 수용도
+export type ExecutionMode       = 'AUTO' | 'MANUAL'                              // 매매 방식
 
 // Exactly 7 unique categories required by the backend
 export type CategoryType = 'CAFE' | 'MART' | 'FOOD' | 'SHOPPING' | 'TRAFFIC' | 'CULTURE' | 'ETC'
@@ -27,21 +23,15 @@ export interface CategoryRule {
 }
 
 export interface OnboardingRequest {
-  kisAppKey:           string
-  kisAppSecret:        string
-  kisAccountNum:       string
+  upbitAccessKey:      string
+  upbitSecretKey:      string
   targetCardCompany:   string
   targetCardLast4:     string       // exactly 4-digit numeric string
   riskTolerance:       RiskTolerance
-  investmentTerm:      InvestmentTerm
-  investmentStyle:     InvestmentStyle
-  preferredTheme:      PreferredTheme
-  stockCapPreference:  StockCapPref
-  marketPreference:    MarketPreference
-  esgFocus:            EsgFocus
-  sinIndustryFilter:   SinIndustryFilter
-  returnPreference:    ReturnPreference
+  trendSensitivity:    TrendSensitivity
+  cryptoThemes:        CryptoTheme[]
   diversificationType: DiversificationType
+  memeAcceptance:      MemeAcceptance
   executionMode:       ExecutionMode
   categoryRules:       CategoryRule[] // length must be exactly 7
 }

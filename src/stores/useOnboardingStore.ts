@@ -3,15 +3,10 @@ import { ref } from 'vue'
 import type { AxiosError } from 'axios'
 import type {
   RiskTolerance,
-  InvestmentTerm,
-  InvestmentStyle,
-  PreferredTheme,
-  StockCapPref,
-  MarketPreference,
-  EsgFocus,
-  SinIndustryFilter,
-  ReturnPreference,
+  TrendSensitivity,
+  CryptoTheme,
   DiversificationType,
+  MemeAcceptance,
   ExecutionMode,
   CategoryRule,
   OnboardingRequest,
@@ -39,27 +34,17 @@ const DEFAULT_CATEGORY_RULES: CategoryRule[] = [
 
 export const useOnboardingStore = defineStore('onboarding', () => {
 
-  // ── Step 1 (Survey): investment profile ──
-  // riskTolerance is the canonical API value set by the new OnboardingView.
-  const riskTolerance = ref<RiskTolerance>('MODERATE')
-  const executionMode = ref<ExecutionMode>('AUTO')
+  // ── 투자 성향 설문 (Q1~Q5) + 매매 방식 ──
+  const riskTolerance       = ref<RiskTolerance>('HOLD')               // Q1. 하락장 방어 심리
+  const trendSensitivity    = ref<TrendSensitivity>('PARTIAL_TREND')   // Q2. 트렌드 민감도
+  const cryptoThemes        = ref<CryptoTheme[]>([])                   // Q3. 관심 테마 (다중)
+  const diversificationType = ref<DiversificationType>('BALANCED')     // Q4. 분산도
+  const memeAcceptance      = ref<MemeAcceptance>('NONE')              // Q5. 밈 코인 수용도
+  const executionMode       = ref<ExecutionMode>('AUTO')              // 매매 방식
 
-  // Investment preference fields — defaulted here; future survey steps
-  // can update these via setPreferences() before submitOnboarding() is called.
-  const investmentTerm      = ref<InvestmentTerm>('LONG_TERM')
-  const investmentStyle     = ref<InvestmentStyle>('VALUE')
-  const preferredTheme      = ref<PreferredTheme>('NONE')
-  const stockCapPreference  = ref<StockCapPref>('BLUE_CHIP')
-  const marketPreference    = ref<MarketPreference>('DOMESTIC')
-  const esgFocus            = ref<EsgFocus>('NONE')
-  const sinIndustryFilter   = ref<SinIndustryFilter>('NONE')
-  const returnPreference    = ref<ReturnPreference>('GROWTH')
-  const diversificationType = ref<DiversificationType>('DIVERSIFIED')
-
-  // ── Step 2 (ApiKey): KIS credentials + card info ──
-  const kisAppKey         = ref('')
-  const kisAppSecret      = ref('')
-  const kisAccountNum     = ref('')
+  // ── 업비트 Open API 키 + 결제 카드 ──
+  const upbitAccessKey    = ref('')
+  const upbitSecretKey    = ref('')
   const targetCardCompany = ref('')
   const targetCardLast4   = ref('')   // must be exactly 4 digits
 
@@ -68,44 +53,31 @@ export const useOnboardingStore = defineStore('onboarding', () => {
 
   // ── Actions ──
 
-  // setPreferences — used by the new consolidated OnboardingView (all 9 axes).
-  // Accepts RiskTolerance directly so no reverse-mapping is needed.
+  // setPreferences — Q1~Q5 설문 결과 + 매매 방식을 한 번에 반영한다.
   function setPreferences(params: {
     riskTolerance:       RiskTolerance
-    investmentTerm:      InvestmentTerm
-    investmentStyle:     InvestmentStyle
-    preferredTheme:      PreferredTheme
-    stockCapPreference:  StockCapPref
-    marketPreference:    MarketPreference
-    esgFocus:            EsgFocus
-    sinIndustryFilter:   SinIndustryFilter
-    returnPreference:    ReturnPreference
+    trendSensitivity:    TrendSensitivity
+    cryptoThemes:        CryptoTheme[]
     diversificationType: DiversificationType
+    memeAcceptance:      MemeAcceptance
     executionMode:       ExecutionMode
   }) {
-    riskTolerance.value      = params.riskTolerance
-    investmentTerm.value     = params.investmentTerm
-    investmentStyle.value    = params.investmentStyle
-    preferredTheme.value     = params.preferredTheme
-    stockCapPreference.value = params.stockCapPreference
-    marketPreference.value   = params.marketPreference
-    esgFocus.value           = params.esgFocus
-    sinIndustryFilter.value  = params.sinIndustryFilter
-    returnPreference.value   = params.returnPreference
+    riskTolerance.value       = params.riskTolerance
+    trendSensitivity.value    = params.trendSensitivity
+    cryptoThemes.value        = [...params.cryptoThemes]
     diversificationType.value = params.diversificationType
-    executionMode.value      = params.executionMode
+    memeAcceptance.value      = params.memeAcceptance
+    executionMode.value       = params.executionMode
   }
 
   function setCredentials(params: {
-    kisAppKey: string
-    kisAppSecret: string
-    kisAccountNum: string
+    upbitAccessKey: string
+    upbitSecretKey: string
     targetCardCompany: string
     targetCardLast4: string
   }) {
-    kisAppKey.value         = params.kisAppKey
-    kisAppSecret.value      = params.kisAppSecret
-    kisAccountNum.value     = params.kisAccountNum
+    upbitAccessKey.value    = params.upbitAccessKey
+    upbitSecretKey.value    = params.upbitSecretKey
     targetCardCompany.value = params.targetCardCompany
     targetCardLast4.value   = params.targetCardLast4
   }
@@ -120,21 +92,15 @@ export const useOnboardingStore = defineStore('onboarding', () => {
   // display the message directly in the UI.
   async function submitOnboarding(): Promise<void> {
     const payload: OnboardingRequest = {
-      kisAppKey:           kisAppKey.value,
-      kisAppSecret:        kisAppSecret.value,
-      kisAccountNum:       kisAccountNum.value,
+      upbitAccessKey:      upbitAccessKey.value,
+      upbitSecretKey:      upbitSecretKey.value,
       targetCardCompany:   targetCardCompany.value,
       targetCardLast4:     targetCardLast4.value,
       riskTolerance:       riskTolerance.value,
-      investmentTerm:      investmentTerm.value,
-      investmentStyle:     investmentStyle.value,
-      preferredTheme:      preferredTheme.value,
-      stockCapPreference:  stockCapPreference.value,
-      marketPreference:    marketPreference.value,
-      esgFocus:            esgFocus.value,
-      sinIndustryFilter:   sinIndustryFilter.value,
-      returnPreference:    returnPreference.value,
+      trendSensitivity:    trendSensitivity.value,
+      cryptoThemes:        cryptoThemes.value,
       diversificationType: diversificationType.value,
+      memeAcceptance:      memeAcceptance.value,
       executionMode:       executionMode.value,
       categoryRules:       categoryRules.value,
     }
@@ -164,21 +130,15 @@ export const useOnboardingStore = defineStore('onboarding', () => {
   return {
     // state (read-only from outside — mutations go through setters)
     riskTolerance,
+    trendSensitivity,
+    cryptoThemes,
+    diversificationType,
+    memeAcceptance,
     executionMode,
-    kisAppKey,
-    kisAppSecret,
-    kisAccountNum,
+    upbitAccessKey,
+    upbitSecretKey,
     targetCardCompany,
     targetCardLast4,
-    investmentTerm,
-    investmentStyle,
-    preferredTheme,
-    stockCapPreference,
-    marketPreference,
-    esgFocus,
-    sinIndustryFilter,
-    returnPreference,
-    diversificationType,
     categoryRules,
     // actions
     setPreferences,

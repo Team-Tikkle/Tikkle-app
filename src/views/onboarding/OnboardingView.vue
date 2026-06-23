@@ -5,15 +5,10 @@ import { useUserStore } from '@/stores/useUserStore';
 import { useOnboardingStore } from '@/stores/useOnboardingStore';
 import type {
   RiskTolerance,
-  InvestmentTerm,
-  InvestmentStyle,
-  PreferredTheme,
-  StockCapPref,
-  MarketPreference,
-  EsgFocus,
-  SinIndustryFilter,
-  ReturnPreference,
+  TrendSensitivity,
+  CryptoTheme,
   DiversificationType,
+  MemeAcceptance,
   ExecutionMode,
   CategoryType,
   RuleType,
@@ -25,44 +20,58 @@ const userStore = useUserStore();
 const onboardingStore = useOnboardingStore();
 
 // ── Step tracking ──
-// 1: 투자 성향  2: 잔돈 설정  3: 거래소 연동  4: 카드 등록
+// 1: 업비트 연결  2: 카드 등록  3~7: 투자 성향 Q1~Q5  8: 매매 방식 & 잔돈 규칙
 const step = ref(1);
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 8;
 
-// ── Step 1 state ──
-const prefs = reactive({
-  riskTolerance: 'MODERATE' as RiskTolerance,
-  investmentTerm: 'LONG_TERM' as InvestmentTerm,
-  investmentStyle: 'VALUE' as InvestmentStyle,
-  preferredTheme: 'NONE' as PreferredTheme,
-  stockCapPreference: 'BLUE_CHIP' as StockCapPref,
-  marketPreference: 'DOMESTIC' as MarketPreference,
-  esgFocus: 'NONE' as EsgFocus,
-  sinIndustryFilter: 'NONE' as SinIndustryFilter,
-  returnPreference: 'GROWTH' as ReturnPreference,
-  diversificationType: 'DIVERSIFIED' as DiversificationType,
-  executionMode: 'AUTO' as ExecutionMode,
-});
-
-// ── Step 2 state ──
-const kisAppKey = ref('');
-const kisAppSecret = ref('');
+// ── 업비트 Open API 키 + 결제 카드 ──
+const accessKey = ref('');
+const secretKey = ref('');
 const cardCompany = ref('국민카드');
 const cardLast4 = ref('');
 
 const isCardLast4Valid = computed(() => /^\d{4}$/.test(cardLast4.value));
 
-// Step 3: 업비트 Open API 키만 검증 (카드 정보는 Step 4로 분리)
-const isStep3Valid = computed(
-  () => kisAppKey.value.trim() && kisAppSecret.value.trim(),
+// Step 1: 업비트 키 검증 / Step 2: 카드 검증
+const isStep1Valid = computed(
+  () => accessKey.value.trim() && secretKey.value.trim(),
 );
-
-// Step 4: 결제 카드 정보 검증
-const isStep4Valid = computed(
+const isStep2Valid = computed(
   () => cardCompany.value.trim() && isCardLast4Valid.value,
 );
 
-// ── Step 2 state: 잔돈 규칙 ──
+// ── 투자 성향 설문 (Q1~Q5) + 매매 방식 ──
+const prefs = reactive({
+  riskTolerance: 'HOLD' as RiskTolerance,
+  trendSensitivity: 'PARTIAL_TREND' as TrendSensitivity,
+  diversificationType: 'BALANCED' as DiversificationType,
+  memeAcceptance: 'NONE' as MemeAcceptance,
+  executionMode: 'AUTO' as ExecutionMode,
+});
+// Q3: 관심 테마 (다중 선택)
+const cryptoThemes = ref<CryptoTheme[]>([]);
+
+function toggleTheme(theme: CryptoTheme) {
+  const i = cryptoThemes.value.indexOf(theme);
+  if (i >= 0) cryptoThemes.value.splice(i, 1);
+  else cryptoThemes.value.push(theme);
+}
+
+// 단계별 진행 가능 여부 (검증이 필요한 단계만 막는다)
+const canProceed = computed(() => {
+  switch (step.value) {
+    case 1:
+      return Boolean(isStep1Valid.value);
+    case 2:
+      return Boolean(isStep2Valid.value);
+    case 5:
+      return cryptoThemes.value.length > 0; // Q3: 최소 1개 테마 선택
+    default:
+      return true;
+  }
+});
+
+// ── 잔돈 규칙 (Step 8) ──
 // 온보딩에서는 하나의 규칙을 모든 카테고리에 일괄 적용한다.
 // 카테고리별 세부 조정은 가입 후 설정 화면(CategoryRulesView)에서 가능.
 const ALL_CATEGORIES: CategoryType[] = [
@@ -103,7 +112,8 @@ const activeOptions = computed(() =>
   ruleMode.value === 'ROUND_UP' ? ROUND_UP_OPTIONS : PERCENT_OPTIONS,
 );
 const activeIndex = computed<number>({
-  get: () => (ruleMode.value === 'ROUND_UP' ? roundUpIndex.value : percentIndex.value),
+  get: () =>
+    ruleMode.value === 'ROUND_UP' ? roundUpIndex.value : percentIndex.value,
   set: (v) => {
     if (ruleMode.value === 'ROUND_UP') roundUpIndex.value = v;
     else percentIndex.value = v;
@@ -111,7 +121,9 @@ const activeIndex = computed<number>({
 });
 
 // 제출 시 모든 카테고리에 일괄 적용할 규칙
-const selectedRule = computed<RuleType>(() => activeOptions.value[activeIndex.value].value);
+const selectedRule = computed<RuleType>(
+  () => activeOptions.value[activeIndex.value].value,
+);
 
 // 카드 상단 현재 값 + 설명
 const ruleValueLabel = computed(() =>
@@ -157,20 +169,26 @@ function skipOnboarding() {
   router.replace('/');
 }
 
-// ── Submit (Step 3) ──
+// ── Submit (Step 8) ──
 async function handleSubmit() {
   if (isLoading.value) return;
   isLoading.value = true;
   errorMsg.value = '';
 
   try {
-    onboardingStore.setPreferences({ ...prefs });
     onboardingStore.setCredentials({
-      kisAppKey: kisAppKey.value.trim(),
-      kisAppSecret: kisAppSecret.value.trim(),
-      kisAccountNum: '',
+      upbitAccessKey: accessKey.value.trim(),
+      upbitSecretKey: secretKey.value.trim(),
       targetCardCompany: cardCompany.value,
       targetCardLast4: cardLast4.value,
+    });
+    onboardingStore.setPreferences({
+      riskTolerance: prefs.riskTolerance,
+      trendSensitivity: prefs.trendSensitivity,
+      cryptoThemes: [...cryptoThemes.value],
+      diversificationType: prefs.diversificationType,
+      memeAcceptance: prefs.memeAcceptance,
+      executionMode: prefs.executionMode,
     });
     onboardingStore.setCategoryRules(
       ALL_CATEGORIES.map(
@@ -193,54 +211,43 @@ async function handleSubmit() {
   }
 }
 
-// ── Label maps ──
-const RISK_LABELS: Record<RiskTolerance, string> = {
-  SAFE: '안정형',
-  MODERATE: '중립형',
-  AGGRESSIVE: '공격형',
+// ── Q1~Q5 설문 라벨 ──
+const RISK_LABELS: Record<RiskTolerance, { title: string; desc: string }> = {
+  SELL_IMMEDIATELY: { title: '즉시 매도', desc: '더 잃기 전에 바로 정리할래요' },
+  HOLD: { title: '홀딩', desc: '단기 변동엔 둔감하게, 그대로 들고 가요' },
+  BUY_MORE: { title: '추가 매수', desc: '하락은 기회, 더 담아 평단을 낮춰요' },
 };
-const TERM_LABELS: Record<InvestmentTerm, string> = {
-  SHORT_TERM: '단기',
-  LONG_TERM: '장기',
+const TREND_LABELS: Record<TrendSensitivity, { title: string; desc: string }> = {
+  FUNDAMENTAL_ONLY: {
+    title: '펀더멘털 위주',
+    desc: '트렌드는 무시, 기본기 좋은 코인만',
+  },
+  PARTIAL_TREND: {
+    title: '대장 + 일부 트렌드',
+    desc: '메이저 중심으로 트렌드를 일부 탑승',
+  },
+  FULL_TREND: { title: '트렌드 적극', desc: '뜨는 트렌드 코인에 적극 편승해요' },
 };
-const STYLE_LABELS: Record<InvestmentStyle, string> = {
-  VALUE: '가치투자',
-  MOMENTUM: '모멘텀투자',
+const THEME_LABELS: Record<CryptoTheme, { title: string; sub: string }> = {
+  LAYER_1: { title: '레이어1', sub: 'BTC·ETH·SOL' },
+  DEFI: { title: '디파이', sub: '탈중앙 금융' },
+  AI: { title: 'AI', sub: 'AI 관련 코인' },
+  WEB3_GAMING: { title: '웹3·게이밍', sub: '게임·메타버스' },
+  RWA: { title: 'RWA', sub: '실물자산 토큰화' },
+  MEME: { title: '밈', sub: '밈 코인' },
 };
-const THEME_LABELS: Record<PreferredTheme, string> = {
-  TECH: '기술',
-  BIO: '바이오',
-  SEMICONDUCTOR: '반도체',
-  GREEN: '친환경',
-  ENTERTAINMENT: '엔터',
-  NONE: '없음',
+const DIVERS_LABELS: Record<
+  DiversificationType,
+  { title: string; desc: string }
+> = {
+  CONCENTRATED: { title: '집중형', desc: '될 놈에게 몰빵, 소수 정예로' },
+  BALANCED: { title: '균형형', desc: '대장과 유망주를 반반으로' },
+  DIVERSIFIED: { title: '분산형', desc: '여러 테마에 고루 분산해요' },
 };
-const CAP_LABELS: Record<StockCapPref, string> = {
-  BLUE_CHIP: '대형주',
-  NEW_LISTING: '신규상장',
-};
-const MARKET_LABELS: Record<MarketPreference, string> = {
-  DOMESTIC: '국내',
-  FOREIGN: '해외',
-  BOTH: '국내+해외',
-};
-const ESG_LABELS: Record<EsgFocus, string> = {
-  NONE: '없음',
-  ESG_DRIVEN: 'ESG 중시',
-};
-const SIN_LABELS: Record<SinIndustryFilter, string> = {
-  NONE: '필터 없음',
-  WEAPON: '무기 제외',
-  TOBACCO: '담배 제외',
-  FOSSIL_FUEL: '화석연료 제외',
-};
-const RETURN_LABELS: Record<ReturnPreference, string> = {
-  DIVIDEND: '배당',
-  GROWTH: '성장',
-};
-const DIVERS_LABELS: Record<DiversificationType, string> = {
-  CONCENTRATED: '집중투자',
-  DIVERSIFIED: '분산투자',
+const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
+  NONE: { title: '투자 안 함', desc: '밈 코인은 절대 담지 않아요' },
+  SMALL: { title: '소액', desc: '재미 삼아 10% 미만으로만' },
+  ACTIVE: { title: '적극', desc: '밈 코인에도 적극 투자해요' },
 };
 </script>
 
@@ -279,224 +286,354 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
 
     <!-- Scrollable content -->
     <div class="flex-1 overflow-y-auto pb-36">
-      <!-- ── Step 1: 투자 성향 ── -->
+      <!-- ── Step 1: 업비트 계좌 연결 ── -->
       <div v-if="step === 1" class="px-6 pt-6 flex flex-col gap-6">
-        <span class="text-sm font-semibold text-brand">투자 성향 설정</span>
+        <span class="text-sm font-semibold text-brand">거래소 연동</span>
 
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            투자 성향을<br />알려주세요
+            업비트 계정을<br />연결해 주세요
           </h2>
           <p class="text-base text-text-tertiary leading-relaxed">
-            9가지 항목으로 나에게 맞는 투자 전략을 만들어요.
+            업비트 Open API 키를 연동합니다. 키 발급 시 출금 권한은 켜지 않아도
+            됩니다.
           </p>
         </div>
 
-        <!-- Risk Tolerance -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">위험 성향</p>
-          <div class="flex gap-2">
-            <button
-              v-for="(label, key) in RISK_LABELS"
-              :key="key"
-              class="flex-1 py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.riskTolerance === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.riskTolerance = key as RiskTolerance"
+        <!-- Info banner -->
+        <div class="bg-brand-bg rounded-xl p-4 flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <svg
+              class="text-brand shrink-0"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
             >
-              {{ label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Investment Term -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">투자 기간</p>
-          <div class="flex gap-2">
-            <button
-              v-for="(label, key) in TERM_LABELS"
-              :key="key"
-              class="flex-1 py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.investmentTerm === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.investmentTerm = key as InvestmentTerm"
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="8" x2="12" y2="12" />
+              <line x1="12" y1="16" x2="12.01" y2="16" />
+            </svg>
+            <span class="text-base font-semibold text-brand"
+              >Open API 키 연동</span
             >
-              {{ label }}
-            </button>
           </div>
-        </div>
-
-        <!-- Investment Style -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">투자 스타일</p>
-          <div class="flex gap-2">
-            <button
-              v-for="(label, key) in STYLE_LABELS"
-              :key="key"
-              class="flex-1 py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.investmentStyle === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.investmentStyle = key as InvestmentStyle"
-            >
-              {{ label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Preferred Theme -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">관심 테마</p>
-          <div class="grid grid-cols-3 gap-2">
-            <button
-              v-for="(label, key) in THEME_LABELS"
-              :key="key"
-              class="py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.preferredTheme === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.preferredTheme = key as PreferredTheme"
-            >
-              {{ label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Stock Cap Preference -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">
-            선호 종목 규모
+          <p class="text-sm text-brand-300 leading-relaxed">
+            업비트 [마이페이지 → Open API 관리]에서 API 키를 발급받아 입력해
+            주세요.
           </p>
-          <div class="flex gap-2">
-            <button
-              v-for="(label, key) in CAP_LABELS"
-              :key="key"
-              class="flex-1 py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.stockCapPreference === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.stockCapPreference = key as StockCapPref"
-            >
-              {{ label }}
-            </button>
-          </div>
         </div>
 
-        <!-- Market Preference -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">투자 시장</p>
-          <div class="flex gap-2">
-            <button
-              v-for="(label, key) in MARKET_LABELS"
-              :key="key"
-              class="flex-1 py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.marketPreference === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.marketPreference = key as MarketPreference"
+        <div class="flex flex-col gap-5">
+          <!-- Access Key -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-text-secondary"
+              >Access Key</label
             >
-              {{ label }}
-            </button>
+            <input
+              v-model="accessKey"
+              type="text"
+              placeholder="Access Key를 붙여넣으세요"
+              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
+            />
+            <p class="text-xs2 text-text-tertiary">
+              업비트 → 마이페이지 → Open API 관리 → Access Key 복사
+            </p>
           </div>
-        </div>
 
-        <!-- ESG Focus -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">ESG 투자</p>
-          <div class="flex gap-2">
-            <button
-              v-for="(label, key) in ESG_LABELS"
-              :key="key"
-              class="flex-1 py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.esgFocus === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.esgFocus = key as EsgFocus"
+          <!-- Secret Key -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-text-secondary"
+              >Secret Key</label
             >
-              {{ label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Sin Industry Filter -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">제외 산업</p>
-          <div class="grid grid-cols-2 gap-2">
-            <button
-              v-for="(label, key) in SIN_LABELS"
-              :key="key"
-              class="py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.sinIndustryFilter === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.sinIndustryFilter = key as SinIndustryFilter"
-            >
-              {{ label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Return Preference -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">수익 방식</p>
-          <div class="flex gap-2">
-            <button
-              v-for="(label, key) in RETURN_LABELS"
-              :key="key"
-              class="flex-1 py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.returnPreference === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.returnPreference = key as ReturnPreference"
-            >
-              {{ label }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Diversification Type -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">분산 투자</p>
-          <div class="flex gap-2">
-            <button
-              v-for="(label, key) in DIVERS_LABELS"
-              :key="key"
-              class="flex-1 py-3 rounded-xl text-sm font-semibold border transition-all"
-              :class="
-                prefs.diversificationType === key
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-text-secondary border-surface-border'
-              "
-              @click="prefs.diversificationType = key as DiversificationType"
-            >
-              {{ label }}
-            </button>
+            <input
+              v-model="secretKey"
+              type="password"
+              placeholder="Secret Key를 붙여넣으세요"
+              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
+            />
           </div>
         </div>
       </div>
 
-      <!-- ── Step 2: 잔돈 규칙 & 매매 방식 ── -->
-      <div v-else-if="step === 2" class="px-6 pt-6 flex flex-col gap-7">
+      <!-- ── Step 2: 카드 등록 ── -->
+      <div v-else-if="step === 2" class="px-6 pt-6 flex flex-col gap-6">
+        <span class="text-sm font-semibold text-brand">카드 등록</span>
+
+        <div class="flex flex-col gap-2">
+          <h2 class="text-2xl font-bold text-text-primary leading-snug">
+            잔돈 적립에 사용할<br />카드를 등록해 주세요
+          </h2>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            업비트와는 별개로, 잔돈을 모을 결제 카드를 등록합니다.
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-5">
+          <!-- Card company -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-text-secondary"
+              >카드사</label
+            >
+            <select
+              v-model="cardCompany"
+              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all appearance-none"
+            >
+              <option value="국민카드">국민카드</option>
+              <option value="우리카드">우리카드</option>
+              <option value="하나카드">하나카드</option>
+              <option value="케이뱅크">케이뱅크</option>
+            </select>
+          </div>
+
+          <!-- Card last 4 digits -->
+          <div class="flex flex-col gap-2">
+            <label class="text-sm font-semibold text-text-secondary"
+              >카드 번호 끝 4자리</label
+            >
+            <input
+              v-model="cardLast4"
+              type="text"
+              inputmode="numeric"
+              maxlength="4"
+              placeholder="0000"
+              class="w-full px-4 py-3.5 rounded-xl bg-white border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 transition-all"
+              :class="
+                cardLast4 && !isCardLast4Valid
+                  ? 'border-danger focus:border-danger focus:ring-danger/20'
+                  : 'border-surface-border focus:border-brand focus:ring-brand/20'
+              "
+            />
+            <p
+              v-if="cardLast4 && !isCardLast4Valid"
+              class="text-xs2 text-danger"
+            >
+              숫자 4자리를 정확히 입력해 주세요.
+            </p>
+            <p v-else class="text-xs2 text-text-tertiary">
+              잔돈 적립 대상 카드의 끝 4자리 숫자를 입력하세요
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Step 3: Q1 하락장 방어 ── -->
+      <div v-else-if="step === 3" class="px-6 pt-6 flex flex-col gap-6">
+        <span class="text-sm font-semibold text-brand">Q1 · 하락장 방어</span>
+        <div class="flex flex-col gap-2">
+          <h2 class="text-2xl font-bold text-text-primary leading-snug">
+            보유 코인이 급락하면<br />어떻게 하시겠어요?
+          </h2>
+        </div>
+        <div class="flex flex-col gap-3">
+          <button
+            v-for="(opt, key) in RISK_LABELS"
+            :key="key"
+            class="w-full text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-0.5"
+            :class="
+              prefs.riskTolerance === key
+                ? 'border-brand bg-brand-bg'
+                : 'border-surface-border bg-white'
+            "
+            @click="prefs.riskTolerance = key as RiskTolerance"
+          >
+            <span
+              class="text-base font-bold"
+              :class="
+                prefs.riskTolerance === key ? 'text-brand' : 'text-text-primary'
+              "
+              >{{ opt.title }}</span
+            >
+            <span
+              class="text-sm"
+              :class="
+                prefs.riskTolerance === key
+                  ? 'text-brand-300'
+                  : 'text-text-tertiary'
+              "
+              >{{ opt.desc }}</span
+            >
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Step 4: Q2 트렌드 민감도 ── -->
+      <div v-else-if="step === 4" class="px-6 pt-6 flex flex-col gap-6">
+        <span class="text-sm font-semibold text-brand">Q2 · 트렌드 민감도</span>
+        <div class="flex flex-col gap-2">
+          <h2 class="text-2xl font-bold text-text-primary leading-snug">
+            투자할 코인을<br />어떻게 고르시나요?
+          </h2>
+        </div>
+        <div class="flex flex-col gap-3">
+          <button
+            v-for="(opt, key) in TREND_LABELS"
+            :key="key"
+            class="w-full text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-0.5"
+            :class="
+              prefs.trendSensitivity === key
+                ? 'border-brand bg-brand-bg'
+                : 'border-surface-border bg-white'
+            "
+            @click="prefs.trendSensitivity = key as TrendSensitivity"
+          >
+            <span
+              class="text-base font-bold"
+              :class="
+                prefs.trendSensitivity === key
+                  ? 'text-brand'
+                  : 'text-text-primary'
+              "
+              >{{ opt.title }}</span
+            >
+            <span
+              class="text-sm"
+              :class="
+                prefs.trendSensitivity === key
+                  ? 'text-brand-300'
+                  : 'text-text-tertiary'
+              "
+              >{{ opt.desc }}</span
+            >
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Step 5: Q3 관심 테마 (다중) ── -->
+      <div v-else-if="step === 5" class="px-6 pt-6 flex flex-col gap-6">
+        <span class="text-sm font-semibold text-brand">Q3 · 관심 테마</span>
+        <div class="flex flex-col gap-2">
+          <h2 class="text-2xl font-bold text-text-primary leading-snug">
+            관심 있는 테마를<br />모두 골라주세요
+          </h2>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            여러 개를 선택할 수 있어요.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <button
+            v-for="(opt, key) in THEME_LABELS"
+            :key="key"
+            class="text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-0.5"
+            :class="
+              cryptoThemes.includes(key as CryptoTheme)
+                ? 'border-brand bg-brand-bg'
+                : 'border-surface-border bg-white'
+            "
+            @click="toggleTheme(key as CryptoTheme)"
+          >
+            <span
+              class="text-base font-bold"
+              :class="
+                cryptoThemes.includes(key as CryptoTheme)
+                  ? 'text-brand'
+                  : 'text-text-primary'
+              "
+              >{{ opt.title }}</span
+            >
+            <span
+              class="text-xs2"
+              :class="
+                cryptoThemes.includes(key as CryptoTheme)
+                  ? 'text-brand-300'
+                  : 'text-text-tertiary'
+              "
+              >{{ opt.sub }}</span
+            >
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Step 6: Q4 분산도 ── -->
+      <div v-else-if="step === 6" class="px-6 pt-6 flex flex-col gap-6">
+        <span class="text-sm font-semibold text-brand">Q4 · 분산도</span>
+        <div class="flex flex-col gap-2">
+          <h2 class="text-2xl font-bold text-text-primary leading-snug">
+            포트폴리오를<br />어떻게 구성할까요?
+          </h2>
+        </div>
+        <div class="flex flex-col gap-3">
+          <button
+            v-for="(opt, key) in DIVERS_LABELS"
+            :key="key"
+            class="w-full text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-0.5"
+            :class="
+              prefs.diversificationType === key
+                ? 'border-brand bg-brand-bg'
+                : 'border-surface-border bg-white'
+            "
+            @click="prefs.diversificationType = key as DiversificationType"
+          >
+            <span
+              class="text-base font-bold"
+              :class="
+                prefs.diversificationType === key
+                  ? 'text-brand'
+                  : 'text-text-primary'
+              "
+              >{{ opt.title }}</span
+            >
+            <span
+              class="text-sm"
+              :class="
+                prefs.diversificationType === key
+                  ? 'text-brand-300'
+                  : 'text-text-tertiary'
+              "
+              >{{ opt.desc }}</span
+            >
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Step 7: Q5 밈 코인 수용도 ── -->
+      <div v-else-if="step === 7" class="px-6 pt-6 flex flex-col gap-6">
+        <span class="text-sm font-semibold text-brand">Q5 · 밈 코인</span>
+        <div class="flex flex-col gap-2">
+          <h2 class="text-2xl font-bold text-text-primary leading-snug">
+            밈 코인에 대한<br />생각은 어떠세요?
+          </h2>
+        </div>
+        <div class="flex flex-col gap-3">
+          <button
+            v-for="(opt, key) in MEME_LABELS"
+            :key="key"
+            class="w-full text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-0.5"
+            :class="
+              prefs.memeAcceptance === key
+                ? 'border-brand bg-brand-bg'
+                : 'border-surface-border bg-white'
+            "
+            @click="prefs.memeAcceptance = key as MemeAcceptance"
+          >
+            <span
+              class="text-base font-bold"
+              :class="
+                prefs.memeAcceptance === key
+                  ? 'text-brand'
+                  : 'text-text-primary'
+              "
+              >{{ opt.title }}</span
+            >
+            <span
+              class="text-sm"
+              :class="
+                prefs.memeAcceptance === key
+                  ? 'text-brand-300'
+                  : 'text-text-tertiary'
+              "
+              >{{ opt.desc }}</span
+            >
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Step 8: 매매 방식 & 잔돈 규칙 ── -->
+      <div v-else-if="step === 8" class="px-6 pt-6 flex flex-col gap-7">
         <span class="text-sm font-semibold text-brand">잔돈 설정</span>
 
         <div class="flex flex-col gap-2">
@@ -633,142 +770,6 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
             </button>
           </div>
         </div>
-      </div>
-
-      <!-- ── Step 3: 거래소 연동 ── -->
-      <div v-else-if="step === 3" class="px-6 pt-6 flex flex-col gap-6">
-        <span class="text-sm font-semibold text-brand">거래소 연동</span>
-
-        <div class="flex flex-col gap-2">
-          <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            업비트 계정을<br />연결해 주세요
-          </h2>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            업비트 Open API 키를 연동합니다. 키 발급 시 출금 권한은 켜지 않아도
-            됩니다.
-          </p>
-        </div>
-
-        <!-- Info banner -->
-        <div class="bg-brand-bg rounded-xl p-4 flex flex-col gap-2">
-          <div class="flex items-center gap-2">
-            <svg
-              class="text-brand shrink-0"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>
-            <span class="text-base font-semibold text-brand"
-              >Open API 키 연동</span
-            >
-          </div>
-          <p class="text-sm text-brand-300 leading-relaxed">
-            업비트 [마이페이지 → Open API 관리]에서 API 키를 발급받아 입력해
-            주세요.
-          </p>
-        </div>
-
-        <div class="flex flex-col gap-5">
-          <!-- Access Key -->
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary"
-              >Access Key</label
-            >
-            <input
-              v-model="kisAppKey"
-              type="text"
-              placeholder="Access Key를 붙여넣으세요"
-              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-            />
-            <p class="text-xs2 text-text-tertiary">
-              업비트 → 마이페이지 → Open API 관리 → Access Key 복사
-            </p>
-          </div>
-
-          <!-- Secret Key -->
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary"
-              >Secret Key</label
-            >
-            <input
-              v-model="kisAppSecret"
-              type="password"
-              placeholder="Secret Key를 붙여넣으세요"
-              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-            />
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ── Step 4: 카드 등록 ── -->
-      <div v-else-if="step === 4" class="px-6 pt-6 flex flex-col gap-6">
-        <span class="text-sm font-semibold text-brand">카드 등록</span>
-
-        <div class="flex flex-col gap-2">
-          <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            잔돈 적립에 사용할<br />카드를 등록해 주세요
-          </h2>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            업비트와는 별개로, 잔돈을 모을 결제 카드를 등록합니다.
-          </p>
-        </div>
-
-        <div class="flex flex-col gap-5">
-          <!-- Card company -->
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary"
-              >카드사</label
-            >
-            <select
-              v-model="cardCompany"
-              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all appearance-none"
-            >
-              <option value="국민카드">국민카드</option>
-              <option value="우리카드">우리카드</option>
-              <option value="하나카드">하나카드</option>
-              <option value="케이뱅크">케이뱅크</option>
-            </select>
-          </div>
-
-          <!-- Card last 4 digits -->
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary"
-              >카드 번호 끝 4자리</label
-            >
-            <input
-              v-model="cardLast4"
-              type="text"
-              inputmode="numeric"
-              maxlength="4"
-              placeholder="0000"
-              class="w-full px-4 py-3.5 rounded-xl bg-white border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 transition-all"
-              :class="
-                cardLast4 && !isCardLast4Valid
-                  ? 'border-danger focus:border-danger focus:ring-danger/20'
-                  : 'border-surface-border focus:border-brand focus:ring-brand/20'
-              "
-            />
-            <p
-              v-if="cardLast4 && !isCardLast4Valid"
-              class="text-xs2 text-danger"
-            >
-              숫자 4자리를 정확히 입력해 주세요.
-            </p>
-            <p v-else class="text-xs2 text-text-tertiary">
-              잔돈 적립 대상 카드의 끝 4자리 숫자를 입력하세요
-            </p>
-          </div>
-        </div>
 
         <!-- Error message -->
         <p
@@ -788,13 +789,11 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
       <!-- Main CTA -->
       <button
         v-if="step < TOTAL_STEPS"
-        class="w-full py-4 rounded-xl text-md font-semibold text-white bg-brand active:bg-brand-hover transition-colors"
-        :disabled="step === 3 && !isStep3Valid"
+        class="w-full py-4 rounded-xl text-md font-semibold text-white transition-colors"
         :class="
-          step === 3 && !isStep3Valid
-            ? 'bg-text-disabled'
-            : 'bg-brand active:bg-brand-hover'
+          canProceed ? 'bg-brand active:bg-brand-hover' : 'bg-text-disabled'
         "
+        :disabled="!canProceed"
         @click="goNext"
       >
         다음
@@ -803,11 +802,9 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
         v-else
         class="w-full py-4 rounded-xl text-md font-semibold text-white transition-colors flex items-center justify-center gap-2"
         :class="
-          isLoading || !isStep4Valid
-            ? 'bg-text-disabled'
-            : 'bg-brand active:bg-brand-hover'
+          isLoading ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'
         "
-        :disabled="isLoading || !isStep4Valid"
+        :disabled="isLoading"
         @click="handleSubmit"
       >
         <span
@@ -844,7 +841,7 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
   appearance: none;
   width: 22px;
   height: 22px;
-  margin-top: -8px;            /* center the 22px thumb on the 6px track */
+  margin-top: -8px; /* center the 22px thumb on the 6px track */
   border-radius: 9999px;
   background: #0051ff;
   border: 3px solid #ffffff;
@@ -861,7 +858,7 @@ const DIVERS_LABELS: Record<DiversificationType, string> = {
 .tikkle-range::-webkit-slider-runnable-track {
   height: 6px;
   border-radius: 9999px;
-  background: transparent;     /* fill comes from the element's inline gradient */
+  background: transparent; /* fill comes from the element's inline gradient */
 }
 .tikkle-range::-moz-range-track {
   height: 6px;
