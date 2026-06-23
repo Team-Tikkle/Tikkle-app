@@ -43,9 +43,9 @@ import javax.crypto.spec.SecretKeySpec;
  * payment data to POST https://api.tikkle.xyz/api/payments.
  *
  * Supported packages:
- *   com.kbcard.csw      — KB Pay
- *   com.wooricard.wpay  — Woori Card WON Pay
- *   com.android.mms     — Android default SMS (fallback)
+ *   com.kbcard.cxh.appcard   — KB Pay
+ *   com.wooricard.smartapp   — Woori Card
+ *   com.kbankwith.smartbank  — K뱅크 (KBank)
  *
  * Requires "Notification Access" granted via ACTION_NOTIFICATION_LISTENER_SETTINGS.
  */
@@ -70,8 +70,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
 //    private static final String PKG_KB_PAY    = "com.android.shell";
     private static final String PKG_WOORI     = "com.wooricard.smartapp";
 //    private static final String PKG_WOORI     = "com.google.android.dialer";
-    //private static final String PKG_SMS       = "com.google.android.apps.messaging"; // Google Messages (AVD default)
-    private static final String PKG_SMS       = "com.google.android.dialer"; // Google Messages (AVD default). 사실상 테스트용으로 사용하지 않을 듯함
+    private static final String PKG_KBANK     = "com.kbankwith.smartbank"; // K뱅크
 
     // [TEST] adb `cmd notification post` posts as com.android.shell. Routing it to a
     // parser lets us inject test notifications. Remove this block before release.
@@ -105,18 +104,19 @@ public class PaymentNotificationListener extends NotificationListenerService {
     private static final Pattern WOORI_LAST4  = Pattern.compile("\\((\\d{4})\\)");
     private static final Pattern WOORI_AMOUNT = Pattern.compile("([\\d,]+)원");
 
-    // ── SMS fallback patterns ─────────────────────────────────────────────────
+    // ── K뱅크 (KBank) patterns ─────────────────────────────────────────────────
     //
-    // Generic Korean card SMS alerts often look like:
-    //   "[신한카드] 스타벅스 12,500원 승인 (1234)"
-    // These patterns are intentionally broad and serve as a last-resort path.
+    // K뱅크 posts a multi-line body (title "케이뱅크" excluded), e.g.:
+    //   승인 17,500원
+    //   주식회사 무신사페이
+    //   카드(1586) | 06/23 11:26
+    //
+    // KBANK_LAST4  — 4 digits inside the 카드(NNNN) marker
+    // KBANK_AMOUNT — digits-with-commas before 원
+    // Merchant is the line that is neither the amount line nor the card line.
 
-    private static final Pattern SMS_AMOUNT   = Pattern.compile("([\\d,]+)원");
-    private static final Pattern SMS_LAST4    = Pattern.compile("(?:\\*{2,4}|\\()(\\d{4})\\)?");
-    private static final Pattern SMS_COMPANY  = Pattern.compile(
-        "(신한카드|현대카드|KB카드|국민카드|롯데카드|삼성카드|NH카드|농협카드|우리카드|씨티카드|하나카드|BC카드)");
-    private static final Pattern SMS_MERCHANT = Pattern.compile(
-        "([가-힣a-zA-Z0-9·&'_-]{2,30})\\s*[\\d,]+원");
+    private static final Pattern KBANK_LAST4  = Pattern.compile("카드\\((\\d{4})\\)");
+    private static final Pattern KBANK_AMOUNT = Pattern.compile("([\\d,]+)원");
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -148,7 +148,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
         // Hard whitelist — drop everything that is not a verified target
         // ([TEST] PKG_TEST allows adb-injected notifications — remove before release)
         if (!PKG_KB_PAY.equals(pkg) && !PKG_WOORI.equals(pkg)
-            && !PKG_SMS.equals(pkg) && !PKG_TEST.equals(pkg)) return;
+            && !PKG_KBANK.equals(pkg) && !PKG_TEST.equals(pkg)) return;
 
         Notification notification = sbn.getNotification();
         if (notification == null) return;
@@ -184,8 +184,8 @@ public class PaymentNotificationListener extends NotificationListenerService {
             switch (pkg) {
                 case PKG_KB_PAY: return parseKbPay(body);
                 case PKG_WOORI:  return parseWooriCard(body);
-                case PKG_SMS:    return parseSms(body);
-                case PKG_TEST:   return parseWooriCard(body); // [TEST] adb-injected → KB format
+                case PKG_KBANK:  return parseKbank(body);
+                case PKG_TEST:   return parseKbank(body); // [TEST] adb-injected → KB format
                 default:         return null;
             }
         } catch (IndexOutOfBoundsException e) {
@@ -293,35 +293,53 @@ public class PaymentNotificationListener extends NotificationListenerService {
         return new ParsedPayment(merchant, amount, "우리카드", cardLast4);
     }
 
-    // ── SMS fallback sub-parser ───────────────────────────────────────────────
+    // ── K뱅크 (KBank) sub-parser ───────────────────────────────────────────────
 
     /**
-     * Generic fallback parser for standard Korean card SMS alerts.
-     * Less reliable than the dedicated app parsers — logs a warning on failure.
+     * Parses a K뱅크 notification body.
+     *
+     * @return ParsedPayment, or null if a required field could not be extracted.
      */
-    private ParsedPayment parseSms(String body) {
-        Matcher amountMatcher = SMS_AMOUNT.matcher(body);
-        if (!amountMatcher.find()) return null;
+    private ParsedPayment parseKbank(String body) {
+        // Last 4 digits — inside the 카드(NNNN) marker
+        Matcher last4Matcher = KBANK_LAST4.matcher(body);
+        if (!last4Matcher.find()) {
+            Log.d(TAG, "[KBank] could not extract card last4");
+            return null;
+        }
+        String cardLast4 = last4Matcher.group(1);
+
+        // Amount
+        Matcher amountMatcher = KBANK_AMOUNT.matcher(body);
+        if (!amountMatcher.find()) {
+            Log.d(TAG, "[KBank] could not extract amount");
+            return null;
+        }
         int amount;
         try {
             amount = Integer.parseInt(amountMatcher.group(1).replace(",", ""));
         } catch (NumberFormatException e) {
+            Log.d(TAG, "[KBank] amount parse failed: " + amountMatcher.group(1));
             return null;
         }
 
-        Matcher companyMatcher = SMS_COMPANY.matcher(body);
-        String cardCompany = companyMatcher.find() ? companyMatcher.group(1) : "";
+        // Merchant — the line that is neither the amount line nor the card line
+        // (and not the "케이뱅크" title, in case it leaks into the body).
+        String merchant = "";
+        for (String line : body.split("\\n")) {
+            String t = line.trim();
+            if (t.isEmpty() || t.equals("케이뱅크")) continue;
+            if (KBANK_AMOUNT.matcher(t).find()) continue;  // "승인 17,500원"
+            if (KBANK_LAST4.matcher(t).find()) continue;   // "카드(1586) | ..."
+            merchant = t;
+            break;
+        }
+        if (merchant.isEmpty()) {
+            Log.d(TAG, "[KBank] could not extract merchant");
+            return null;
+        }
 
-        Matcher last4Matcher = SMS_LAST4.matcher(body);
-        String cardLast4 = last4Matcher.find() ? last4Matcher.group(1) : "0000";
-
-        Matcher merchantMatcher = SMS_MERCHANT.matcher(body);
-        if (!merchantMatcher.find()) return null;
-        String merchant = merchantMatcher.group(1).trim();
-        if (!cardCompany.isEmpty()) merchant = merchant.replace(cardCompany, "").trim();
-        if (merchant.isEmpty()) return null;
-
-        return new ParsedPayment(merchant, amount, cardCompany, cardLast4);
+        return new ParsedPayment(merchant, amount, "케이뱅크", cardLast4);
     }
 
     // ── Dispatch ──────────────────────────────────────────────────────────────
