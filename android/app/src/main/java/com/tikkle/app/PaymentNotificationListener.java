@@ -428,10 +428,11 @@ public class PaymentNotificationListener extends NotificationListenerService {
         String text;
         PendingIntent contentIntent = null;
         switch (actionType) {
-            case "ORDER_REQUESTED":   // 자동 매매 → 즉시 매수 접수
+            case "ORDER_REQUESTED":   // 자동 매매 → 즉시 매수 접수 (탭하면 앱만 열기)
                 title = "잔돈으로 코인을 샀어요 📈";
                 text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
                       + stockName + " 매수를 요청했어요!";
+                contentIntent = buildLaunchIntent();
                 break;
             case "WAITING_APPROVAL":     // 수동 매매 → 매수 제안 (탭하면 검토 화면으로)
                 title = "잔돈으로 투자할까요? 🤔";
@@ -446,6 +447,21 @@ public class PaymentNotificationListener extends NotificationListenerService {
                 return;
         }
         postFeedback(title, text, contentIntent);
+    }
+
+    /**
+     * Builds a PendingIntent that simply opens the app (no deep link / navigation).
+     * Used for ORDER_REQUESTED, where tapping just brings the app to the foreground.
+     */
+    private PendingIntent buildLaunchIntent() {
+        Intent intent = new Intent(this, MainActivity.class)
+            .setAction(Intent.ACTION_MAIN)
+            .addCategory(Intent.CATEGORY_LAUNCHER)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        return PendingIntent.getActivity(
+            this, 0, intent,
+            PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+        );
     }
 
     /**
