@@ -162,13 +162,6 @@ function goBack() {
   if (step.value > 1) step.value--;
 }
 
-// TEMP(스킵): 백엔드 API 미연동 상태에서 온보딩을 건너뛰고 홈으로 이동한다.
-// 백엔드 준비 후 이 함수와 템플릿의 스킵 버튼 블록을 함께 삭제하면 된다.
-function skipOnboarding() {
-  userStore.completeOnboarding();
-  router.replace('/');
-}
-
 // ── Submit (Step 8) ──
 async function handleSubmit() {
   if (isLoading.value) return;
@@ -298,18 +291,8 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
     <!-- Status bar placeholder -->
     <div class="bg-white h-12 shrink-0" />
 
-    <!-- TEMP(스킵): 백엔드 준비 후 이 블록 삭제 -->
-    <div class="bg-white px-6 pb-2 flex justify-end">
-      <button
-        class="px-3 py-1 rounded-pill bg-surface-alt text-text-tertiary text-xs2 font-semibold active:opacity-70"
-        @click="skipOnboarding"
-      >
-        스킵하고 홈으로 →
-      </button>
-    </div>
-
     <!-- Progress bar -->
-    <div class="bg-white px-6 pt-1 pb-4">
+    <div class="bg-white px-6 pt-4 pb-4">
       <div class="flex items-center justify-between mb-3">
         <span class="text-sm text-text-tertiary"
           >{{ step }} / {{ TOTAL_STEPS }} 단계</span
