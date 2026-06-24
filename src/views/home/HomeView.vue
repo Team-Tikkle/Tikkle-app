@@ -128,10 +128,8 @@ function coinIconUrl(currency: string): string {
   <div class="min-h-screen bg-surface pb-24">
 
     <!-- ── Header ── -->
-    <div class="bg-white px-6 pt-12 pb-4 flex items-center justify-between sticky top-0 z-40">
-      <h1 class="text-xl font-bold text-text-primary">
-        {{ userStore.profile?.name || '티끌 유저' }}
-      </h1>
+    <div class="bg-white px-6 flex items-center justify-between sticky top-0 z-40 h-[60px]">
+      <h1 class="text-xl font-bold text-text-primary">내 보유자산</h1>
       <button class="w-10 h-10 flex items-center justify-center text-text-primary">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -143,7 +141,6 @@ function coinIconUrl(currency: string): string {
 
       <!-- ── 내 자산 ── -->
       <div class="bg-white rounded-xl px-6 py-5 flex flex-col gap-4">
-        <span class="text-md font-bold text-text-primary">내 자산</span>
 
         <!-- 에러 -->
         <p v-if="portfolioStore.error" class="text-sm text-danger">{{ portfolioStore.error }}</p>
@@ -151,16 +148,16 @@ function coinIconUrl(currency: string): string {
         <!-- 로딩 skeleton (첫 데이터 도착 전) -->
         <div v-else-if="!portfolioStore.portfolio" class="flex flex-col gap-3">
           <div class="flex flex-col gap-1.5">
-            <span class="text-xs2 text-text-disabled">총 자산</span>
+            <span class="text-md font-bold text-text-secondary">총 자산</span>
             <div class="h-9 w-48 bg-surface rounded-lg" />
           </div>
           <div class="flex gap-6">
             <div class="flex flex-col gap-1">
-              <span class="text-xs2 text-text-disabled">총 투자금</span>
+              <span class="text-xs text-text-tertiary">총 투자금</span>
               <div class="h-4 w-24 bg-surface rounded" />
             </div>
             <div class="flex flex-col gap-1">
-              <span class="text-xs2 text-text-disabled">평가 수익</span>
+              <span class="text-xs text-text-tertiary">평가 수익</span>
               <div class="h-4 w-20 bg-surface rounded" />
             </div>
           </div>
@@ -170,20 +167,20 @@ function coinIconUrl(currency: string): string {
         <template v-else>
           <div class="flex flex-col gap-3">
             <div class="flex flex-col gap-1.5">
-              <span class="text-xs2 text-text-disabled">총 자산</span>
+              <span class="text-md font-bold text-text-secondary">총 자산</span>
               <span class="text-3xl font-bold text-text-primary">
                 ₩{{ fmtAmount(liveTotalEvaluation) }}
               </span>
             </div>
             <div class="flex gap-6">
               <div class="flex flex-col gap-1">
-                <span class="text-xs2 text-text-disabled">총 투자금</span>
+                <span class="text-xs text-text-tertiary">총 투자금</span>
                 <span class="text-sm font-semibold text-text-secondary">
                   ₩{{ fmtAmount(totalPrincipal) }}
                 </span>
               </div>
               <div class="flex flex-col gap-1">
-                <span class="text-xs2 text-text-disabled">평가 수익</span>
+                <span class="text-xs text-text-tertiary">평가 수익</span>
                 <span class="text-sm font-semibold" :class="plColorClass(liveTotalProfitLoss)">
                   {{ fmtSignedPL(liveTotalProfitLoss, totalPrincipal) }}
                 </span>

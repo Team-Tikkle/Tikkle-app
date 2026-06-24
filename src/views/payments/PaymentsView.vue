@@ -71,14 +71,19 @@ const CATEGORY_META: Record<CategoryType, { label: string; color: string }> = {
   ETC:      { label: '기타', color: '#e0ecff' },
 }
 
-// ── Category bar chart (from dashboard) ──
-const categories = computed(() =>
-  (paymentStore.dashboard?.categorySpending ?? []).map((c) => ({
-    label:  CATEGORY_META[c.category]?.label ?? c.category,
-    amount: c.amount,
-    color:  CATEGORY_META[c.category]?.color ?? '#b3d4ff',
-  })),
-)
+// ── Category bar chart (from dashboard) — ETC always last ──
+const categories = computed(() => {
+  const mapped = (paymentStore.dashboard?.categorySpending ?? []).map((c) => ({
+    label:    CATEGORY_META[c.category]?.label ?? c.category,
+    amount:   c.amount,
+    color:    CATEGORY_META[c.category]?.color ?? '#b3d4ff',
+    isEtc:   c.category === 'ETC',
+  }))
+  return mapped.sort((a, b) => {
+    if (a.isEtc !== b.isEtc) return a.isEtc ? 1 : -1
+    return 0
+  })
+})
 const maxAmount = computed(() => Math.max(1, ...categories.value.map((c) => c.amount)))
 
 // ── Status badge config ──

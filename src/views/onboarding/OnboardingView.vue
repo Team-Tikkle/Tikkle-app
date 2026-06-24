@@ -64,8 +64,8 @@ const canProceed = computed(() => {
       return Boolean(isStep1Valid.value);
     case 2:
       return Boolean(isStep2Valid.value);
-    case 5:
-      return cryptoThemes.value.length > 0; // Q3: 최소 1개 테마 선택
+    case 7:
+      return cryptoThemes.value.length > 0; // Q5(관심 테마): 최소 1개 선택
     default:
       return true;
   }
@@ -211,87 +211,84 @@ async function handleSubmit() {
   }
 }
 
-// ── Q1~Q5 설문 라벨 (초보자도 이해할 수 있게 풀어쓴 설명) ──
+// ── Q1~Q5 설문 라벨 ──
 const RISK_LABELS: Record<RiskTolerance, { title: string; desc: string }> = {
   SELL_IMMEDIATELY: {
-    title: '바로 팔아요',
-    desc: '손해가 더 커지기 전에 빠르게 정리하는 편이에요',
+    title: '즉시 매도',
+    desc: '더 큰 손실을 막기 위해 바로 처분합니다.',
   },
   HOLD: {
-    title: '그냥 둬요',
-    desc: '잠깐 떨어진 거라 보고, 팔지 않고 기다려요',
+    title: '그대로 보유',
+    desc: '일시적인 하락이라 판단하고 시장을 관망합니다.',
   },
   BUY_MORE: {
-    title: '더 사요',
-    desc: '오히려 싸졌다고 보고 더 사서 평균 구매가를 낮춰요',
+    title: '추가 매수',
+    desc: '저가 매수의 기회로 삼아 보유량을 늘립니다.',
   },
 };
 const TREND_LABELS: Record<TrendSensitivity, { title: string; desc: string }> = {
   FUNDAMENTAL_ONLY: {
-    title: '검증된 코인만',
-    desc: '유행은 신경 쓰지 않고, 오래 살아남을 탄탄한 코인 위주로요',
+    title: '대형 우량주 위주',
+    desc: '비트코인, 이더리움 등 검증되고 안정적인 코인을 선호합니다.',
   },
   PARTIAL_TREND: {
-    title: '안정 위주 + 유행 조금',
-    desc: '비트코인 같은 대표 코인을 중심으로, 인기 코인도 조금 섞어요',
+    title: '우량주 + 트렌드',
+    desc: '대형 코인을 기본으로 두고, 유행하는 코인을 일부 섞어 투자합니다.',
   },
   FULL_TREND: {
-    title: '요즘 뜨는 코인',
-    desc: '지금 인기가 빠르게 오르는 코인에 적극적으로 올라타요',
+    title: '트렌드 적극 추종',
+    desc: '현재 시장에서 가장 인기 있고 화제가 되는 코인 위주로 투자합니다.',
   },
 };
 const THEME_LABELS: Record<CryptoTheme, { title: string; sub: string }> = {
   LAYER_1: {
-    title: '레이어1',
-    sub: '비트코인·이더리움처럼 토대가 되는 대표 코인',
+    title: '메이저 코인',
+    sub: '비트코인, 이더리움 등 시장을 주도하는 대표 코인',
   },
   DEFI: {
-    title: '디파이',
-    sub: '은행 없이 코인으로 예금·대출하는 금융 서비스',
+    title: '스마트 금융 (디파이)',
+    sub: '은행 없이 코인으로 예금·대출을 하는 금융 서비스',
   },
-  AI: { title: 'AI 코인', sub: '인공지능 기술과 연결된 코인' },
+  AI: { title: 'AI 테마', sub: '인공지능 기술 및 데이터 혁신 관련 프로젝트' },
   WEB3_GAMING: {
-    title: '웹3·게임',
-    sub: '게임·가상세계 안에서 쓰이는 코인',
+    title: '게임·문화 (웹3)',
+    sub: '게임 아이템 소유 및 엔터테인먼트 중심 생태계',
   },
   RWA: {
-    title: '실물자산(RWA)',
-    sub: '부동산·금 같은 실제 자산을 코인으로 만든 것',
+    title: '실물 자산 (RWA)',
+    sub: '부동산, 금, 국채 등 실제 자산과 연동된 코인',
   },
-  MEME: {
-    title: '밈 코인',
-    sub: '유행·재미로 만든 코인 (예: 도지코인)',
-  },
+  MEME: { title: '트렌드 밈(Meme)', sub: '커뮤니티 팬덤 기반 코인' },
 };
 const DIVERS_LABELS: Record<
   DiversificationType,
   { title: string; desc: string }
 > = {
   CONCENTRATED: {
-    title: '한두 개에 집중',
-    desc: '가장 자신 있는 코인 한두 개에 몰아서 투자해요',
+    title: '집중 투자',
+    desc: '확신이 있는 1~2개의 코인에 비중을 크게 둡니다.',
   },
   BALANCED: {
-    title: '적당히 나눠서',
-    desc: '대표 코인과 유망한 코인을 반반 정도로 담아요',
+    title: '균형 분산',
+    desc: '관리가 용이한 3~5개의 코인으로 적절히 나누어 투자합니다.',
   },
   DIVERSIFIED: {
-    title: '여러 개로 분산',
-    desc: '여러 종류에 골고루 나눠서 위험을 줄여요',
+    title: '넓은 분산',
+    desc: '변동성 대비를 위해 최대한 다양한 코인에 폭넓게 나누어 담습니다.',
   },
 };
 const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
   NONE: {
     title: '투자 안 함',
-    desc: '위험해 보이니 밈 코인은 아예 담지 않을래요',
+    desc: '변동성이 너무 커서 포트폴리오에 포함하지 않습니다.',
   },
   SMALL: {
-    title: '조금만',
-    desc: '재미로 전체의 10% 미만 정도만 가볍게요',
+    title: '소액 체험',
+    desc: '전체 투자금에 영향이 없는 소액 범위 내에서만 투자합니다.',
   },
   ACTIVE: {
-    title: '적극적으로',
-    desc: '가격이 크게 출렁여도 기회로 보고 적극 투자할래요',
+    title: '적극 수용',
+    desc: '높은 단기 수익률을 위해 비중 있게 투자할 의향이 있습니다.',
   },
 };
 </script>
@@ -473,11 +470,8 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
         >
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            내가 산 코인 값이<br />갑자기 크게 떨어지면?
+            보유 중인 코인이 갑자기 10% 하락한다면 어떻게 대응하시겠습니까?
           </h2>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            산 가격보다 30% 넘게 떨어진 상황을 떠올려 보세요.
-          </p>
         </div>
         <div class="flex flex-col gap-3">
           <button
@@ -518,11 +512,8 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
         >
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            어떤 코인에<br />투자하고 싶나요?
+            투자할 코인을 고르는 주요 기준은 무엇인가요?
           </h2>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            '뜨는 코인'은 요즘 갑자기 인기가 오르는 코인을 말해요.
-          </p>
         </div>
         <div class="flex flex-col gap-3">
           <button
@@ -558,47 +549,43 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
         </div>
       </div>
 
-      <!-- ── Step 5: Q3 관심 테마 (다중) ── -->
+      <!-- ── Step 5: Q3 밈 코인 수용도 ── -->
       <div v-else-if="step === 5" class="px-6 pt-6 flex flex-col gap-6">
-        <span class="text-sm font-semibold text-brand">Q3 · 관심 분야</span>
+        <span class="text-sm font-semibold text-brand">Q3 · 밈 코인</span>
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            어떤 종류의 코인에<br />관심이 있나요?
+            인터넷 유행으로 만들어진 '밈 코인(Meme Coin)' 투자는 어떤가요?
           </h2>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            관심 가는 분야를 모두 골라주세요. 잘 모르겠으면 아래 설명을 참고하면
-            돼요.
-          </p>
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="flex flex-col gap-3">
           <button
-            v-for="(opt, key) in THEME_LABELS"
+            v-for="(opt, key) in MEME_LABELS"
             :key="key"
-            class="text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-0.5"
+            class="w-full text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-0.5"
             :class="
-              cryptoThemes.includes(key as CryptoTheme)
+              prefs.memeAcceptance === key
                 ? 'border-brand bg-brand-bg'
                 : 'border-surface-border bg-white'
             "
-            @click="toggleTheme(key as CryptoTheme)"
+            @click="prefs.memeAcceptance = key as MemeAcceptance"
           >
             <span
               class="text-base font-bold"
               :class="
-                cryptoThemes.includes(key as CryptoTheme)
+                prefs.memeAcceptance === key
                   ? 'text-brand'
                   : 'text-text-primary'
               "
               >{{ opt.title }}</span
             >
             <span
-              class="text-xs2"
+              class="text-sm"
               :class="
-                cryptoThemes.includes(key as CryptoTheme)
+                prefs.memeAcceptance === key
                   ? 'text-brand-300'
                   : 'text-text-tertiary'
               "
-              >{{ opt.sub }}</span
+              >{{ opt.desc }}</span
             >
           </button>
         </div>
@@ -609,11 +596,8 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
         <span class="text-sm font-semibold text-brand">Q4 · 투자 분산</span>
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            투자금을<br />어떻게 나눌까요?
+            선호하는 자산 분배 방식은 무엇인가요?
           </h2>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            한 코인에 몰아넣을수록 수익도 손실도 커져요.
-          </p>
         </div>
         <div class="flex flex-col gap-3">
           <button
@@ -649,47 +633,43 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
         </div>
       </div>
 
-      <!-- ── Step 7: Q5 밈 코인 수용도 ── -->
+      <!-- ── Step 7: Q5 관심 테마 (다중) ── -->
       <div v-else-if="step === 7" class="px-6 pt-6 flex flex-col gap-6">
-        <span class="text-sm font-semibold text-brand">Q5 · 밈 코인</span>
+        <span class="text-sm font-semibold text-brand">Q5 · 관심 분야</span>
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            '밈 코인'에는<br />얼마나 투자할까요?
+            가장 관심 있는 가상자산 분야를 모두 선택해 주세요.
           </h2>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            밈 코인은 유행·재미로 만든 코인이에요(예: 도지코인). 인기에 따라
-            가격이 크게 출렁여요.
-          </p>
         </div>
-        <div class="flex flex-col gap-3">
+        <div class="grid grid-cols-2 gap-2">
           <button
-            v-for="(opt, key) in MEME_LABELS"
+            v-for="(opt, key) in THEME_LABELS"
             :key="key"
-            class="w-full text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-0.5"
+            class="text-left p-4 rounded-2xl border-2 transition-all flex flex-col gap-0.5"
             :class="
-              prefs.memeAcceptance === key
+              cryptoThemes.includes(key as CryptoTheme)
                 ? 'border-brand bg-brand-bg'
                 : 'border-surface-border bg-white'
             "
-            @click="prefs.memeAcceptance = key as MemeAcceptance"
+            @click="toggleTheme(key as CryptoTheme)"
           >
             <span
               class="text-base font-bold"
               :class="
-                prefs.memeAcceptance === key
+                cryptoThemes.includes(key as CryptoTheme)
                   ? 'text-brand'
                   : 'text-text-primary'
               "
               >{{ opt.title }}</span
             >
             <span
-              class="text-sm"
+              class="text-xs2"
               :class="
-                prefs.memeAcceptance === key
+                cryptoThemes.includes(key as CryptoTheme)
                   ? 'text-brand-300'
                   : 'text-text-tertiary'
               "
-              >{{ opt.desc }}</span
+              >{{ opt.sub }}</span
             >
           </button>
         </div>
