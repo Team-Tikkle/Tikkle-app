@@ -78,95 +78,92 @@ function extractErrorMessage(err: unknown): string {
 </script>
 
 <template>
-  <div class="min-h-screen bg-surface flex flex-col">
+  <div class="min-h-screen bg-white flex flex-col">
     <AppHeader title="잔돈 투자 확인" :show-back="true" />
 
-    <!-- 카드 영역 -->
-    <div class="flex-1 flex flex-col px-4 pt-4 pb-8">
-      <div class="bg-white rounded-3xl px-6 pt-8 pb-6 flex flex-col items-center gap-6 shadow-sm">
+    <!-- 중앙 콘텐츠 -->
+    <div class="flex-1 flex flex-col items-center justify-center px-6 gap-8">
 
-        <!-- 상단 타이틀 -->
-        <h2 class="text-2xl font-bold text-text-primary text-center leading-snug">
-          {{ merchant }} 잔돈 {{ fmt(spareChange) }}원으로<br>
-          {{ stockName || '코인' }}에 투자할까요?
-        </h2>
+      <!-- 상단 타이틀 -->
+      <h2 class="text-2xl font-bold text-text-primary text-center leading-snug">
+        {{ merchant }} 잔돈 {{ fmt(spareChange) }}원으로<br>
+        {{ stockName || '코인' }}에 투자할까요?
+      </h2>
 
-        <!-- 코인 로고 + AI 추천 배지 -->
-        <div class="relative flex items-center justify-center">
-          <div class="w-32 h-32 rounded-full bg-surface flex items-center justify-center shadow-inner">
-            <img
-              v-if="ticker"
-              :src="`https://static.upbit.com/logos/${ticker.replace('KRW-', '')}.png`"
-              :alt="stockName"
-              class="w-24 h-24 object-contain"
-              @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')"
-            >
-          </div>
-          <!-- AI 추천 말풍선 -->
-          <div class="absolute -top-1 -right-2 flex flex-col items-center">
-            <span
-              class="px-3 py-1 rounded-full text-xs font-semibold text-white"
-              style="background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399)"
-            >
-              AI 추천
-            </span>
-            <!-- 말풍선 꼬리 -->
-            <svg width="10" height="6" viewBox="0 0 10 6" class="-mt-px">
-              <polygon points="5,6 0,0 10,0" fill="url(#tail-grad)" />
-              <defs>
-                <linearGradient id="tail-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stop-color="#a78bfa"/>
-                  <stop offset="100%" stop-color="#60a5fa"/>
-                </linearGradient>
-              </defs>
-            </svg>
-          </div>
+      <!-- 코인 로고 + AI 추천 배지 -->
+      <div class="relative flex items-center justify-center">
+        <div class="w-32 h-32 rounded-full bg-surface flex items-center justify-center">
+          <img
+            v-if="ticker"
+            :src="`https://static.upbit.com/logos/${ticker.replace('KRW-', '')}.png`"
+            :alt="stockName"
+            class="w-24 h-24 object-contain"
+            @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')"
+          >
         </div>
-
-        <!-- 결제 정보 테이블 -->
-        <div class="w-full flex flex-col divide-y divide-surface-border">
-          <div class="flex items-center justify-between py-3.5">
-            <span class="text-base text-text-tertiary">결제</span>
-            <span class="text-base font-semibold text-text-primary">{{ merchant }} {{ fmt(amount) }}원</span>
-          </div>
-          <div class="flex items-center justify-between py-3.5">
-            <span class="text-base text-text-tertiary">투자 금액</span>
-            <span class="text-base font-semibold text-text-primary">{{ fmt(spareChange) }}원</span>
-          </div>
-        </div>
-
-        <!-- 에러 -->
-        <p v-if="errorMsg" role="alert" class="text-sm text-danger text-center -mb-2">
-          {{ errorMsg }}
-        </p>
-        <p v-if="!isActionable" class="text-sm text-danger text-center -mb-2">
-          잘못된 접근이에요. (주문 정보를 찾을 수 없습니다)
-        </p>
-
-        <!-- 투자하기 버튼 -->
-        <button
-          class="w-full py-4 rounded-2xl text-white text-lg font-bold transition-colors flex items-center justify-center gap-2"
-          :class="(isLoading || !isActionable) ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'"
-          :disabled="isLoading || !isActionable"
-          @click="handle('approve')"
-        >
+        <!-- AI 추천 말풍선 -->
+        <div class="absolute -top-1 -right-2 flex flex-col items-center">
           <span
-            v-if="isLoading"
-            class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
-          />
-          투자하기
-        </button>
-
-        <!-- 거부 텍스트 버튼 -->
-        <button
-          class="text-base text-text-tertiary font-medium"
-          :disabled="isLoading || !isActionable"
-          @click="handle('reject')"
-        >
-          거부
-        </button>
-
+            class="px-3 py-1 rounded-full text-xs font-semibold text-white"
+            style="background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399)"
+          >
+            AI 추천
+          </span>
+          <svg width="10" height="6" viewBox="0 0 10 6" class="-mt-px">
+            <polygon points="5,6 0,0 10,0" fill="url(#tail-grad)" />
+            <defs>
+              <linearGradient id="tail-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#a78bfa"/>
+                <stop offset="100%" stop-color="#60a5fa"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
       </div>
+
+      <!-- 결제 정보 테이블 -->
+      <div class="w-full flex flex-col divide-y divide-surface-border">
+        <div class="flex items-center justify-between py-3.5">
+          <span class="text-lg text-text-tertiary">결제</span>
+          <span class="text-lg font-semibold text-text-primary">{{ merchant }} {{ fmt(amount) }}원</span>
+        </div>
+        <div class="flex items-center justify-between py-3.5">
+          <span class="text-lg text-text-tertiary">투자 금액</span>
+          <span class="text-lg font-semibold text-brand">{{ fmt(spareChange) }}원</span>
+        </div>
+      </div>
+
+      <!-- 에러 -->
+      <p v-if="errorMsg" role="alert" class="text-sm text-danger text-center">
+        {{ errorMsg }}
+      </p>
+      <p v-if="!isActionable" class="text-sm text-danger text-center">
+        잘못된 접근이에요. (주문 정보를 찾을 수 없습니다)
+      </p>
+
+    </div>
+
+    <!-- 하단 고정 버튼 영역 -->
+    <div class="px-6 pb-10 pt-4 flex flex-col gap-3">
+      <button
+        class="w-full py-4 rounded-2xl text-white text-lg font-bold transition-colors flex items-center justify-center gap-2"
+        :class="(isLoading || !isActionable) ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'"
+        :disabled="isLoading || !isActionable"
+        @click="handle('approve')"
+      >
+        <span
+          v-if="isLoading"
+          class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+        />
+        투자하기
+      </button>
+      <button
+        class="w-full py-3 text-base text-text-tertiary font-medium"
+        :disabled="isLoading || !isActionable"
+        @click="handle('reject')"
+      >
+        투자 취소
+      </button>
     </div>
   </div>
 </template>
