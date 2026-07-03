@@ -43,8 +43,6 @@ import javax.crypto.spec.SecretKeySpec;
  * payment data to POST https://api.tikkle.xyz/api/payments.
  *
  * Supported packages:
- *   com.kbcard.cxh.appcard   — KB Pay
- *   com.wooricard.smartapp   — Woori Card
  *   com.kbankwith.smartbank  — K뱅크 (KBank)
  *
  * Requires "Notification Access" granted via ACTION_NOTIFICATION_LISTENER_SETTINGS.
@@ -65,44 +63,11 @@ public class PaymentNotificationListener extends NotificationListenerService {
     private static final String FEEDBACK_CHANNEL_ID = "tikkle_payment_feedback";
 
     // ── Verified package whitelist ────────────────────────────────────────────
-
-    private static final String PKG_KB_PAY    = "com.kbcard.cxh.appcard";
-//    private static final String PKG_KB_PAY    = "com.android.shell";
-    private static final String PKG_WOORI     = "com.wooricard.smartapp";
-//    private static final String PKG_WOORI     = "com.google.android.dialer";
     private static final String PKG_KBANK     = "com.kbankwith.smartbank"; // K뱅크
 
     // [TEST] adb `cmd notification post` posts as com.android.shell. Routing it to a
     // parser lets us inject test notifications. Remove this block before release.
     private static final String PKG_TEST = "com.android.shell";
-
-    // ── KB Pay patterns ───────────────────────────────────────────────────────
-    //
-    // KB Pay posts a single-line, space-separated body, e.g.:
-    //   KB국민체크 1082 김*윤 31,250원 06/03 18:33 주식회사 무신사페이(잔액 151,854)
-    //   └─카드명──┘ └4자리┘ └이름┘ └금액─┘ └날짜─┘└시간┘ └─사용처명──────┘└─잔액──────┘
-    //
-    // KB_LAST4    — 4 digits following the card-name word (e.g. "KB국민체크 1082")
-    // KB_AMOUNT   — digits-with-commas immediately before 원
-    // KB_MERCHANT — text between the HH:MM time and the trailing "(잔액 …)" marker
-
-    private static final Pattern KB_LAST4    = Pattern.compile("KB\\S+\\s+(\\d{4})");
-    private static final Pattern KB_AMOUNT   = Pattern.compile("([\\d,]+)원");
-    private static final Pattern KB_MERCHANT = Pattern.compile("\\d{1,2}:\\d{2}\\s+(.+?)(?:\\(잔액|$)");
-
-    // ── Woori Card patterns ───────────────────────────────────────────────────
-    //
-    // Woori posts a multi-line body (title "승인내역" excluded), e.g.:
-    //   [일시불체크.승인(1162)]06/15 18:28
-    //   9,000원
-    //   쿠니라멘 (KUN        ← may be truncated in the collapsed view
-    //
-    // WOORI_LAST4  — 4 digits inside the (NNNN) parenthesis of the approval header
-    // WOORI_AMOUNT — digits-with-commas before 원
-    // Merchant is the last non-empty line (truncated "(..." tail stripped).
-
-    private static final Pattern WOORI_LAST4  = Pattern.compile("\\((\\d{4})\\)");
-    private static final Pattern WOORI_AMOUNT = Pattern.compile("([\\d,]+)원");
 
     // ── K뱅크 (KBank) patterns ─────────────────────────────────────────────────
     //
@@ -147,8 +112,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
         // Hard whitelist — drop everything that is not a verified target
         // ([TEST] PKG_TEST allows adb-injected notifications — remove before release)
-        if (!PKG_KB_PAY.equals(pkg) && !PKG_WOORI.equals(pkg)
-            && !PKG_KBANK.equals(pkg) && !PKG_TEST.equals(pkg)) return;
+        if (!PKG_KBANK.equals(pkg) && !PKG_TEST.equals(pkg)) return;
 
         Notification notification = sbn.getNotification();
         if (notification == null) return;
@@ -180,14 +144,11 @@ public class PaymentNotificationListener extends NotificationListenerService {
      * source package. Returns null if the text does not match the expected layout.
      */
     private ParsedPayment routeParser(String pkg, String body) {
+        if (!PKG_KBANK.equals(pkg) && !PKG_TEST.equals(pkg)) { // 테스트 다하면 나중에 그냥 뒤쪽 조건만 지우셈
+            return null;
+        }
         try {
-            switch (pkg) {
-                case PKG_KB_PAY: return parseKbPay(body);
-                case PKG_WOORI:  return parseWooriCard(body);
-                case PKG_KBANK:  return parseKbank(body);
-                case PKG_TEST:   return parseKbank(body); // [TEST] adb-injected → KB format
-                default:         return null;
-            }
+            return parseKbank(body);
         } catch (IndexOutOfBoundsException e) {
             Log.w(TAG, "Parser index error for " + pkg + " — notification layout may have changed.", e);
             return null;
@@ -195,102 +156,6 @@ public class PaymentNotificationListener extends NotificationListenerService {
             Log.w(TAG, "Unexpected parser error for " + pkg, e);
             return null;
         }
-    }
-
-    // ── KB Pay sub-parser ─────────────────────────────────────────────────────
-
-    /**
-     * Parses a KB Pay notification body.
-     *
-     * @return ParsedPayment, or null if a required field could not be extracted.
-     */
-    private ParsedPayment parseKbPay(String body) {
-        // Last 4 digits — the 4-digit token following the card-name word
-        Matcher last4Matcher = KB_LAST4.matcher(body);
-        if (!last4Matcher.find()) {
-            Log.d(TAG, "[KB] could not extract card last4");
-            return null;
-        }
-        String cardLast4 = last4Matcher.group(1);
-
-        // Amount
-        Matcher amountMatcher = KB_AMOUNT.matcher(body);
-        if (!amountMatcher.find()) {
-            Log.d(TAG, "[KB] could not extract amount");
-            return null;
-        }
-        int amount;
-        try {
-            amount = Integer.parseInt(amountMatcher.group(1).replace(",", ""));
-        } catch (NumberFormatException e) {
-            Log.d(TAG, "[KB] amount parse failed: " + amountMatcher.group(1));
-            return null;
-        }
-
-        // Merchant — text between the HH:MM time and the trailing "(잔액 …)" marker
-        Matcher merchantMatcher = KB_MERCHANT.matcher(body);
-        if (!merchantMatcher.find()) {
-            Log.d(TAG, "[KB] could not extract merchant");
-            return null;
-        }
-        String merchant = merchantMatcher.group(1).trim();
-        if (merchant.isEmpty()) {
-            Log.d(TAG, "[KB] merchant is empty after trim");
-            return null;
-        }
-
-        return new ParsedPayment(merchant, amount, "국민카드", cardLast4);
-    }
-
-    // ── Woori Card sub-parser ─────────────────────────────────────────────────
-
-    /**
-     * Parses a Woori Card WON Pay notification body.
-     *
-     * @return ParsedPayment, or null if a required field could not be extracted.
-     */
-    private ParsedPayment parseWooriCard(String body) {
-        // Search across the whole body rather than fixed line indices, so a leading
-        // "승인내역" title line (if it ends up in the body) does not shift everything.
-
-        // Last 4 digits — inside the (NNNN) parenthesis of the approval header
-        Matcher last4Matcher = WOORI_LAST4.matcher(body);
-        if (!last4Matcher.find()) {
-            Log.d(TAG, "[Woori] could not extract card last4 from body");
-            return null;
-        }
-        String cardLast4 = last4Matcher.group(1);
-
-        // Amount
-        Matcher amountMatcher = WOORI_AMOUNT.matcher(body);
-        if (!amountMatcher.find()) {
-            Log.d(TAG, "[Woori] could not extract amount from body");
-            return null;
-        }
-        int amount;
-        try {
-            amount = Integer.parseInt(amountMatcher.group(1).replace(",", ""));
-        } catch (NumberFormatException e) {
-            Log.d(TAG, "[Woori] amount parse failed: " + amountMatcher.group(1));
-            return null;
-        }
-
-        // Merchant — the last non-empty line (Woori puts the merchant name on its own
-        // line after the header and amount). A trailing truncated "(..." fragment from
-        // the collapsed notification view is stripped; properly closed parens are kept.
-        String merchant = "";
-        String[] lines = body.split("\\n");
-        for (int i = lines.length - 1; i >= 0; i--) {
-            String line = lines[i].trim();
-            if (!line.isEmpty()) { merchant = line; break; }
-        }
-        merchant = merchant.replaceAll("\\s*\\([^)]*$", "").trim();
-        if (merchant.isEmpty()) {
-            Log.d(TAG, "[Woori] merchant line is empty");
-            return null;
-        }
-
-        return new ParsedPayment(merchant, amount, "우리카드", cardLast4);
     }
 
     // ── K뱅크 (KBank) sub-parser ───────────────────────────────────────────────

@@ -219,20 +219,21 @@ const RISK_LABELS: Record<RiskTolerance, { title: string; desc: string }> = {
     desc: '저가 매수의 기회로 삼아 보유량을 늘립니다.',
   },
 };
-const TREND_LABELS: Record<TrendSensitivity, { title: string; desc: string }> = {
-  FUNDAMENTAL_ONLY: {
-    title: '대형 우량주 위주',
-    desc: '비트코인, 이더리움 등 검증되고 안정적인 코인을 선호합니다.',
-  },
-  PARTIAL_TREND: {
-    title: '우량주 + 트렌드',
-    desc: '대형 코인을 기본으로 두고, 유행하는 코인을 일부 섞어 투자합니다.',
-  },
-  FULL_TREND: {
-    title: '트렌드 적극 추종',
-    desc: '현재 시장에서 가장 인기 있고 화제가 되는 코인 위주로 투자합니다.',
-  },
-};
+const TREND_LABELS: Record<TrendSensitivity, { title: string; desc: string }> =
+  {
+    FUNDAMENTAL_ONLY: {
+      title: '대형 우량주 위주',
+      desc: '비트코인, 이더리움 등 검증되고 안정적인 코인을 선호합니다.',
+    },
+    PARTIAL_TREND: {
+      title: '우량주 + 트렌드',
+      desc: '대형 코인을 기본으로 두고, 유행하는 코인을 일부 섞어 투자합니다.',
+    },
+    FULL_TREND: {
+      title: '트렌드 적극 추종',
+      desc: '현재 시장에서 가장 인기 있고 화제가 되는 코인 위주로 투자합니다.',
+    },
+  };
 const THEME_LABELS: Record<CryptoTheme, { title: string; sub: string }> = {
   LAYER_1: {
     title: '메이저 코인',
@@ -391,10 +392,11 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
 
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            잔돈 적립에 사용할<br />카드를 등록해 주세요
+            잔돈 적립에 사용할<br />케이뱅크 카드를 등록해 주세요
           </h2>
           <p class="text-base text-text-tertiary leading-relaxed">
-            업비트와는 별개로, 잔돈을 모을 결제 카드를 등록합니다.
+            케이뱅크 카드로 결제 발생 시 해당 계좌에서 자동으로 잔돈이
+            이체됩니다.
           </p>
         </div>
 
@@ -408,9 +410,6 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
               v-model="cardCompany"
               class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all appearance-none"
             >
-              <option value="국민카드">국민카드</option>
-              <option value="우리카드">우리카드</option>
-              <option value="하나카드">하나카드</option>
               <option value="케이뱅크">케이뱅크</option>
             </select>
           </div>
