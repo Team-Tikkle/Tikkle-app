@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { AxiosError } from 'axios'
-import type { CategoryRule, CategoryType, ExecutionMode } from '@/types'
+import type { CategoryRule, CategoryType } from '@/types'
 
 export interface SettingsData {
-  executionMode: ExecutionMode
   spareChangeRules: CategoryRule[]
 }
 
@@ -20,12 +19,10 @@ function mapError(err: unknown): never {
 }
 
 export const useSettingsStore = defineStore('settings', () => {
-  const executionMode   = ref<ExecutionMode>('AUTO')
   const spareChangeRules = ref<CategoryRule[]>([])
 
   // GET /api/settings
-  // 현재 매매 방식과 전체 카테고리 잔돈 규칙을 조회한다.
-  // 미설정 카테고리는 서버가 NONE으로 반환한다.
+  // 전체 카테고리 잔돈 규칙을 조회한다. 미설정 카테고리는 서버가 NONE으로 반환한다.
   async function fetchSettings(): Promise<void> {
     const { default: api } = await import('@/utils/api')
     try {
@@ -34,20 +31,7 @@ export const useSettingsStore = defineStore('settings', () => {
         message: string
         data: SettingsData
       }>('/api/settings')
-      executionMode.value    = envelope.data.executionMode
       spareChangeRules.value = envelope.data.spareChangeRules
-    } catch (err) {
-      mapError(err)
-    }
-  }
-
-  // PATCH /api/settings/execution-mode
-  // 매매 방식을 변경한다. 성공 시 로컬 상태도 즉시 반영한다.
-  async function updateExecutionMode(mode: ExecutionMode): Promise<void> {
-    const { default: api } = await import('@/utils/api')
-    try {
-      await api.patch('/api/settings/execution-mode', { executionMode: mode })
-      executionMode.value = mode
     } catch (err) {
       mapError(err)
     }
@@ -89,10 +73,8 @@ export const useSettingsStore = defineStore('settings', () => {
   }
 
   return {
-    executionMode,
     spareChangeRules,
     fetchSettings,
-    updateExecutionMode,
     updateSpareChangeRules,
     updateLinkedAccount,
   }

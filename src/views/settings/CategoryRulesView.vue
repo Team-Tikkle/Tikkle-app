@@ -39,24 +39,6 @@ const localRules = reactive<Record<CategoryType, RuleType>>(
   Object.fromEntries(CATEGORIES.map(c => [c.type, 'ROUND_UP_10000'])) as Record<CategoryType, RuleType>
 )
 
-// ── 자동/수동 매매 로컬 상태 ──
-const localExecutionMode = ref<'AUTO' | 'MANUAL'>('AUTO')
-const isTogglingMode = ref(false)
-
-async function toggleExecutionMode() {
-  if (isTogglingMode.value) return
-  isTogglingMode.value = true
-  const next = localExecutionMode.value === 'AUTO' ? 'MANUAL' : 'AUTO'
-  try {
-    await settingsStore.updateExecutionMode(next)
-    localExecutionMode.value = next
-  } catch (err) {
-    errorMsg.value = err instanceof Error ? err.message : '매매 방식 변경에 실패했습니다.'
-  } finally {
-    isTogglingMode.value = false
-  }
-}
-
 // ── UI 상태 ──
 const isLoading    = ref(true)
 const isSaving     = ref(false)
@@ -75,7 +57,6 @@ function ruleToMode(r: RuleType): 'ROUND_UP' | 'PERCENT' {
 onMounted(async () => {
   try {
     await settingsStore.fetchSettings()
-    localExecutionMode.value = settingsStore.executionMode
     for (const rule of settingsStore.spareChangeRules) {
       if (rule.category in localRules) {
         localRules[rule.category] = rule.ruleType
@@ -175,7 +156,7 @@ async function confirmRule() {
 
 <template>
   <div class="min-h-screen bg-surface flex flex-col">
-    <AppHeader title="카테고리별 잔돈 규칙" :show-back="true" />
+    <AppHeader title="잔돈 규칙 설정" :show-back="true" />
 
     <!-- Loading -->
     <div v-if="isLoading" class="flex-1 flex items-center justify-center">
@@ -189,30 +170,6 @@ async function confirmRule() {
         class="mx-4 mt-3 bg-danger-bg border border-danger rounded-xl px-4 py-3 text-sm text-danger"
       >
         {{ errorMsg }}
-      </div>
-
-      <!-- 매매 방식 -->
-      <div class="px-4 pt-3">
-        <div class="bg-white rounded-xl px-5 py-4 flex items-center justify-between">
-          <div class="flex flex-col gap-0.5">
-            <span class="text-base font-medium text-text-primary">자동 매매</span>
-            <span class="text-sm text-text-tertiary">
-              {{ localExecutionMode === 'AUTO' ? '잔돈이 모이면 자동으로 투자합니다' : '매매 전 직접 확인 후 실행합니다' }}
-            </span>
-          </div>
-          <!-- 토글 스위치 -->
-          <button
-            class="relative w-12 h-7 rounded-full transition-colors duration-200 shrink-0 disabled:opacity-50"
-            :class="localExecutionMode === 'AUTO' ? 'bg-brand' : 'bg-surface-border'"
-            :disabled="isTogglingMode"
-            @click="toggleExecutionMode"
-          >
-            <span
-              class="absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow-sm transition-transform duration-200"
-              :class="localExecutionMode === 'AUTO' ? 'translate-x-5' : 'translate-x-0'"
-            />
-          </button>
-        </div>
       </div>
 
       <!-- Category list -->

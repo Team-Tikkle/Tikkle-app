@@ -9,7 +9,6 @@ import type {
   CryptoTheme,
   DiversificationType,
   MemeAcceptance,
-  ExecutionMode,
   CategoryType,
   RuleType,
   CategoryRule,
@@ -20,14 +19,13 @@ const userStore = useUserStore();
 const onboardingStore = useOnboardingStore();
 
 // ── Step tracking ──
-// 1: 업비트 연결  2: 카드 등록  3~7: 투자 성향 Q1~Q5  8: 매매 방식 & 잔돈 규칙
+// 1: 업비트 연결  2: 카드 등록  3~7: 투자 성향 Q1~Q5  8: 잔돈 규칙
 const step = ref(1);
 const TOTAL_STEPS = 8;
 
 // ── 업비트 Open API 키 + 결제 카드 ──
 const accessKey = ref('');
 const secretKey = ref('');
-const cardCompany = ref('국민카드');
 const cardLast4 = ref('');
 
 const isCardLast4Valid = computed(() => /^\d{4}$/.test(cardLast4.value));
@@ -36,17 +34,14 @@ const isCardLast4Valid = computed(() => /^\d{4}$/.test(cardLast4.value));
 const isStep1Valid = computed(
   () => accessKey.value.trim() && secretKey.value.trim(),
 );
-const isStep2Valid = computed(
-  () => cardCompany.value.trim() && isCardLast4Valid.value,
-);
+const isStep2Valid = computed(() => isCardLast4Valid.value);
 
-// ── 투자 성향 설문 (Q1~Q5) + 매매 방식 ──
+// ── 투자 성향 설문 (Q1~Q5) ──
 const prefs = reactive({
   riskTolerance: 'HOLD' as RiskTolerance,
   trendSensitivity: 'PARTIAL_TREND' as TrendSensitivity,
   diversificationType: 'BALANCED' as DiversificationType,
   memeAcceptance: 'NONE' as MemeAcceptance,
-  executionMode: 'AUTO' as ExecutionMode,
 });
 // Q3: 관심 테마 (다중 선택)
 const cryptoThemes = ref<CryptoTheme[]>([]);
@@ -172,7 +167,6 @@ async function handleSubmit() {
     onboardingStore.setCredentials({
       upbitAccessKey: accessKey.value.trim(),
       upbitSecretKey: secretKey.value.trim(),
-      targetCardCompany: cardCompany.value,
       targetCardLast4: cardLast4.value,
     });
     onboardingStore.setPreferences({
@@ -181,7 +175,6 @@ async function handleSubmit() {
       cryptoThemes: [...cryptoThemes.value],
       diversificationType: prefs.diversificationType,
       memeAcceptance: prefs.memeAcceptance,
-      executionMode: prefs.executionMode,
     });
     onboardingStore.setCategoryRules(
       ALL_CATEGORIES.map(
@@ -400,20 +393,32 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
           </p>
         </div>
 
-        <div class="flex flex-col gap-5">
-          <!-- Card company -->
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary"
-              >카드사</label
-            >
-            <select
-              v-model="cardCompany"
-              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all appearance-none"
-            >
-              <option value="케이뱅크">케이뱅크</option>
-            </select>
+        <!-- 케이뱅크 고정 안내 -->
+        <div class="bg-brand-bg rounded-xl px-4 py-3.5 flex items-center gap-3">
+          <svg
+            class="text-brand shrink-0"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <div>
+            <p class="text-sm font-semibold text-brand">
+              케이뱅크 카드 자동 연동
+            </p>
+            <p class="text-xs2 text-brand-300 mt-0.5">
+              현재 케이뱅크 카드만 지원됩니다
+            </p>
           </div>
+        </div>
 
+        <div class="flex flex-col gap-5">
           <!-- Card last 4 digits -->
           <div class="flex flex-col gap-2">
             <label class="text-sm font-semibold text-text-secondary"
@@ -657,13 +662,13 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
         </div>
       </div>
 
-      <!-- ── Step 8: 매매 방식 & 잔돈 규칙 ── -->
+      <!-- ── Step 8: 잔돈 규칙 ── -->
       <div v-else-if="step === 8" class="px-6 pt-6 flex flex-col gap-7">
         <span class="text-sm font-semibold text-brand">잔돈 설정</span>
 
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
-            잔돈 규칙과 매매<br />방식을 설정하세요
+            잔돈 규칙을 설정하세요
           </h2>
           <p class="text-base text-text-tertiary leading-relaxed">
             모든 결제에 공통으로 적용돼요. 카테고리별 세부 설정은 가입 후 설정
@@ -747,53 +752,6 @@ const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }> = {
           <p class="text-xs2 text-text-tertiary leading-relaxed">
             ※ 5,000원 미만의 잔돈이 발생한 경우에는 투자가 진행되지 않습니다.
           </p>
-        </div>
-
-        <!-- ── 매매 방식 ── -->
-        <div class="flex flex-col gap-3">
-          <p class="text-sm font-semibold text-text-secondary">매매 방식</p>
-          <div class="bg-surface-alt rounded-2xl p-1 flex gap-1">
-            <button
-              class="flex-1 py-2.5 rounded-xl flex flex-col items-center gap-0.5 transition-all"
-              :class="
-                prefs.executionMode === 'AUTO' ? 'bg-white shadow-sm' : ''
-              "
-              @click="prefs.executionMode = 'AUTO'"
-            >
-              <span
-                class="text-sm font-semibold"
-                :class="
-                  prefs.executionMode === 'AUTO'
-                    ? 'text-text-primary'
-                    : 'text-text-tertiary'
-                "
-                >자동 매매</span
-              >
-              <span class="text-xs2 text-text-tertiary"
-                >AI로 잔돈 자동 투자</span
-              >
-            </button>
-            <button
-              class="flex-1 py-2.5 rounded-xl flex flex-col items-center gap-0.5 transition-all"
-              :class="
-                prefs.executionMode === 'MANUAL' ? 'bg-white shadow-sm' : ''
-              "
-              @click="prefs.executionMode = 'MANUAL'"
-            >
-              <span
-                class="text-sm font-semibold"
-                :class="
-                  prefs.executionMode === 'MANUAL'
-                    ? 'text-text-primary'
-                    : 'text-text-tertiary'
-                "
-                >수동 매매</span
-              >
-              <span class="text-xs2 text-text-tertiary"
-                >AI 추천 코인 구매 여부 결정</span
-              >
-            </button>
-          </div>
         </div>
 
         <!-- Error message -->

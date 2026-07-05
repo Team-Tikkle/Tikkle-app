@@ -7,7 +7,6 @@ import type {
   CryptoTheme,
   DiversificationType,
   MemeAcceptance,
-  ExecutionMode,
   CategoryRule,
   OnboardingRequest,
 } from '@/types'
@@ -34,52 +33,46 @@ const DEFAULT_CATEGORY_RULES: CategoryRule[] = [
 
 export const useOnboardingStore = defineStore('onboarding', () => {
 
-  // ── 투자 성향 설문 (Q1~Q5) + 매매 방식 ──
+  // ── 투자 성향 설문 (Q1~Q5) ──
   const riskTolerance       = ref<RiskTolerance>('HOLD')               // Q1. 하락장 방어 심리
   const trendSensitivity    = ref<TrendSensitivity>('PARTIAL_TREND')   // Q2. 트렌드 민감도
   const cryptoThemes        = ref<CryptoTheme[]>([])                   // Q3. 관심 테마 (다중)
   const diversificationType = ref<DiversificationType>('BALANCED')     // Q4. 분산도
   const memeAcceptance      = ref<MemeAcceptance>('NONE')              // Q5. 밈 코인 수용도
-  const executionMode       = ref<ExecutionMode>('AUTO')              // 매매 방식
 
   // ── 업비트 Open API 키 + 결제 카드 ──
-  const upbitAccessKey    = ref('')
-  const upbitSecretKey    = ref('')
-  const targetCardCompany = ref('')
-  const targetCardLast4   = ref('')   // must be exactly 4 digits
+  const upbitAccessKey  = ref('')
+  const upbitSecretKey  = ref('')
+  const targetCardLast4 = ref('')   // must be exactly 4 digits
 
   // ── Category rules (exactly 7) ──
   const categoryRules = ref<CategoryRule[]>([...DEFAULT_CATEGORY_RULES])
 
   // ── Actions ──
 
-  // setPreferences — Q1~Q5 설문 결과 + 매매 방식을 한 번에 반영한다.
+  // setPreferences — Q1~Q5 설문 결과를 한 번에 반영한다.
   function setPreferences(params: {
     riskTolerance:       RiskTolerance
     trendSensitivity:    TrendSensitivity
     cryptoThemes:        CryptoTheme[]
     diversificationType: DiversificationType
     memeAcceptance:      MemeAcceptance
-    executionMode:       ExecutionMode
   }) {
     riskTolerance.value       = params.riskTolerance
     trendSensitivity.value    = params.trendSensitivity
     cryptoThemes.value        = [...params.cryptoThemes]
     diversificationType.value = params.diversificationType
     memeAcceptance.value      = params.memeAcceptance
-    executionMode.value       = params.executionMode
   }
 
   function setCredentials(params: {
     upbitAccessKey: string
     upbitSecretKey: string
-    targetCardCompany: string
     targetCardLast4: string
   }) {
-    upbitAccessKey.value    = params.upbitAccessKey
-    upbitSecretKey.value    = params.upbitSecretKey
-    targetCardCompany.value = params.targetCardCompany
-    targetCardLast4.value   = params.targetCardLast4
+    upbitAccessKey.value  = params.upbitAccessKey
+    upbitSecretKey.value  = params.upbitSecretKey
+    targetCardLast4.value = params.targetCardLast4
   }
 
   function setCategoryRules(rules: CategoryRule[]) {
@@ -94,14 +87,12 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     const payload: OnboardingRequest = {
       upbitAccessKey:      upbitAccessKey.value,
       upbitSecretKey:      upbitSecretKey.value,
-      targetCardCompany:   targetCardCompany.value,
       targetCardLast4:     targetCardLast4.value,
       riskTolerance:       riskTolerance.value,
       trendSensitivity:    trendSensitivity.value,
       cryptoThemes:        cryptoThemes.value,
       diversificationType: diversificationType.value,
       memeAcceptance:      memeAcceptance.value,
-      executionMode:       executionMode.value,
       categoryRules:       categoryRules.value,
     }
 
@@ -134,10 +125,8 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     cryptoThemes,
     diversificationType,
     memeAcceptance,
-    executionMode,
     upbitAccessKey,
     upbitSecretKey,
-    targetCardCompany,
     targetCardLast4,
     categoryRules,
     // actions

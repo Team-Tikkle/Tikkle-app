@@ -85,7 +85,7 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
         >
           <div class="flex flex-col gap-1 text-left">
             <span class="text-base font-medium text-text-primary">투자 규칙 변경</span>
-            <span class="text-sm text-text-tertiary">잔돈 규칙 · 매매 방식 설정</span>
+            <span class="text-sm text-text-tertiary">카테고리별 잔돈 규칙 설정</span>
           </div>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />

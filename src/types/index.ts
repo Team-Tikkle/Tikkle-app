@@ -9,7 +9,6 @@ export type TrendSensitivity    = 'FUNDAMENTAL_ONLY' | 'PARTIAL_TREND' | 'FULL_T
 export type CryptoTheme         = 'LAYER_1' | 'DEFI' | 'AI' | 'WEB3_GAMING' | 'RWA' | 'MEME' // Q3. 관심 테마 (다중)
 export type DiversificationType = 'CONCENTRATED' | 'BALANCED' | 'DIVERSIFIED'     // Q4. 포트폴리오 분산도
 export type MemeAcceptance      = 'NONE' | 'SMALL' | 'ACTIVE'                     // Q5. 밈 코인 수용도
-export type ExecutionMode       = 'AUTO' | 'MANUAL'                              // 매매 방식
 
 // Exactly 7 unique categories required by the backend
 export type CategoryType = 'CAFE' | 'MART' | 'FOOD' | 'SHOPPING' | 'TRAFFIC' | 'CULTURE' | 'ETC'
@@ -25,14 +24,12 @@ export interface CategoryRule {
 export interface OnboardingRequest {
   upbitAccessKey:      string
   upbitSecretKey:      string
-  targetCardCompany:   string
   targetCardLast4:     string       // exactly 4-digit numeric string
   riskTolerance:       RiskTolerance
   trendSensitivity:    TrendSensitivity
   cryptoThemes:        CryptoTheme[]
   diversificationType: DiversificationType
   memeAcceptance:      MemeAcceptance
-  executionMode:       ExecutionMode
   categoryRules:       CategoryRule[] // length must be exactly 7
 }
 
