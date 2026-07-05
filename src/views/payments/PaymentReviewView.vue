@@ -15,6 +15,7 @@ import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
 import { usePaymentStore } from '@/stores/usePaymentStore'
 import AppHeader from '@/components/common/AppHeader.vue'
+import { fmtKRW } from '@/utils/format'
 
 const route = useRoute()
 const router = useRouter()
@@ -33,9 +34,7 @@ const { isLoading, errorMsg, run } = useAsyncAction()
 // Missing eventId means we cannot call approve/reject — guard the UI.
 const isActionable = computed(() => !!eventId)
 
-function fmt(n: number) {
-  return n.toLocaleString('ko-KR')
-}
+const fmt = fmtKRW
 
 function handle(decision: 'approve' | 'reject') {
   if (!eventId) return

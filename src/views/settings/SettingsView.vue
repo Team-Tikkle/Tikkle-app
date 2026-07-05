@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import AppHeader from '@/components/common/AppHeader.vue'
 import BottomNav from '@/components/common/BottomNav.vue'
 import { useUserStore } from '@/stores/useUserStore'
+import { useAsyncAction } from '@/composables/useAsyncAction'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -31,19 +32,14 @@ async function handleLogout() {
 }
 
 // Delete account: calls DELETE /api/users/me, clears session, redirects to /login
-const isDeletingAccount = ref(false)
-async function handleDeleteAccount() {
-  if (isDeletingAccount.value) return
-  isDeletingAccount.value = true
-  try {
+// 실패 시 errorMsg만 설정되고 modal은 열린 채로 유지됨 (사용자가 재시도 가능)
+const { isLoading: isDeletingAccount, run: runDeleteAccount } = useAsyncAction()
+function handleDeleteAccount() {
+  runDeleteAccount(async () => {
     await userStore.deleteAccount()
     showWithdrawalModal.value = false
     router.replace({ name: 'login' })
-  } catch {
-    // Keep modal open if the request fails so the user can retry
-  } finally {
-    isDeletingAccount.value = false
-  }
+  })
 }
 
 // Chevron icon (right arrow for menu items)
