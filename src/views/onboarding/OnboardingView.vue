@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue';
+import { useAsyncAction } from '@/composables/useAsyncAction';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/useUserStore';
 import { useOnboardingStore } from '@/stores/useOnboardingStore';
@@ -55,8 +56,7 @@ const ALL_CATEGORIES: CategoryType[] = [
 const selectedRule = ref<RuleType>('ROUND_UP_10000');
 
 // ── UI 상태 ──
-const isLoading = ref(false);
-const errorMsg = ref('');
+const { isLoading, errorMsg, run } = useAsyncAction();
 
 // ── 단계별 진행 가능 여부 ──
 const canProceed = computed(() => {
@@ -78,11 +78,8 @@ function goBack() {
   if (step.value > 1) step.value--;
 }
 
-async function handleSubmit() {
-  if (isLoading.value) return;
-  isLoading.value = true;
-  errorMsg.value = '';
-  try {
+function handleSubmit() {
+  run(async () => {
     onboardingStore.setCredentials({
       upbitAccessKey: accessKey.value.trim(),
       upbitSecretKey: secretKey.value.trim(),
@@ -103,12 +100,7 @@ async function handleSubmit() {
     await onboardingStore.submitOnboarding();
     userStore.completeOnboarding();
     router.replace('/');
-  } catch (err: unknown) {
-    errorMsg.value =
-      err instanceof Error ? err.message : '오류가 발생했습니다. 다시 시도해 주세요.';
-  } finally {
-    isLoading.value = false;
-  }
+  });
 }
 
 </script>

@@ -161,11 +161,14 @@ api.interceptors.response.use(
   },
 )
 
-// ── Force logout: clear storage + notify App.vue via DOM event ──
+// ── Force logout: 스토리지 삭제 후 스토어 액션으로 세션 정리 + 라우팅 ──
+// window 이벤트 대신 스토어를 직접 호출해 App.vue 마운트 타이밍에 의존하지 않는다.
 function _forceLogout() {
   localStorage.removeItem(LS_ACCESS)
   localStorage.removeItem(LS_REFRESH)
-  window.dispatchEvent(new CustomEvent('tikkle:force-logout'))
+  import('@/stores/useUserStore').then(({ useUserStore }) => {
+    useUserStore().forceLogout()
+  })
 }
 
 export default api

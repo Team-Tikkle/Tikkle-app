@@ -9,7 +9,8 @@
  * Route: /payments/review?eventId&merchant&amount&spareChange&ticker&stockName
  * API  : POST /api/payments/{eventId}/approve | /reject  (JWT, no body)
  */
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
+import { useAsyncAction } from '@/composables/useAsyncAction'
 import axios from 'axios'
 import { useRoute, useRouter } from 'vue-router'
 import { usePaymentStore } from '@/stores/usePaymentStore'
@@ -27,8 +28,7 @@ const spareChange = Number(route.query.spareChange ?? 0)
 const stockName   = (route.query.stockName as string) || ''
 const ticker      = (route.query.ticker as string) || ''
 
-const isLoading = ref(false)
-const errorMsg  = ref('')
+const { isLoading, errorMsg, run } = useAsyncAction()
 
 // Missing eventId means we cannot call approve/reject — guard the UI.
 const isActionable = computed(() => !!eventId)
@@ -37,27 +37,20 @@ function fmt(n: number) {
   return n.toLocaleString('ko-KR')
 }
 
-async function handle(decision: 'approve' | 'reject') {
-  if (isLoading.value || !eventId) return
-  isLoading.value = true
-  errorMsg.value  = ''
-  try {
+function handle(decision: 'approve' | 'reject') {
+  if (!eventId) return
+  const failMsg =
+    decision === 'approve'
+      ? '오류가 발생해 투자가 취소되었어요.'
+      : '오류가 발생했어요. 다시 시도해 주세요.'
+  run(async () => {
     if (decision === 'approve') {
       await paymentStore.approvePaymentEvent(eventId)
     } else {
       await paymentStore.rejectPaymentEvent(eventId)
     }
     router.replace('/payments')
-  } catch (err: unknown) {
-    if (import.meta.env.DEV) console.error('[review]', extractErrorMessage(err))
-    if (decision === 'approve') {
-      errorMsg.value = '오류가 발생해 투자가 취소되었어요.'
-    } else {
-      errorMsg.value = '오류가 발생했어요. 다시 시도해 주세요.'
-    }
-  } finally {
-    isLoading.value = false
-  }
+  }, failMsg)
 }
 
 /**

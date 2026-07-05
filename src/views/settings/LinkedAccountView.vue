@@ -2,39 +2,30 @@
 import { ref } from 'vue'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { useSettingsStore } from '@/stores/useSettingsStore'
+import { useAsyncAction } from '@/composables/useAsyncAction'
 
 const settingsStore = useSettingsStore()
 
 const accessKey = ref('')
 const secretKey = ref('')
-
-const isLoading = ref(false)
-const errorMsg  = ref('')
 const successMsg = ref('')
 
-async function handleSave() {
-  if (isLoading.value) return
+const { isLoading, errorMsg, run } = useAsyncAction('저장에 실패했습니다. 다시 시도해 주세요.')
+
+function handleSave() {
   if (!accessKey.value.trim() || !secretKey.value.trim()) {
     errorMsg.value = '모든 항목을 입력해 주세요.'
     return
   }
-
-  isLoading.value = true
-  errorMsg.value  = ''
   successMsg.value = ''
-
-  try {
+  run(async () => {
     await settingsStore.updateLinkedAccount({
       upbitAccessKey: accessKey.value.trim(),
       upbitSecretKey: secretKey.value.trim(),
     })
     successMsg.value = '업비트 계정 정보가 업데이트되었습니다.'
     secretKey.value = ''
-  } catch (err: unknown) {
-    errorMsg.value = err instanceof Error ? err.message : '저장에 실패했습니다. 다시 시도해 주세요.'
-  } finally {
-    isLoading.value = false
-  }
+  })
 }
 </script>
 

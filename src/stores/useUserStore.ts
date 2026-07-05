@@ -281,6 +281,16 @@ export const useUserStore = defineStore('user', () => {
   // Existing profile-mutation actions (unchanged)
   // ════════════════════════════════════════════════
 
+  // ── Force logout: Axios 인터셉터가 리프레시 토큰 만료를 감지했을 때 호출 ──
+  // 세션을 즉시 삭제하고 로그인 화면으로 이동한다.
+  // window 이벤트 없이 스토어 액션만으로 처리해 마운트 타이밍 경쟁 조건을 제거.
+  function forceLogout(): void {
+    _clearSession()
+    import('@/router').then(({ default: router }) => {
+      router.replace({ name: 'login' }).catch(() => {})
+    })
+  }
+
   function setProfile(newProfile: UserProfile) {
     profile.value = newProfile
   }
@@ -317,6 +327,7 @@ export const useUserStore = defineStore('user', () => {
     bootstrap,
     login,
     logout,
+    forceLogout,
     reissueTokens,
     issueTestToken,
     testSignup,
