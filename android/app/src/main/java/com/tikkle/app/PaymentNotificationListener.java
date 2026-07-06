@@ -166,6 +166,16 @@ public class PaymentNotificationListener extends NotificationListenerService {
      * @return ParsedPayment, or null if a required field could not be extracted.
      */
     private ParsedPayment parseKbank(String body) {
+        // Reject cancellation notifications — "승인취소" appears in the amount line
+        // (e.g. "승인취소 17,500원") and must not be sent to the payment endpoint.
+        for (String line : body.split("\\n")) {
+            String t = line.trim();
+            if (KBANK_AMOUNT.matcher(t).find() && t.contains("취소")) {
+                Log.d(TAG, "[KBank] cancellation notification — skipping.");
+                return null;
+            }
+        }
+
         // Last 4 digits — inside the 카드(NNNN) marker
         Matcher last4Matcher = KBANK_LAST4.matcher(body);
         if (!last4Matcher.find()) {
