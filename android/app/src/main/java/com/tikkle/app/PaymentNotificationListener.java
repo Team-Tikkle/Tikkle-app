@@ -475,8 +475,16 @@ public class PaymentNotificationListener extends NotificationListenerService {
             Log.d(TAG, "HTTP " + status);
             Log.d(TAG, "Body: " + responseBody);
 
+            // 409/404 are expected business outcomes - ignore silently, no notification.
+            // 409 PAYMENT-009: duplicate transaction  409 PAYMENT-008: card mismatch
+            // 404 USER-003: card not registered       404 USER-005: no category rules
+            if (status == 409 || status == 404) {
+                Log.d(TAG, "Payment silently ignored: HTTP " + status + " body=" + responseBody);
+                return null;
+            }
+
             if (status != 200) {
-                Log.w(TAG, "Non-200 response from payment endpoint: " + status);
+                Log.w(TAG, "Unexpected response from payment endpoint: HTTP " + status + " body=" + responseBody);
                 return null;
             }
 
