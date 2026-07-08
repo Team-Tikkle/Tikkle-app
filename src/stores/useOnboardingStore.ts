@@ -7,6 +7,7 @@ import type {
   CryptoTheme,
   DiversificationType,
   MemeAcceptance,
+  TwoFactorProvider,
   CategoryRule,
   OnboardingRequest,
 } from '@/types'
@@ -40,10 +41,11 @@ export const useOnboardingStore = defineStore('onboarding', () => {
   const diversificationType = ref<DiversificationType>('BALANCED')     // Q4. 분산도
   const memeAcceptance      = ref<MemeAcceptance>('NONE')              // Q5. 밈 코인 수용도
 
-  // ── 업비트 Open API 키 + 결제 카드 ──
-  const upbitAccessKey  = ref('')
-  const upbitSecretKey  = ref('')
-  const targetCardLast4 = ref('')   // must be exactly 4 digits
+  // ── 업비트 Open API 키 + 결제 카드 + 2차 인증 수단 ──
+  const upbitAccessKey    = ref('')
+  const upbitSecretKey    = ref('')
+  const targetCardLast4   = ref('')                    // must be exactly 4 digits
+  const twoFactorProvider = ref<TwoFactorProvider | ''>('')
 
   // ── Category rules (exactly 7) ──
   const categoryRules = ref<CategoryRule[]>([...DEFAULT_CATEGORY_RULES])
@@ -66,13 +68,15 @@ export const useOnboardingStore = defineStore('onboarding', () => {
   }
 
   function setCredentials(params: {
-    upbitAccessKey: string
-    upbitSecretKey: string
-    targetCardLast4: string
+    upbitAccessKey:    string
+    upbitSecretKey:    string
+    targetCardLast4:   string
+    twoFactorProvider: TwoFactorProvider
   }) {
-    upbitAccessKey.value  = params.upbitAccessKey
-    upbitSecretKey.value  = params.upbitSecretKey
-    targetCardLast4.value = params.targetCardLast4
+    upbitAccessKey.value    = params.upbitAccessKey
+    upbitSecretKey.value    = params.upbitSecretKey
+    targetCardLast4.value   = params.targetCardLast4
+    twoFactorProvider.value = params.twoFactorProvider
   }
 
   function setCategoryRules(rules: CategoryRule[]) {
@@ -88,6 +92,7 @@ export const useOnboardingStore = defineStore('onboarding', () => {
       upbitAccessKey:      upbitAccessKey.value,
       upbitSecretKey:      upbitSecretKey.value,
       targetCardLast4:     targetCardLast4.value,
+      twoFactorProvider:   twoFactorProvider.value as TwoFactorProvider,
       riskTolerance:       riskTolerance.value,
       trendSensitivity:    trendSensitivity.value,
       cryptoThemes:        cryptoThemes.value,
@@ -128,6 +133,7 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     upbitAccessKey,
     upbitSecretKey,
     targetCardLast4,
+    twoFactorProvider,
     categoryRules,
     // actions
     setPreferences,

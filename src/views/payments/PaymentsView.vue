@@ -6,6 +6,7 @@ import AppHeader from '@/components/common/AppHeader.vue'
 import BottomNav from '@/components/common/BottomNav.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import RemainingTime from '@/components/common/RemainingTime.vue'
+import { useAsyncAction } from '@/composables/useAsyncAction'
 import type { TransactionStatus, PaymentFeedStatus, CategoryType, PaymentFeedItem } from '@/types'
 import { fmtKRW } from '@/utils/format'
 
@@ -118,6 +119,25 @@ const CATEGORY_ICONS: Record<CategoryType, string> = {
   CULTURE: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>`,
   // 더보기(점 3개)
   ETC: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>`,
+}
+
+// ── Category change sheet ──
+const categorySheetTx = ref<PaymentFeedItem | null>(null)
+const { isLoading: isSavingCategory, run: runUpdateCategory } = useAsyncAction()
+
+function openCategorySheet(tx: PaymentFeedItem, e: Event) {
+  e.stopPropagation()
+  categorySheetTx.value = tx
+}
+
+function selectCategory(category: CategoryType) {
+  const tx = categorySheetTx.value
+  if (!tx || isSavingCategory.value) return
+  if (category === tx.category) { categorySheetTx.value = null; return }
+  runUpdateCategory(async () => {
+    await paymentStore.updateCategory(tx.id, category)
+    categorySheetTx.value = null
+  })
 }
 
 // ── Infinite scroll: observe a sentinel at the end of the list ──
@@ -238,11 +258,14 @@ onUnmounted(() => observer?.disconnect())
             :class="tx.status === 'PENDING' ? 'cursor-pointer' : ''"
             @click="tx.status === 'PENDING' && goReview(tx)"
           >
-            <!-- Category icon -->
-            <div class="w-10 h-10 rounded-lg bg-brand-bg flex items-center justify-center shrink-0 text-brand">
+            <!-- Category icon — tap to change category -->
+            <button
+              class="w-10 h-10 rounded-lg bg-brand-bg flex items-center justify-center shrink-0 text-brand active:opacity-60"
+              @click="openCategorySheet(tx, $event)"
+            >
               <!-- eslint-disable-next-line vue/no-v-html -->
               <span v-html="CATEGORY_ICONS[tx.category] ?? CATEGORY_ICONS.ETC" />
-            </div>
+            </button>
 
             <!-- Info -->
             <div class="flex-1 min-w-0">
@@ -282,4 +305,66 @@ onUnmounted(() => observer?.disconnect())
 
     <BottomNav />
   </div>
+
+  <!-- ════ Category change sheet ════ -->
+  <Teleport to="body">
+    <Transition
+      enter-active-class="transition-opacity duration-200"
+      enter-from-class="opacity-0"
+      leave-active-class="transition-opacity duration-150"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="categorySheetTx"
+        class="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+        @click.self="categorySheetTx = null"
+      >
+        <Transition
+          enter-active-class="transition-transform duration-200 ease-out"
+          enter-from-class="translate-y-full"
+          leave-active-class="transition-transform duration-150 ease-in"
+          leave-to-class="translate-y-full"
+        >
+          <div
+            v-if="categorySheetTx"
+            class="w-full max-w-mobile bg-white rounded-t-3xl px-6 pt-6 pb-10 flex flex-col gap-5"
+          >
+            <!-- Header -->
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-bold text-text-primary">카테고리 변경</h3>
+              <button
+                class="w-8 h-8 flex items-center justify-center text-text-tertiary"
+                @click="categorySheetTx = null"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Category grid -->
+            <div class="grid grid-cols-4 gap-3">
+              <button
+                v-for="(meta, key) in CATEGORY_META"
+                :key="key"
+                class="flex flex-col items-center gap-2 py-3 rounded-xl transition-colors"
+                :class="categorySheetTx.category === key
+                  ? 'bg-brand-bg text-brand'
+                  : 'bg-surface text-text-secondary active:bg-surface-border'"
+                :disabled="isSavingCategory"
+                @click="selectCategory(key as CategoryType)"
+              >
+                <!-- eslint-disable-next-line vue/no-v-html -->
+                <span v-html="CATEGORY_ICONS[key as CategoryType]" />
+                <span class="text-xs2 font-medium">{{ meta.label }}</span>
+              </button>
+            </div>
+
+            <!-- Loading indicator -->
+            <p v-if="isSavingCategory" class="text-center text-sm text-text-tertiary">저장 중…</p>
+          </div>
+        </Transition>
+      </div>
+    </Transition>
+  </Teleport>
 </template>

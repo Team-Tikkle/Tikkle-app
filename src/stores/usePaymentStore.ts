@@ -6,6 +6,7 @@ import type {
   Page,
   PaymentDashboard,
   ApiEnvelope,
+  CategoryType,
 } from '@/types'
 
 export const usePaymentStore = defineStore('payment', () => {
@@ -19,6 +20,13 @@ export const usePaymentStore = defineStore('payment', () => {
   async function rejectPaymentEvent(eventId: string) {
     const { default: api } = await import('@/utils/api')
     await api.post(`/api/payments/${eventId}/reject`)
+  }
+
+  async function updateCategory(id: number, category: CategoryType) {
+    const { default: api } = await import('@/utils/api')
+    await api.patch(`/api/payments/${id}/category`, { category })
+    const item = feed.value.find((tx) => tx.id === id)
+    if (item) item.category = category
   }
 
   // ── Paged payment feed (GET /api/payments) — low-level fetch ──
@@ -101,6 +109,7 @@ export const usePaymentStore = defineStore('payment', () => {
   return {
     approvePaymentEvent,
     rejectPaymentEvent,
+    updateCategory,
     fetchPaymentFeed,
     fetchPaymentDashboard,
     // feed / dashboard state for the 결제 내역 tab

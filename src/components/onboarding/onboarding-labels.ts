@@ -3,6 +3,7 @@ import type {
   TrendSensitivity,
   DiversificationType,
   MemeAcceptance,
+  TwoFactorProvider,
 } from '@/types';
 
 export const RISK_LABELS: Record<RiskTolerance, { title: string; desc: string }> = {
@@ -30,6 +31,12 @@ export const MEME_LABELS: Record<MemeAcceptance, { title: string; desc: string }
   NONE: { title: '투자 안 함', desc: '변동성이 너무 커서 포트폴리오에 포함하지 않습니다.' },
   SMALL: { title: '소액 체험', desc: '전체 투자금에 영향이 없는 소액 범위 내에서만 투자합니다.' },
   ACTIVE: { title: '적극 수용', desc: '높은 단기 수익률을 위해 비중 있게 투자할 의향이 있습니다.' },
+};
+
+export const TWO_FACTOR_LABELS: Record<TwoFactorProvider, { title: string; desc: string }> = {
+  KAKAO: { title: '카카오톡', desc: '카카오페이 인증으로 2차 인증을 완료합니다.' },
+  NAVER: { title: '네이버', desc: '네이버 인증서로 2차 인증을 완료합니다.' },
+  HANA:  { title: '하나원큐', desc: '하나은행 앱으로 2차 인증을 완료합니다.' },
 };
 
 export const DIVERS_LABELS: Record<DiversificationType, { title: string; desc: string }> = {

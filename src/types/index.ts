@@ -9,6 +9,7 @@ export type TrendSensitivity    = 'FUNDAMENTAL_ONLY' | 'PARTIAL_TREND' | 'FULL_T
 export type CryptoTheme         = 'LAYER_1' | 'DEFI' | 'AI' | 'WEB3_GAMING' | 'RWA' | 'MEME' // Q3. 관심 테마 (다중)
 export type DiversificationType = 'CONCENTRATED' | 'BALANCED' | 'DIVERSIFIED'     // Q4. 포트폴리오 분산도
 export type MemeAcceptance      = 'NONE' | 'SMALL' | 'ACTIVE'                     // Q5. 밈 코인 수용도
+export type TwoFactorProvider  = 'KAKAO' | 'NAVER' | 'HANA'                       // 업비트 2차 인증 수단
 
 // Exactly 7 unique categories required by the backend
 export type CategoryType = 'CAFE' | 'MART' | 'FOOD' | 'SHOPPING' | 'TRAFFIC' | 'CULTURE' | 'ETC'
@@ -25,12 +26,22 @@ export interface OnboardingRequest {
   upbitAccessKey:      string
   upbitSecretKey:      string
   targetCardLast4:     string       // exactly 4-digit numeric string
+  twoFactorProvider:   TwoFactorProvider
   riskTolerance:       RiskTolerance
   trendSensitivity:    TrendSensitivity
   cryptoThemes:        CryptoTheme[]
   diversificationType: DiversificationType
   memeAcceptance:      MemeAcceptance
   categoryRules:       CategoryRule[] // length must be exactly 7
+}
+
+// SSE 이벤트 데이터 (GET /api/payments/{eventId}/stream)
+export interface SseTradeResult {
+  status:          string
+  message:         string
+  targetCoinName?: string
+  investedVolume?: number
+  investedPrice?:  number
 }
 
 export interface UserProfile {
@@ -64,6 +75,8 @@ export interface PaymentFeedItem {
   expiredAt:        string  // ISO-8601, e.g. "2026-06-22T10:30:00"
   targetCoinMarket: string | null  // e.g. "KRW-BTC" (PENDING 상태에서만 존재)
   targetCoinName:   string | null  // e.g. "비트코인"
+  investedVolume:   number | null  // 체결된 코인 수량 (INVESTED 상태에서만 존재)
+  investedPrice:    number | null  // 체결 단가 (INVESTED 상태에서만 존재)
   createdAt:        string
 }
 

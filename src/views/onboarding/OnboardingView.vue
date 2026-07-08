@@ -10,6 +10,7 @@ import type {
   CryptoTheme,
   DiversificationType,
   MemeAcceptance,
+  TwoFactorProvider,
   CategoryType,
   RuleType,
   CategoryRule,
@@ -20,6 +21,7 @@ import OnboardingSingleChoice from '@/components/onboarding/OnboardingSingleChoi
 import OnboardingThemeChoice from '@/components/onboarding/OnboardingThemeChoice.vue';
 import RuleSliderEditor from '@/components/common/RuleSliderEditor.vue';
 import {
+  TWO_FACTOR_LABELS,
   RISK_LABELS,
   TREND_LABELS,
   MEME_LABELS,
@@ -31,14 +33,15 @@ const userStore = useUserStore();
 const onboardingStore = useOnboardingStore();
 
 // ── 스텝 추적 ──
-// 1: 업비트 연결  2: 카드 등록  3~7: 투자 성향 Q1~Q5  8: 잔돈 규칙
+// 1: 업비트 연결  2: 2차 인증 수단  3: 카드 등록  4~8: 투자 성향 Q1~Q5  9: 잔돈 규칙
 const step = ref(1);
-const TOTAL_STEPS = 8;
+const TOTAL_STEPS = 9;
 
 // ── 자격증명 ──
-const accessKey = ref('');
-const secretKey = ref('');
-const cardLast4 = ref('');
+const accessKey         = ref('');
+const secretKey         = ref('');
+const twoFactorProvider = ref<TwoFactorProvider | ''>('');
+const cardLast4         = ref('');
 
 // ── 투자 성향 설문 (Q1~Q5) ──
 const prefs = reactive({
@@ -62,8 +65,9 @@ const { isLoading, errorMsg, run } = useAsyncAction();
 const canProceed = computed(() => {
   switch (step.value) {
     case 1: return Boolean(accessKey.value.trim() && secretKey.value.trim());
-    case 2: return /^\d{4}$/.test(cardLast4.value);
-    case 7: return cryptoThemes.value.length > 0;
+    case 2: return twoFactorProvider.value !== '';
+    case 3: return /^\d{4}$/.test(cardLast4.value);
+    case 8: return cryptoThemes.value.length > 0;
     default: return true;
   }
 });
@@ -81,9 +85,10 @@ function goBack() {
 function handleSubmit() {
   run(async () => {
     onboardingStore.setCredentials({
-      upbitAccessKey: accessKey.value.trim(),
-      upbitSecretKey: secretKey.value.trim(),
-      targetCardLast4: cardLast4.value,
+      upbitAccessKey:    accessKey.value.trim(),
+      upbitSecretKey:    secretKey.value.trim(),
+      targetCardLast4:   cardLast4.value,
+      twoFactorProvider: twoFactorProvider.value as TwoFactorProvider,
     });
     onboardingStore.setPreferences({
       riskTolerance: prefs.riskTolerance,
@@ -128,12 +133,22 @@ function handleSubmit() {
 
     <!-- 스크롤 영역 -->
     <div class="flex-1 overflow-y-auto pb-36">
-      <OnboardingUpbitConnect v-if="step === 1" v-model:accessKey="accessKey" v-model:secretKey="secretKey" />
+      <!-- ── DEV ONLY: @skip 핸들러 — 이 속성만 삭제하면 됩니다 ── -->
+      <OnboardingUpbitConnect v-if="step === 1" v-model:accessKey="accessKey" v-model:secretKey="secretKey" @skip="() => { userStore.completeOnboarding(); router.replace('/'); }" />
 
-      <OnboardingCardRegister v-else-if="step === 2" v-model="cardLast4" />
+      <!-- Step 2: 2차 인증 수단 선택 -->
+      <OnboardingSingleChoice
+        v-else-if="step === 2"
+        tag="2차 인증 수단"
+        question="업비트 입금 시 사용할 인증 앱을 선택해 주세요."
+        :options="TWO_FACTOR_LABELS"
+        v-model="twoFactorProvider"
+      />
+
+      <OnboardingCardRegister v-else-if="step === 3" v-model="cardLast4" />
 
       <OnboardingSingleChoice
-        v-else-if="step === 3"
+        v-else-if="step === 4"
         tag="Q1 · 가격이 떨어질 때"
         question="보유 중인 코인이 갑자기 10% 하락한다면 어떻게 대응하시겠습니까?"
         :options="RISK_LABELS"
@@ -141,7 +156,7 @@ function handleSubmit() {
       />
 
       <OnboardingSingleChoice
-        v-else-if="step === 4"
+        v-else-if="step === 5"
         tag="Q2 · 코인 고르는 기준"
         question="투자할 코인을 고르는 주요 기준은 무엇인가요?"
         :options="TREND_LABELS"
@@ -149,7 +164,7 @@ function handleSubmit() {
       />
 
       <OnboardingSingleChoice
-        v-else-if="step === 5"
+        v-else-if="step === 6"
         tag="Q3 · 밈 코인"
         question="인터넷 유행으로 만들어진 '밈 코인(Meme Coin)' 투자는 어떤가요?"
         :options="MEME_LABELS"
@@ -157,17 +172,17 @@ function handleSubmit() {
       />
 
       <OnboardingSingleChoice
-        v-else-if="step === 6"
+        v-else-if="step === 7"
         tag="Q4 · 투자 분산"
         question="선호하는 자산 분배 방식은 무엇인가요?"
         :options="DIVERS_LABELS"
         v-model="prefs.diversificationType"
       />
 
-      <OnboardingThemeChoice v-else-if="step === 7" v-model="cryptoThemes" />
+      <OnboardingThemeChoice v-else-if="step === 8" v-model="cryptoThemes" />
 
-      <!-- Step 8: 잔돈 규칙 -->
-      <div v-else-if="step === 8" class="px-6 pt-6 flex flex-col gap-7">
+      <!-- Step 9: 잔돈 규칙 -->
+      <div v-else-if="step === 9" class="px-6 pt-6 flex flex-col gap-7">
         <span class="text-sm font-semibold text-brand">잔돈 설정</span>
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">
