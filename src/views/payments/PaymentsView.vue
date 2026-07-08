@@ -301,6 +301,7 @@ onUnmounted(() => observer?.disconnect())
 
                 <!-- 그 외 상태: 기존 배지 -->
                 <span
+                  v-else
                   class="text-xs2 font-medium px-2 py-0.5 rounded-pill"
                   :class="statusConfig[tx.status].class"
                 >
