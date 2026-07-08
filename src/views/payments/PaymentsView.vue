@@ -98,6 +98,12 @@ const statusConfig: Record<TransactionStatus, { label: string; class: string }> 
 
 const fmt = fmtKRW
 
+function fmtVolume(v: number): string {
+  if (v === 0) return '0'
+  const s = v.toPrecision(4)
+  return parseFloat(s).toString()
+}
+
 function fmtDate(iso: string) {
   const d = new Date(iso)
   return `${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')}`
@@ -283,6 +289,17 @@ onUnmounted(() => observer?.disconnect())
               <span class="text-base font-semibold text-text-primary">₩{{ fmt(tx.amount) }}</span>
               <div class="flex items-center gap-1.5">
                 <span class="text-xs2 text-text-tertiary">잔돈 ₩{{ fmt(tx.roundUpAmount) }}</span>
+
+                <!-- INVESTED + 코인 정보 있을 때: 코인 칩으로 배지 대체 -->
+                <div
+                  v-if="tx.status === 'INVESTED' && tx.targetCoinName"
+                  class="flex items-center gap-1 bg-brand-bg px-2 py-0.5 rounded-pill"
+                >
+                  <span class="w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
+                  <span class="text-xs2 font-medium text-brand">{{ tx.targetCoinName }}</span>
+                </div>
+
+                <!-- 그 외 상태: 기존 배지 -->
                 <span
                   class="text-xs2 font-medium px-2 py-0.5 rounded-pill"
                   :class="statusConfig[tx.status].class"
@@ -290,6 +307,15 @@ onUnmounted(() => observer?.disconnect())
                   {{ statusConfig[tx.status].label }}
                 </span>
               </div>
+
+              <!-- 수량 · 단가 (INVESTED + 데이터 있을 때) -->
+              <span
+                v-if="tx.status === 'INVESTED' && tx.investedVolume != null && tx.investedPrice != null"
+                class="text-xs2 text-text-disabled"
+              >
+                {{ fmtVolume(tx.investedVolume) }}개 · ₩{{ fmt(tx.investedPrice) }}
+              </span>
+
               <!-- Remaining time until the approval deadline — PENDING only -->
               <RemainingTime v-if="tx.status === 'PENDING' && tx.expiredAt" :expired-at="tx.expiredAt" />
             </div>
