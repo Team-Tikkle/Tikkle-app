@@ -73,6 +73,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
     {
+      path: '/settings/investment',
+      name: 'settings-investment',
+      component: () => import('@/views/settings/InvestmentToggleView.vue'),
+      meta: { requiresAuth: true, requiresOnboarding: true },
+    },
+    {
       path: '/settings/category-rules',
       name: 'category-rules',
       component: () => import('@/views/settings/CategoryRulesView.vue'),

@@ -74,6 +74,18 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
 
       <!-- ── Investment settings ── -->
       <div class="bg-white rounded-xl overflow-hidden divide-y divide-surface-border">
+        <!-- 자동 투자 On/Off -->
+        <button
+          class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
+          @click="router.push('/settings/investment')"
+        >
+          <div class="flex flex-col gap-1 text-left">
+            <span class="text-base font-medium text-text-primary">자동 투자 설정</span>
+            <span class="text-sm text-text-tertiary">잔돈 자동 투자 서비스 유지·중단</span>
+          </div>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <span v-html="chevronRight" />
+        </button>
         <!-- 투자 규칙 변경 -->
         <button
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"

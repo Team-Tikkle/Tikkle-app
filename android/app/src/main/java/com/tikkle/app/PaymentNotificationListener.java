@@ -56,8 +56,9 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
     // @capacitor/preferences stores values in the "CapacitorStorage" SharedPreferences
     // file, keyed verbatim (no prefix) — verified against the plugin's Preferences.java.
-    private static final String PREFS_NAME     = "CapacitorStorage";
-    private static final String PREFS_KEY_USER = "userId";
+    private static final String PREFS_NAME              = "CapacitorStorage";
+    private static final String PREFS_KEY_USER          = "userId";
+    private static final String PREFS_KEY_INVESTMENT    = "isInvestmentEnabled";
 
     // Channel for the result notifications we post back to the user
     private static final String FEEDBACK_CHANNEL_ID = "tikkle_payment_feedback";
@@ -113,6 +114,15 @@ public class PaymentNotificationListener extends NotificationListenerService {
         // Hard whitelist — drop everything that is not a verified target
         // ([TEST] PKG_TEST allows adb-injected notifications — remove before release)
         if (!PKG_KBANK.equals(pkg) && !PKG_TEST.equals(pkg)) return;
+
+        // 자동 투자 서비스가 Off 상태이면 파싱·전송 없이 즉시 종료.
+        // 프론트엔드가 PATCH /api/settings/investment 호출 후 CapacitorStorage에 동기화한다.
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String investmentFlag = prefs.getString(PREFS_KEY_INVESTMENT, "true");
+        if ("false".equals(investmentFlag)) {
+            Log.d(TAG, "자동 투자 Off — 알림 파싱 중단 pkg=" + pkg);
+            return;
+        }
 
         Notification notification = sbn.getNotification();
         if (notification == null) return;

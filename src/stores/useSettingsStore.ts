@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { AxiosError } from 'axios'
+import { Preferences } from '@capacitor/preferences'
 import type { CategoryRule, CategoryType } from '@/types'
 
 export interface SettingsData {
   spareChangeRules: CategoryRule[]
+  isInvestmentEnabled: boolean
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -19,7 +21,8 @@ function mapError(err: unknown): never {
 }
 
 export const useSettingsStore = defineStore('settings', () => {
-  const spareChangeRules = ref<CategoryRule[]>([])
+  const spareChangeRules       = ref<CategoryRule[]>([])
+  const isInvestmentEnabled    = ref<boolean>(true)
 
   // GET /api/settings
   // 전체 카테고리 잔돈 규칙을 조회한다. 미설정 카테고리는 서버가 NONE으로 반환한다.
@@ -31,7 +34,8 @@ export const useSettingsStore = defineStore('settings', () => {
         message: string
         data: SettingsData
       }>('/api/settings')
-      spareChangeRules.value = envelope.data.spareChangeRules
+      spareChangeRules.value    = envelope.data.spareChangeRules
+      isInvestmentEnabled.value = envelope.data.isInvestmentEnabled
     } catch (err) {
       mapError(err)
     }
@@ -58,6 +62,20 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
+  // PATCH /api/settings/investment
+  // 자동 투자 활성화 상태를 변경하고 CapacitorStorage에도 동기화한다.
+  // Android NotificationListener가 이 값을 읽어 서버 전송 여부를 판단한다.
+  async function updateInvestmentEnabled(enabled: boolean): Promise<void> {
+    const { default: api } = await import('@/utils/api')
+    try {
+      await api.patch('/api/settings/investment', { isInvestmentEnabled: enabled })
+      isInvestmentEnabled.value = enabled
+      await Preferences.set({ key: 'isInvestmentEnabled', value: String(enabled) })
+    } catch (err) {
+      mapError(err)
+    }
+  }
+
   // PATCH /api/settings/linked-account
   // 업비트 Open API 키(Access Key·Secret Key)를 변경한다.
   async function updateLinkedAccount(params: {
@@ -74,8 +92,10 @@ export const useSettingsStore = defineStore('settings', () => {
 
   return {
     spareChangeRules,
+    isInvestmentEnabled,
     fetchSettings,
     updateSpareChangeRules,
+    updateInvestmentEnabled,
     updateLinkedAccount,
   }
 })
