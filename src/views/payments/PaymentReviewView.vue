@@ -10,7 +10,7 @@
  * Flow   :
  *   1. POST /api/payments/{eventId}/approve
  *   2. 200 OK → open SSE GET /api/payments/{eventId}/stream
- *   3. Await SUCCESS | FAILED | TIMEOUT event, then close SSE
+ *   3. Await SUCCESS | PENDING_TRADE | FAILED | TIMEOUT event, then close SSE
  */
 import { ref, computed, onUnmounted } from 'vue';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
@@ -35,8 +35,8 @@ const ticker = (route.query.ticker as string) || '';
 const isActionable = computed(() => !!eventId);
 
 // ── Phase state machine ──
-// idle → approving → waiting → success | failed
-type Phase = 'idle' | 'approving' | 'waiting' | 'success' | 'failed';
+// idle → approving → waiting → success | pending_trade | failed
+type Phase = 'idle' | 'approving' | 'waiting' | 'success' | 'pending_trade' | 'failed';
 const phase = ref<Phase>('idle');
 const errorMsg = ref('');
 const sseResult = ref<SseTradeResult | null>(null);
@@ -89,9 +89,13 @@ async function handleApprove() {
       if (name === 'SUCCESS') {
         sseResult.value = data;
         phase.value = 'success';
+      } else if (name === 'PENDING_TRADE') {
+        sseResult.value = data;
+        phase.value = 'pending_trade';
       } else {
-        // FAILED | TIMEOUT
+        // FAILED | TIMEOUT — 피드 항목을 CANCELED로 낙관적 업데이트
         errorMsg.value = data.message || '매수에 실패했어요.';
+        if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'failed';
       }
     },
@@ -321,6 +325,43 @@ const fmt = fmtKRW;
       </div>
     </template>
 
+    <!-- ════ Phase: pending_trade (체결 지연) ════ -->
+    <template v-else-if="phase === 'pending_trade'">
+      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
+        <!-- 시계 아이콘 -->
+        <div class="w-24 h-24 rounded-full bg-surface flex items-center justify-center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+
+        <div class="flex flex-col items-center gap-2 text-center">
+          <p class="text-2xl font-bold text-text-primary">주문 접수 완료</p>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            {{ sseResult?.message }}
+          </p>
+        </div>
+
+        <!-- 안내 박스 -->
+        <div class="w-full bg-surface rounded-xl px-5 py-4 flex gap-3">
+          <span class="text-base shrink-0">💡</span>
+          <p class="text-sm text-text-tertiary leading-relaxed">
+            체결이 완료되면 스마트폰 푸시 알림으로 안내해 드립니다. 지금 앱을 자유롭게 이용하셔도 됩니다.
+          </p>
+        </div>
+      </div>
+
+      <div class="px-6 pb-10 pt-4">
+        <button
+          class="w-full py-4 rounded-2xl bg-brand text-white text-lg font-bold active:bg-brand-hover"
+          @click="router.replace('/payments')"
+        >
+          확인
+        </button>
+      </div>
+    </template>
+
     <!-- ════ Phase: failed ════ -->
     <template v-else-if="phase === 'failed'">
       <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
@@ -346,6 +387,17 @@ const fmt = fmtKRW;
           <p class="text-2xl font-bold text-text-primary">매수 실패</p>
           <p class="text-base text-text-tertiary leading-relaxed">
             {{ errorMsg }}
+          </p>
+        </div>
+
+        <!-- 케이스 B: 매수 주문 실패 — 원화가 이미 업비트에 있음을 고지 -->
+        <div
+          v-if="errorMsg.includes('매수 주문')"
+          class="w-full bg-surface rounded-xl px-5 py-4 flex gap-3"
+        >
+          <span class="text-base shrink-0">ℹ️</span>
+          <p class="text-sm text-text-tertiary leading-relaxed">
+            케이뱅크 계좌에서 출금된 원화는 현재 업비트 계좌에 안전하게 보관되어 있습니다. 업비트 앱에서 직접 매수하시거나 원화를 출금해 주세요.
           </p>
         </div>
       </div>

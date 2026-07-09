@@ -22,6 +22,13 @@ export const usePaymentStore = defineStore('payment', () => {
     await api.post(`/api/payments/${eventId}/reject`)
   }
 
+  // FAILED SSE 이벤트 수신 시 피드 로컬 상태를 CANCELED로 낙관적 업데이트한다.
+  // 서버는 이미 CANCELED 처리가 완료된 상태이므로 별도 API 호출은 없다.
+  function markFeedItemCanceled(id: number) {
+    const item = feed.value.find((tx) => tx.id === id)
+    if (item) item.status = 'CANCELED'
+  }
+
   async function updateCategory(id: number, category: CategoryType) {
     const { default: api } = await import('@/utils/api')
     await api.patch(`/api/payments/${id}/category`, { category })
@@ -109,6 +116,7 @@ export const usePaymentStore = defineStore('payment', () => {
   return {
     approvePaymentEvent,
     rejectPaymentEvent,
+    markFeedItemCanceled,
     updateCategory,
     fetchPaymentFeed,
     fetchPaymentDashboard,
