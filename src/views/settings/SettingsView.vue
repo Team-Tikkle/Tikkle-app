@@ -45,6 +45,10 @@ function handleDeleteAccount() {
 // Chevron icon (right arrow for menu items)
 const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`
 
+// Legal sheet: 'privacy' | 'terms' | null
+const legalSheet = ref<'privacy' | 'terms' | null>(null)
+const legalTitles = { privacy: '개인정보 처리방침', terms: '이용약관' }
+
 </script>
 
 <template>
@@ -112,11 +116,18 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
       <!-- ── General settings ── -->
       <div class="bg-white rounded-xl overflow-hidden divide-y divide-surface-border">
         <button
-          v-for="item in ['알림 설정', '개인정보 처리방침', '이용약관', '고객센터']"
-          :key="item"
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
+          @click="legalSheet = 'privacy'"
         >
-          <span class="text-base font-medium text-text-primary">{{ item }}</span>
+          <span class="text-base font-medium text-text-primary">개인정보 처리방침</span>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <span v-html="chevronRight" />
+        </button>
+        <button
+          class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
+          @click="legalSheet = 'terms'"
+        >
+          <span class="text-base font-medium text-text-primary">이용약관</span>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
         </button>
@@ -167,9 +178,58 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
         </button>
       </div>
 
+      <!-- ── Contact ── -->
+      <div class="px-2 py-1 flex items-center gap-2">
+        <span class="text-sm text-text-disabled">문의</span>
+        <a href="mailto:example@gmail.com" class="text-sm text-text-tertiary underline underline-offset-2">
+          example@gmail.com
+        </a>
+      </div>
+
     </div>
 
     <BottomNav />
+
+    <!-- ════ Legal sheet (Teleport to body) ════ -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        leave-active-class="transition-opacity duration-150"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="legalSheet"
+          class="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+          @click.self="legalSheet = null"
+        >
+            <div
+              class="w-full max-w-mobile bg-white rounded-t-3xl flex flex-col"
+              style="height: 85dvh"
+            >
+              <!-- Sheet header -->
+              <div class="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
+                <h3 class="text-lg font-bold text-text-primary">{{ legalTitles[legalSheet] }}</h3>
+                <button
+                  class="w-8 h-8 flex items-center justify-center text-text-tertiary"
+                  @click="legalSheet = null"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="h-px bg-surface-border shrink-0" />
+              <!-- Content area -->
+              <div class="flex-1 overflow-y-auto px-6 py-6">
+                <p class="text-sm text-text-disabled text-center mt-16">
+                  내용이 곧 추가될 예정입니다.
+                </p>
+              </div>
+            </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <!-- ════ Withdrawal modal (Teleport to body) ════ -->
     <Teleport to="body">
@@ -185,14 +245,7 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
           @click.self="showWithdrawalModal = false"
         >
           <!-- Sheet -->
-          <Transition
-            enter-active-class="transition-transform duration-200 ease-out"
-            enter-from-class="translate-y-full"
-            leave-active-class="transition-transform duration-150 ease-in"
-            leave-to-class="translate-y-full"
-          >
             <div
-              v-if="showWithdrawalModal"
               class="w-full max-w-mobile bg-white rounded-t-3xl px-6 pt-6 pb-10 flex flex-col gap-5"
             >
               <!-- Header -->
@@ -242,7 +295,6 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
                 </button>
               </div>
             </div>
-          </Transition>
         </div>
       </Transition>
     </Teleport>

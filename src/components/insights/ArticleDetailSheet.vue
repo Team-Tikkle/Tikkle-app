@@ -38,7 +38,7 @@ function close() {
 </script>
 
 <template>
-  <!-- Backdrop fades in/out; the panel slides up from the bottom -->
+  <!-- Backdrop + panel fade in/out together -->
   <Transition name="sheet-fade">
     <div
       v-if="articleId"
@@ -46,12 +46,10 @@ function close() {
       @click.self="close"
     >
       <!-- Panel pinned to the bottom, centered within the 430px mobile frame -->
-      <Transition name="sheet-slide" appear>
-        <div
-          v-if="articleId"
-          class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile
-                 h-[90vh] bg-surface rounded-t-2xl flex flex-col overflow-hidden"
-        >
+      <div
+        class="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-mobile
+               h-[90vh] bg-surface rounded-t-2xl flex flex-col overflow-hidden"
+      >
           <!-- Grab handle + close button -->
           <div class="relative pt-3 pb-2 shrink-0">
             <div class="mx-auto w-10 h-1 rounded-full bg-surface-border" />
@@ -88,14 +86,12 @@ function close() {
               </p>
             </template>
           </div>
-        </div>
-      </Transition>
+      </div>
     </div>
   </Transition>
 </template>
 
 <style scoped>
-/* Backdrop fade */
 .sheet-fade-enter-active,
 .sheet-fade-leave-active {
   transition: opacity 0.25s ease;
@@ -103,15 +99,5 @@ function close() {
 .sheet-fade-enter-from,
 .sheet-fade-leave-to {
   opacity: 0;
-}
-
-/* Panel slide up from the bottom */
-.sheet-slide-enter-active,
-.sheet-slide-leave-active {
-  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-}
-.sheet-slide-enter-from,
-.sheet-slide-leave-to {
-  transform: translate(-50%, 100%);
 }
 </style>

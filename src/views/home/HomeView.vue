@@ -128,13 +128,8 @@ function coinIconUrl(currency: string): string {
   <div class="min-h-screen bg-surface pb-24">
 
     <!-- ── Header ── -->
-    <div class="bg-white px-6 flex items-center justify-between sticky top-0 z-40 h-[60px]">
+    <div class="bg-white px-6 flex items-center sticky top-0 z-40 h-[60px]">
       <h1 class="text-xl font-bold text-text-primary">내 보유자산</h1>
-      <button class="w-10 h-10 flex items-center justify-center text-text-primary">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-        </svg>
-      </button>
     </div>
 
     <div class="px-4 flex flex-col gap-3 mt-1">
