@@ -46,11 +46,17 @@ const monthOptions = computed(() => {
   })
 })
 
-function onMonthChange(e: Event) {
-  const month = (e.target as HTMLSelectElement).value
-  if (month === paymentStore.feedMonth) return
-  paymentStore.loadFeed({ month })   // keeps the current status filter
-  paymentStore.loadDashboard(month)
+const monthSheetOpen = ref(false)
+
+const selectedMonthLabel = computed(() =>
+  monthOptions.value.find(m => m.value === paymentStore.feedMonth)?.label ?? paymentStore.feedMonth
+)
+
+function selectMonth(value: string) {
+  monthSheetOpen.value = false
+  if (value === paymentStore.feedMonth) return
+  paymentStore.loadFeed({ month: value })
+  paymentStore.loadDashboard(value)
 }
 
 // ── Filter (server-side: changing it refetches the feed) ──
@@ -165,22 +171,69 @@ onUnmounted(() => observer?.disconnect())
     <div class="px-4 pt-3 flex flex-col gap-3">
 
       <!-- ── Month selector — governs every amount/stat on this page ── -->
-      <div class="relative self-start">
-        <select
-          :value="paymentStore.feedMonth"
-          class="appearance-none bg-white rounded-xl pl-4 pr-10 py-2.5 text-xl font-bold text-text-primary cursor-pointer focus:outline-none"
-          aria-label="조회할 월 선택"
-          @change="onMonthChange"
-        >
-          <option v-for="m in monthOptions" :key="m.value" :value="m.value">{{ m.label }}</option>
-        </select>
-        <svg
-          class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-          width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2.5"
-        >
+      <button
+        class="self-start flex items-center gap-2 bg-white rounded-xl pl-4 pr-3 py-2.5 active:bg-surface transition-colors"
+        aria-label="조회할 월 선택"
+        @click="monthSheetOpen = true"
+      >
+        <span class="text-xl font-bold text-text-primary">{{ selectedMonthLabel }}</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="6 9 12 15 18 9"/>
         </svg>
-      </div>
+      </button>
+
+      <!-- ── Month picker bottom sheet ── -->
+      <Teleport to="body">
+        <Transition enter-active-class="transition-opacity duration-200" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-150" leave-to-class="opacity-0">
+          <div
+            v-if="monthSheetOpen"
+            class="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+            @click.self="monthSheetOpen = false"
+          >
+            <Transition enter-active-class="transition-transform duration-200 ease-out" enter-from-class="translate-y-full" leave-active-class="transition-transform duration-150 ease-in" leave-to-class="translate-y-full">
+              <div
+                v-if="monthSheetOpen"
+                class="w-full max-w-mobile bg-white rounded-t-3xl pt-5 pb-10 flex flex-col"
+              >
+                <!-- 헤더 -->
+                <div class="flex items-center justify-between px-6 mb-4">
+                  <h3 class="text-md font-bold text-text-primary">조회 기간 선택</h3>
+                  <button
+                    class="w-8 h-8 flex items-center justify-center text-text-tertiary"
+                    @click="monthSheetOpen = false"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                      <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- 월 목록 -->
+                <div class="overflow-y-auto max-h-72 flex flex-col divide-y divide-surface-border px-2">
+                  <button
+                    v-for="m in monthOptions"
+                    :key="m.value"
+                    class="flex items-center justify-between px-4 py-3.5 rounded-xl transition-colors"
+                    :class="m.value === paymentStore.feedMonth ? 'bg-brand-bg' : 'active:bg-surface'"
+                    @click="selectMonth(m.value)"
+                  >
+                    <span
+                      class="text-base font-medium"
+                      :class="m.value === paymentStore.feedMonth ? 'text-brand font-semibold' : 'text-text-primary'"
+                    >{{ m.label }}</span>
+                    <svg
+                      v-if="m.value === paymentStore.feedMonth"
+                      width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand"
+                    >
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </Transition>
+          </div>
+        </Transition>
+      </Teleport>
 
       <!-- ── Summary stats ── -->
       <div v-if="paymentStore.dashboard" class="grid grid-cols-3 gap-2">
