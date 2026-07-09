@@ -4,6 +4,7 @@ import { useUserStore } from '@/stores/useUserStore'
 import { useUpbitMarketStore } from '@/stores/useUpbitMarketStore'
 import { usePortfolioStore } from '@/stores/usePortfolioStore'
 import BottomNav from '@/components/common/BottomNav.vue'
+import { coinIconUrl, coinIconFallback } from '@/utils/coin'
 import type { PortfolioHolding } from '@/types'
 
 const userStore      = useUserStore()
@@ -119,9 +120,6 @@ function fmtPrice(n: number): string {
   return n.toFixed(4)
 }
 
-function coinIconUrl(currency: string): string {
-  return `https://static.upbit.com/logos/${currency}.png`
-}
 </script>
 
 <template>
@@ -250,10 +248,10 @@ function coinIconUrl(currency: string): string {
             <div class="flex items-center gap-3">
               <div class="w-8 h-8 rounded-full bg-surface overflow-hidden shrink-0">
                 <img
-                  :src="coinIconUrl(marketCurrency(row.h.market))"
+                  :src="coinIconUrl(row.h.market)"
                   :alt="row.h.coinName"
                   class="w-full h-full object-contain"
-                  @error="(e) => ((e.target as HTMLImageElement).style.display = 'none')"
+                  @error="coinIconFallback"
                 >
               </div>
               <div class="flex flex-col gap-0.5">

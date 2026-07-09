@@ -18,6 +18,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { usePaymentStore } from '@/stores/usePaymentStore';
 import AppHeader from '@/components/common/AppHeader.vue';
 import { fmtKRW } from '@/utils/format';
+import { coinIconUrl, coinIconFallback } from '@/utils/coin';
 import type { SseTradeResult } from '@/types';
 
 const route = useRoute();
@@ -148,12 +149,10 @@ const fmt = fmtKRW;
           >
             <img
               v-if="ticker"
-              :src="`https://static.upbit.com/logos/${ticker.replace('KRW-', '')}.png`"
+              :src="coinIconUrl(ticker)"
               :alt="stockName"
               class="w-24 h-24 object-contain"
-              @error="
-                (e) => ((e.target as HTMLImageElement).style.display = 'none')
-              "
+              @error="coinIconFallback"
             />
           </div>
           <div class="absolute -top-1 -right-2 flex flex-col items-center">
