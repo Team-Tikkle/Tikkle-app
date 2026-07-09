@@ -21,7 +21,6 @@ import OnboardingSingleChoice from '@/components/onboarding/OnboardingSingleChoi
 import OnboardingThemeChoice from '@/components/onboarding/OnboardingThemeChoice.vue';
 import RuleSliderEditor from '@/components/common/RuleSliderEditor.vue';
 import {
-  TWO_FACTOR_LABELS,
   RISK_LABELS,
   TREND_LABELS,
   MEME_LABELS,
@@ -33,9 +32,9 @@ const userStore = useUserStore();
 const onboardingStore = useOnboardingStore();
 
 // ── 스텝 추적 ──
-// 1: 업비트 연결  2: 2차 인증 수단  3: 카드 등록  4~8: 투자 성향 Q1~Q5  9: 잔돈 규칙
+// 1: 카드 등록  2: 업비트 연결 + 2차 인증 수단  3~7: 투자 성향 Q1~Q5  8: 잔돈 규칙
 const step = ref(1);
-const TOTAL_STEPS = 9;
+const TOTAL_STEPS = 8;
 
 // ── 자격증명 ──
 const accessKey         = ref('');
@@ -52,7 +51,7 @@ const prefs = reactive({
 });
 const cryptoThemes = ref<CryptoTheme[]>([]);
 
-// ── 잔돈 규칙 (Step 8) ──
+// ── 잔돈 규칙 (Step 8/8) ──
 const ALL_CATEGORIES: CategoryType[] = [
   'CAFE', 'MART', 'FOOD', 'SHOPPING', 'TRAFFIC', 'CULTURE', 'ETC',
 ];
@@ -64,10 +63,9 @@ const { isLoading, errorMsg, run } = useAsyncAction();
 // ── 단계별 진행 가능 여부 ──
 const canProceed = computed(() => {
   switch (step.value) {
-    case 1: return Boolean(accessKey.value.trim() && secretKey.value.trim());
-    case 2: return twoFactorProvider.value !== '';
-    case 3: return /^\d{4}$/.test(cardLast4.value);
-    case 8: return cryptoThemes.value.length > 0;
+    case 1: return /^\d{4}$/.test(cardLast4.value);
+    case 2: return Boolean(accessKey.value.trim() && secretKey.value.trim()) && twoFactorProvider.value !== '';
+    case 7: return cryptoThemes.value.length > 0;
     default: return true;
   }
 });
@@ -133,22 +131,19 @@ function handleSubmit() {
 
     <!-- 스크롤 영역 -->
     <div class="flex-1 overflow-y-auto pb-36">
-      <!-- ── DEV ONLY: @skip 핸들러 — 이 속성만 삭제하면 됩니다 ── -->
-      <OnboardingUpbitConnect v-if="step === 1" v-model:accessKey="accessKey" v-model:secretKey="secretKey" @skip="() => { userStore.completeOnboarding(); router.replace('/'); }" />
+      <OnboardingCardRegister v-if="step === 1" v-model="cardLast4" />
 
-      <!-- Step 2: 2차 인증 수단 선택 -->
-      <OnboardingSingleChoice
+      <!-- ── DEV ONLY: @skip 핸들러 — 이 속성만 삭제하면 됩니다 ── -->
+      <OnboardingUpbitConnect
         v-else-if="step === 2"
-        tag="2차 인증 수단"
-        question="업비트 입금 시 사용할 인증 앱을 선택해 주세요."
-        :options="TWO_FACTOR_LABELS"
-        v-model="twoFactorProvider"
+        v-model:accessKey="accessKey"
+        v-model:secretKey="secretKey"
+        v-model:twoFactorProvider="twoFactorProvider"
+        @skip="() => { userStore.completeOnboarding(); router.replace('/'); }"
       />
 
-      <OnboardingCardRegister v-else-if="step === 3" v-model="cardLast4" />
-
       <OnboardingSingleChoice
-        v-else-if="step === 4"
+        v-else-if="step === 3"
         tag="Q1 · 가격이 떨어질 때"
         question="보유 중인 코인이 갑자기 10% 하락한다면 어떻게 대응하시겠습니까?"
         :options="RISK_LABELS"
@@ -156,7 +151,7 @@ function handleSubmit() {
       />
 
       <OnboardingSingleChoice
-        v-else-if="step === 5"
+        v-else-if="step === 4"
         tag="Q2 · 코인 고르는 기준"
         question="투자할 코인을 고르는 주요 기준은 무엇인가요?"
         :options="TREND_LABELS"
@@ -164,7 +159,7 @@ function handleSubmit() {
       />
 
       <OnboardingSingleChoice
-        v-else-if="step === 6"
+        v-else-if="step === 5"
         tag="Q3 · 밈 코인"
         question="인터넷 유행으로 만들어진 '밈 코인(Meme Coin)' 투자는 어떤가요?"
         :options="MEME_LABELS"
@@ -172,17 +167,17 @@ function handleSubmit() {
       />
 
       <OnboardingSingleChoice
-        v-else-if="step === 7"
+        v-else-if="step === 6"
         tag="Q4 · 투자 분산"
         question="선호하는 자산 분배 방식은 무엇인가요?"
         :options="DIVERS_LABELS"
         v-model="prefs.diversificationType"
       />
 
-      <OnboardingThemeChoice v-else-if="step === 8" v-model="cryptoThemes" />
+      <OnboardingThemeChoice v-else-if="step === 7" v-model="cryptoThemes" />
 
-      <!-- Step 9: 잔돈 규칙 -->
-      <div v-else-if="step === 9" class="px-6 pt-6 flex flex-col gap-7">
+      <!-- Step 8: 잔돈 규칙 -->
+      <div v-else-if="step === 8" class="px-6 pt-6 flex flex-col gap-7">
         <span class="text-sm font-semibold text-brand">잔돈 설정</span>
         <div class="flex flex-col gap-2">
           <h2 class="text-2xl font-bold text-text-primary leading-snug">

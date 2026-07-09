@@ -138,7 +138,7 @@ const sliderFillStyle = computed(() => {
     </div>
 
     <p class="text-xs2 text-text-tertiary leading-relaxed">
-      ※ 5,000원 미만의 잔돈이 발생한 경우에는 투자가 진행되지 않습니다.
+      ※ 5,100원 미만의 잔돈이 발생한 경우에는 투자가 진행되지 않습니다.
     </p>
   </div>
 </template>

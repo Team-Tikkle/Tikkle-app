@@ -40,6 +40,30 @@ const isValid = computed(() => /^\d{4}$/.test(cardLast4.value));
       </div>
     </div>
 
+    <!-- 푸시 알림 필수 안내 -->
+    <div class="bg-surface rounded-xl px-4 py-3.5 flex items-start gap-3">
+      <svg
+        class="text-text-tertiary shrink-0 mt-0.5"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+      </svg>
+      <div class="flex flex-col gap-0.5">
+        <p class="text-sm font-semibold text-text-primary">케이뱅크 앱 푸시 알림 필수</p>
+        <p class="text-xs2 text-text-tertiary leading-relaxed">
+          결제 알림을 감지해 자동 투자가 시작됩니다. 케이뱅크 앱의 결제 푸시 알림이 켜져 있어야 정상 작동합니다.
+        </p>
+      </div>
+    </div>
+
     <div class="flex flex-col gap-5">
       <div class="flex flex-col gap-2">
         <label class="text-sm font-semibold text-text-secondary"

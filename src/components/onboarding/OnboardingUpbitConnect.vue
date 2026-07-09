@@ -1,6 +1,16 @@
 <script setup lang="ts">
-const accessKey = defineModel<string>('accessKey', { required: true });
-const secretKey = defineModel<string>('secretKey', { required: true });
+import type { TwoFactorProvider } from '@/types';
+
+const accessKey         = defineModel<string>('accessKey', { required: true });
+const secretKey         = defineModel<string>('secretKey', { required: true });
+const twoFactorProvider = defineModel<TwoFactorProvider | ''>('twoFactorProvider', { required: true });
+
+const TWO_FACTOR_OPTIONS: { key: TwoFactorProvider; label: string; emoji: string }[] = [
+  { key: 'KAKAO', label: '카카오톡', emoji: '💬' },
+  { key: 'NAVER', label: '네이버',   emoji: '🇳' },
+  { key: 'HANA',  label: '하나원큐', emoji: '🏦' },
+];
+
 </script>
 
 <template>
@@ -12,36 +22,11 @@ const secretKey = defineModel<string>('secretKey', { required: true });
         업비트 계정을<br />연결해 주세요
       </h2>
       <p class="text-base text-text-tertiary leading-relaxed">
-        업비트 Open API 키를 연동합니다. 키 발급 시 출금 권한은 켜지 않아도
-        됩니다.
+        Open API 키를 입력하고, 잔돈 투자 시 사용할 2차 인증 앱을 선택해 주세요.
       </p>
     </div>
 
-    <!-- 안내 배너 -->
-    <div class="bg-brand-bg rounded-xl p-4 flex flex-col gap-2">
-      <div class="flex items-center gap-2">
-        <svg
-          class="text-brand shrink-0"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <circle cx="12" cy="12" r="10" />
-          <line x1="12" y1="8" x2="12" y2="12" />
-          <line x1="12" y1="16" x2="12.01" y2="16" />
-        </svg>
-        <span class="text-base font-semibold text-brand">Open API 키 연동</span>
-      </div>
-      <p class="text-sm text-brand-300 leading-relaxed">
-        업비트 [마이페이지 → Open API 관리]에서 API 키를 발급받아 입력해 주세요.
-      </p>
-    </div>
-
+    <!-- API 키 입력 -->
     <div class="flex flex-col gap-5">
       <div class="flex flex-col gap-2">
         <label class="text-sm font-semibold text-text-secondary">Access Key</label>
@@ -52,7 +37,7 @@ const secretKey = defineModel<string>('secretKey', { required: true });
           class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
         />
         <p class="text-xs2 text-text-tertiary">
-          업비트 → 마이페이지 → Open API 관리 → Access Key 복사
+          업비트 → 마이페이지 → Open API 관리 → Access Key 복사. 출금 권한은 불필요합니다.
         </p>
       </div>
 
@@ -65,6 +50,31 @@ const secretKey = defineModel<string>('secretKey', { required: true });
           class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
         />
       </div>
+    </div>
+
+    <!-- 2차 인증 수단 선택 -->
+    <div class="flex flex-col gap-3">
+      <label class="text-sm font-semibold text-text-secondary">2차 인증 앱</label>
+      <div class="grid grid-cols-3 gap-2">
+        <button
+          v-for="opt in TWO_FACTOR_OPTIONS"
+          :key="opt.key"
+          class="flex flex-col items-center gap-1.5 py-3.5 rounded-2xl border-2 transition-all"
+          :class="twoFactorProvider === opt.key
+            ? 'border-brand bg-brand-bg'
+            : 'border-surface-border bg-white'"
+          @click="twoFactorProvider = opt.key"
+        >
+          <span class="text-xl">{{ opt.emoji }}</span>
+          <span
+            class="text-sm font-semibold"
+            :class="twoFactorProvider === opt.key ? 'text-brand' : 'text-text-primary'"
+          >{{ opt.label }}</span>
+        </button>
+      </div>
+      <p class="text-xs2 text-text-tertiary">
+        업비트 입금 시 이 앱으로 2차 인증이 요청됩니다.
+      </p>
     </div>
   </div>
 </template>

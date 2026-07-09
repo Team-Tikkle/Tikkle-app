@@ -105,7 +105,7 @@ async function confirmRule() {
           카테고리별 잔돈 규칙
         </p>
         <p class="text-xs2 text-text-tertiary mb-2 px-1 leading-relaxed">
-          ※ 5,000원 미만의 잔돈이 발생하면 투자가 진행되지 않습니다.
+          ※ 5,100원 미만의 잔돈이 발생하면 투자가 진행되지 않습니다.
         </p>
         <div class="bg-white rounded-xl overflow-hidden divide-y divide-surface-border">
           <button
