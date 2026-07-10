@@ -36,8 +36,8 @@ const ticker = (route.query.ticker as string) || '';
 const isActionable = computed(() => !!eventId);
 
 // ── Phase state machine ──
-// idle → approving → waiting → success | pending_trade | failed
-type Phase = 'idle' | 'approving' | 'waiting' | 'success' | 'pending_trade' | 'failed';
+// idle → approving → waiting → success | pending_trade | deposit_failed | trade_failed | failed
+type Phase = 'idle' | 'approving' | 'waiting' | 'success' | 'pending_trade' | 'deposit_failed' | 'trade_failed' | 'failed';
 const phase = ref<Phase>('idle');
 const errorMsg = ref('');
 const sseResult = ref<SseTradeResult | null>(null);
@@ -93,8 +93,16 @@ async function handleApprove() {
       } else if (name === 'PENDING_TRADE') {
         sseResult.value = data;
         phase.value = 'pending_trade';
+      } else if (name === 'DEPOSIT_FAILED') {
+        errorMsg.value = data.message || '업비트 입금이 거절되거나 취소되었습니다.';
+        if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
+        phase.value = 'deposit_failed';
+      } else if (name === 'TRADE_FAILED') {
+        errorMsg.value = data.message || '업비트 매수 주문이 거절되거나 취소되었습니다.';
+        if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
+        phase.value = 'trade_failed';
       } else {
-        // FAILED | TIMEOUT — 피드 항목을 CANCELED로 낙관적 업데이트
+        // TIMEOUT | 기타 — 피드 항목을 CANCELED로 낙관적 업데이트
         errorMsg.value = data.message || '매수에 실패했어요.';
         if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'failed';
@@ -361,46 +369,72 @@ const fmt = fmtKRW;
       </div>
     </template>
 
-    <!-- ════ Phase: failed ════ -->
-    <template v-else-if="phase === 'failed'">
+    <!-- ════ Phase: deposit_failed (입금 실패) ════ -->
+    <template v-else-if="phase === 'deposit_failed'">
       <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
-        <div
-          class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center"
-        >
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#ff3b30"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
+        <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
           </svg>
         </div>
+        <div class="flex flex-col items-center gap-2 text-center">
+          <p class="text-2xl font-bold text-text-primary">입금 실패</p>
+          <p class="text-base text-text-tertiary leading-relaxed">{{ errorMsg }}</p>
+        </div>
+      </div>
+      <div class="px-6 pb-10 pt-4">
+        <button
+          class="w-full py-4 rounded-2xl bg-surface text-text-primary text-lg font-semibold active:bg-surface-border"
+          @click="router.replace('/payments')"
+        >
+          돌아가기
+        </button>
+      </div>
+    </template>
 
+    <!-- ════ Phase: trade_failed (매수 실패 — 원화는 업비트에 있음) ════ -->
+    <template v-else-if="phase === 'trade_failed'">
+      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
+        <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </div>
         <div class="flex flex-col items-center gap-2 text-center">
           <p class="text-2xl font-bold text-text-primary">매수 실패</p>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            {{ errorMsg }}
-          </p>
+          <p class="text-base text-text-tertiary leading-relaxed">{{ errorMsg }}</p>
         </div>
-
-        <!-- 케이스 B: 매수 주문 실패 — 원화가 이미 업비트에 있음을 고지 -->
-        <div
-          v-if="errorMsg.includes('매수 주문')"
-          class="w-full bg-surface rounded-xl px-5 py-4 flex gap-3"
-        >
+        <!-- 원화 보관 고지 — 반드시 표시 -->
+        <div class="w-full bg-surface rounded-xl px-5 py-4 flex gap-3">
           <span class="text-base shrink-0">ℹ️</span>
           <p class="text-sm text-text-tertiary leading-relaxed">
             케이뱅크 계좌에서 출금된 원화는 현재 업비트 계좌에 안전하게 보관되어 있습니다. 업비트 앱에서 직접 매수하시거나 원화를 출금해 주세요.
           </p>
         </div>
       </div>
+      <div class="px-6 pb-10 pt-4">
+        <button
+          class="w-full py-4 rounded-2xl bg-surface text-text-primary text-lg font-semibold active:bg-surface-border"
+          @click="router.replace('/payments')"
+        >
+          돌아가기
+        </button>
+      </div>
+    </template>
 
+    <!-- ════ Phase: failed (TIMEOUT · 파싱 오류 등) ════ -->
+    <template v-else-if="phase === 'failed'">
+      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
+        <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </div>
+        <div class="flex flex-col items-center gap-2 text-center">
+          <p class="text-2xl font-bold text-text-primary">매수 실패</p>
+          <p class="text-base text-text-tertiary leading-relaxed">{{ errorMsg }}</p>
+        </div>
+      </div>
       <div class="px-6 pb-10 pt-4">
         <button
           class="w-full py-4 rounded-2xl bg-surface text-text-primary text-lg font-semibold active:bg-surface-border"
