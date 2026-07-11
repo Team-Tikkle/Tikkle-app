@@ -152,66 +152,53 @@ const fmt = fmtKRW;
     <template v-if="phase === 'idle' || phase === 'approving'">
       <AppHeader title="잔돈 투자 확인" :show-back="true" />
 
-      <div class="flex-1 flex flex-col items-center justify-center px-6 gap-8">
-        <h2
-          class="text-2xl font-bold text-text-primary text-center leading-snug"
-        >
-          {{ merchant }}<br />잔돈 {{ fmt(spareChange) }}원으로<br />
-          {{ stockName || '코인' }}에 투자할까요?
-        </h2>
-
-        <!-- 코인 로고 + AI 추천 배지 -->
-        <div class="relative flex items-center justify-center">
-          <div
-            class="w-32 h-32 rounded-full bg-surface flex items-center justify-center"
+      <div class="flex-1 flex flex-col px-5 pt-5 gap-4">
+        <!-- AI 추천 배지 -->
+        <div>
+          <span
+            class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold text-white"
+            style="background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);"
           >
-            <img
-              v-if="ticker"
-              :src="coinIconUrl(ticker)"
-              :alt="stockName"
-              class="w-24 h-24 object-contain"
-              @error="coinIconFallback"
-            />
+            ✦ AI 추천
+          </span>
+        </div>
+
+        <!-- 코인 가로 행 카드 -->
+        <div class="bg-surface rounded-2xl px-4 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-14 h-14 rounded-full bg-white flex items-center justify-center overflow-hidden shrink-0">
+              <img
+                v-if="ticker"
+                :src="coinIconUrl(ticker)"
+                :alt="stockName"
+                class="w-10 h-10 object-contain"
+                @error="coinIconFallback"
+              />
+            </div>
+            <div>
+              <p class="text-lg font-semibold text-text-primary">{{ stockName || '코인' }}</p>
+              <p class="text-sm text-text-tertiary mt-0.5">{{ ticker }}</p>
+            </div>
           </div>
-          <div class="absolute -top-1 -right-2 flex flex-col items-center">
-            <span
-              class="px-3 py-1 rounded-full text-xs font-semibold text-white"
-              style="
-                background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
-              "
-              >AI 추천</span
-            >
-            <svg width="10" height="6" viewBox="0 0 10 6" class="-mt-px">
-              <polygon points="5,6 0,0 10,0" fill="url(#tail-grad)" />
-              <defs>
-                <linearGradient
-                  id="tail-grad"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="0%"
-                >
-                  <stop offset="0%" stop-color="#a78bfa" />
-                  <stop offset="100%" stop-color="#60a5fa" />
-                </linearGradient>
-              </defs>
-            </svg>
+          <div class="text-right">
+            <p class="text-xl font-bold text-brand">{{ fmt(spareChange) }}원</p>
+            <p class="text-xs text-text-tertiary mt-0.5">투자 금액</p>
           </div>
         </div>
 
-        <!-- 결제 정보 -->
-        <div class="w-full flex flex-col divide-y divide-surface-border">
-          <div class="flex items-center justify-between py-3.5">
-            <span class="text-lg text-text-tertiary">결제</span>
-            <span class="text-lg font-semibold text-text-primary"
-              >{{ merchant }} {{ fmt(amount) }}원</span
-            >
+        <!-- 결제 상세 카드 -->
+        <div class="bg-surface rounded-2xl overflow-hidden divide-y divide-surface-border">
+          <div class="flex items-center justify-between px-4 py-3.5">
+            <span class="text-base text-text-tertiary">결제처</span>
+            <span class="text-base font-semibold text-text-primary">{{ merchant }}</span>
           </div>
-          <div class="flex items-center justify-between py-3.5">
-            <span class="text-lg text-text-tertiary">투자 금액</span>
-            <span class="text-lg font-semibold text-brand"
-              >{{ fmt(spareChange) }}원</span
-            >
+          <div class="flex items-center justify-between px-4 py-3.5">
+            <span class="text-base text-text-tertiary">결제 금액</span>
+            <span class="text-base font-semibold text-text-primary">{{ fmt(amount) }}원</span>
+          </div>
+          <div class="flex items-center justify-between px-4 py-3.5">
+            <span class="text-base text-text-tertiary">투자 금액</span>
+            <span class="text-base font-semibold text-brand">{{ fmt(spareChange) }}원</span>
           </div>
         </div>
 
@@ -223,7 +210,7 @@ const fmt = fmtKRW;
         </p>
       </div>
 
-      <div class="px-6 pb-10 pt-4 flex flex-col gap-3">
+      <div class="px-5 pb-10 pt-4 flex flex-col gap-3">
         <button
           class="w-full py-4 rounded-2xl text-white text-lg font-bold transition-colors flex items-center justify-center gap-2"
           :class="
