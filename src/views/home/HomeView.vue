@@ -96,11 +96,6 @@ function fmtAmount(n: number): string {
   return Math.round(n).toLocaleString('ko-KR')
 }
 
-// "KRW-BTC" → "BTC" (for the Upbit coin logo URL)
-function marketCurrency(market: string): string {
-  return market.split('-')[1] ?? market
-}
-
 // 평가손익 라벨 (예: "+₩1,235 (+1.18%)") — 손실이면 부호를 ₩ 앞에 둔다
 function fmtSignedPL(pl: number, principal: number): string {
   const rate = principal > 0 ? (pl / principal) * 100 : 0
