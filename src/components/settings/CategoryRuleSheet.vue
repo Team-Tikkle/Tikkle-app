@@ -4,12 +4,10 @@ import type { CategoryType, RuleType } from '@/types';
 
 const props = defineProps<{
   category: { type: CategoryType; label: string; icon: string } | null;
-  isSaving: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'close'): void;
-  (e: 'confirm'): void;
 }>();
 
 const modelValue = defineModel<RuleType>({ required: true });
@@ -38,7 +36,6 @@ const modelValue = defineModel<RuleType>({ required: true });
             v-if="props.category !== null"
             class="w-full max-w-mobile bg-white rounded-t-3xl px-6 pt-5 pb-10 flex flex-col gap-5"
           >
-            <!-- 시트 헤더 -->
             <div class="flex items-center justify-between">
               <h3 class="text-md font-bold text-text-primary">
                 {{ props.category.icon }} {{ props.category.label }} 잔돈 규칙
@@ -47,15 +44,7 @@ const modelValue = defineModel<RuleType>({ required: true });
                 class="w-8 h-8 flex items-center justify-center text-text-tertiary"
                 @click="emit('close')"
               >
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.5"
-                  stroke-linecap="round"
-                >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -63,23 +52,6 @@ const modelValue = defineModel<RuleType>({ required: true });
             </div>
 
             <RuleSliderEditor v-model="modelValue" />
-
-            <button
-              class="w-full py-4 rounded-xl text-md font-semibold text-white flex items-center justify-center gap-2 transition-colors"
-              :class="
-                props.isSaving
-                  ? 'bg-text-disabled'
-                  : 'bg-brand active:bg-brand-hover'
-              "
-              :disabled="props.isSaving"
-              @click="emit('confirm')"
-            >
-              <span
-                v-if="props.isSaving"
-                class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
-              />
-              {{ props.isSaving ? '저장 중...' : '확인' }}
-            </button>
           </div>
         </Transition>
       </div>

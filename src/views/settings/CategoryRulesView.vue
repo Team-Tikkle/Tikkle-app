@@ -19,9 +19,12 @@ const CATEGORIES: { type: CategoryType; label: string; icon: string }[] = [
 ];
 
 const localRules = reactive<Record<CategoryType, RuleType>>(
-  Object.fromEntries(
-    CATEGORIES.map((c) => [c.type, 'ROUND_UP_10000']),
-  ) as Record<CategoryType, RuleType>,
+  Object.fromEntries(CATEGORIES.map((c) => [c.type, 'ROUND_UP_10000'])) as Record<CategoryType, RuleType>,
+);
+
+// 서버에서 받은 초기값 스냅샷 — 변경 여부 감지에 사용
+const savedRules = reactive<Record<CategoryType, RuleType>>(
+  Object.fromEntries(CATEGORIES.map((c) => [c.type, 'ROUND_UP_10000'])) as Record<CategoryType, RuleType>,
 );
 
 const isLoading    = ref(true);
@@ -33,7 +36,10 @@ onMounted(async () => {
   try {
     await settingsStore.fetchSettings();
     for (const rule of settingsStore.spareChangeRules) {
-      if (rule.category in localRules) localRules[rule.category] = rule.ruleType;
+      if (rule.category in localRules) {
+        localRules[rule.category]  = rule.ruleType;
+        savedRules[rule.category]  = rule.ruleType;
+      }
     }
   } catch (err) {
     errorMsg.value = err instanceof Error ? err.message : '설정을 불러오지 못했습니다.';
@@ -46,31 +52,28 @@ const openCategoryMeta = computed(() =>
   CATEGORIES.find((c) => c.type === openCategory.value) ?? null,
 );
 
-// CategoryRuleSheet의 v-model — 시트가 닫혀 있을 때 쓰기 접근을 막기 위해 computed 사용
 const sheetRule = computed<RuleType>({
   get: () => (openCategory.value ? localRules[openCategory.value] : 'ROUND_UP_10000'),
-  set: (v) => {
-    if (openCategory.value) localRules[openCategory.value] = v;
-  },
+  set: (v) => { if (openCategory.value) localRules[openCategory.value] = v; },
 });
 
-function openSheet(type: CategoryType) {
-  openCategory.value = type;
-}
+// 서버 값과 달라진 카테고리가 하나라도 있으면 저장 버튼 활성화
+const hasChanges = computed(() =>
+  CATEGORIES.some((c) => localRules[c.type] !== savedRules[c.type]),
+);
 
-function closeSheet() {
-  openCategory.value = null;
-}
+function openSheet(type: CategoryType) { openCategory.value = type; }
+function closeSheet() { openCategory.value = null; }
 
-async function confirmRule() {
-  if (!openCategory.value || isSaving.value) return;
+async function saveAll() {
+  if (!hasChanges.value || isSaving.value) return;
   isSaving.value = true;
   errorMsg.value = '';
-  const category = openCategory.value;
-  const ruleType = localRules[category];
   try {
-    await settingsStore.updateSpareChangeRules([{ category, ruleType }]);
-    openCategory.value = null;
+    const rules = CATEGORIES.map((c) => ({ category: c.type, ruleType: localRules[c.type] }));
+    await settingsStore.updateSpareChangeRules(rules);
+    // 저장 성공 후 스냅샷 동기화
+    for (const c of CATEGORIES) savedRules[c.type] = localRules[c.type];
   } catch (err) {
     errorMsg.value = err instanceof Error ? err.message : '저장에 실패했습니다.';
   } finally {
@@ -84,9 +87,7 @@ async function confirmRule() {
     <AppHeader title="잔돈 규칙 설정" :show-back="true" />
 
     <div v-if="isLoading" class="flex-1 flex items-center justify-center">
-      <span
-        class="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin"
-      />
+      <span class="w-8 h-8 border-2 border-brand border-t-transparent rounded-full animate-spin" />
     </div>
 
     <template v-else>
@@ -98,10 +99,8 @@ async function confirmRule() {
       </div>
 
       <!-- 카테고리 목록 -->
-      <div class="flex-1 overflow-y-auto px-4 pt-3 pb-6">
-        <p
-          class="text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2 px-1"
-        >
+      <div class="flex-1 overflow-y-auto px-4 pt-3 pb-32">
+        <p class="text-xs font-semibold text-text-tertiary uppercase tracking-wide mb-2 px-1">
           카테고리별 잔돈 규칙
         </p>
         <p class="text-xs2 text-text-tertiary mb-2 px-1 leading-relaxed">
@@ -120,19 +119,14 @@ async function confirmRule() {
             </div>
             <div class="flex items-center gap-2">
               <span
-                class="text-sm font-semibold px-2.5 py-1 rounded-pill bg-brand-bg text-brand"
+                class="text-sm font-semibold px-2.5 py-1 rounded-pill transition-colors"
+                :class="localRules[cat.type] !== savedRules[cat.type]
+                  ? 'bg-brand text-white'
+                  : 'bg-brand-bg text-brand'"
               >
                 {{ ruleSummary(localRules[cat.type]) }}
               </span>
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#c7c7cc"
-                stroke-width="2.5"
-                stroke-linecap="round"
-              >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2.5" stroke-linecap="round">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
             </div>
@@ -141,12 +135,23 @@ async function confirmRule() {
       </div>
     </template>
 
+    <!-- 하단 저장 버튼 -->
+    <div class="fixed bottom-0 left-0 right-0 max-w-mobile mx-auto px-4 pb-8 pt-3 bg-surface">
+      <button
+        class="w-full py-4 rounded-xl text-md font-semibold text-white flex items-center justify-center gap-2 transition-colors"
+        :class="(hasChanges && !isSaving) ? 'bg-brand active:bg-brand-hover' : 'bg-text-disabled'"
+        :disabled="!hasChanges || isSaving"
+        @click="saveAll"
+      >
+        <span v-if="isSaving" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        {{ isSaving ? '저장 중...' : '저장' }}
+      </button>
+    </div>
+
     <CategoryRuleSheet
       :category="openCategoryMeta"
-      :is-saving="isSaving"
       v-model="sheetRule"
       @close="closeSheet"
-      @confirm="confirmRule"
     />
   </div>
 </template>
