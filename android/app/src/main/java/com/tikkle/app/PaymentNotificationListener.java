@@ -72,16 +72,23 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
     // ── K뱅크 (KBank) patterns ─────────────────────────────────────────────────
     //
-    // K뱅크 posts a multi-line body (title "케이뱅크" excluded), e.g.:
+    // K뱅크 알림은 두 가지 형태가 확인됨:
+    //
+    // [카드 결제]
     //   승인 17,500원
     //   주식회사 무신사페이
     //   카드(1586) | 06/23 11:26
     //
-    // KBANK_LAST4  — 4 digits inside the 카드(NNNN) marker
-    // KBANK_AMOUNT — digits-with-commas before 원
-    // Merchant is the line that is neither the amount line nor the card line.
+    // [계좌 출금]
+    //   출금 2,000원
+    //   무신사페이 | 생활통장(1809)
+    //   잔액 18,002원
+    //
+    // KBANK_LAST4  — 4 digits inside any (NNNN) marker (카드/통장 모두 대응)
+    // KBANK_AMOUNT — digits-with-commas before 원 (잔액 줄은 별도로 스킵)
+    // Merchant     — 가맹점+카드가 같은 줄이면 " | " 앞부분, 아니면 독립 줄
 
-    private static final Pattern KBANK_LAST4  = Pattern.compile("카드\\((\\d{4})\\)");
+    private static final Pattern KBANK_LAST4  = Pattern.compile("[\\(（](\\d{4})[\\)）]");
     private static final Pattern KBANK_AMOUNT = Pattern.compile("([\\d,]+)원");
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -186,45 +193,51 @@ public class PaymentNotificationListener extends NotificationListenerService {
             }
         }
 
-        // Last 4 digits — inside the 카드(NNNN) marker
-        Matcher last4Matcher = KBANK_LAST4.matcher(body);
-        if (!last4Matcher.find()) {
-            Log.d(TAG, "[KBank] could not extract card last4");
-            return null;
-        }
-        String cardLast4 = last4Matcher.group(1);
+        // Iterate lines once to extract all three fields.
+        String cardLast4 = null;
+        int    amount    = -1;
+        String merchant  = "";
 
-        // Amount
-        Matcher amountMatcher = KBANK_AMOUNT.matcher(body);
-        if (!amountMatcher.find()) {
-            Log.d(TAG, "[KBank] could not extract amount");
-            return null;
-        }
-        int amount;
-        try {
-            amount = Integer.parseInt(amountMatcher.group(1).replace(",", ""));
-        } catch (NumberFormatException e) {
-            Log.d(TAG, "[KBank] amount parse failed: " + amountMatcher.group(1));
-            return null;
-        }
-
-        // Merchant — the line that is neither the amount line nor the card line
-        // (and not the "케이뱅크" title, in case it leaks into the body).
-        String merchant = "";
         for (String line : body.split("\\n")) {
             String t = line.trim();
             if (t.isEmpty() || t.equals("케이뱅크")) continue;
-            if (KBANK_AMOUNT.matcher(t).find()) continue;  // "승인 17,500원"
-            if (KBANK_LAST4.matcher(t).find()) continue;   // "카드(1586) | ..."
-            merchant = t;
-            break;
-        }
-        if (merchant.isEmpty()) {
-            Log.d(TAG, "[KBank] could not extract merchant");
-            return null;
+
+            // "잔액 N원" — balance line, must not be mistaken for the payment amount
+            if (t.startsWith("잔액")) continue;
+
+            // Line containing (NNNN) — extract last4, and merchant if on the same line
+            // e.g. "카드(1586) | 06/23 11:26"  →  last4=1586, no inline merchant
+            //      "무신사페이 | 생활통장(1809)" →  last4=1809, merchant="무신사페이"
+            Matcher last4m = KBANK_LAST4.matcher(t);
+            if (last4m.find()) {
+                if (cardLast4 == null) cardLast4 = last4m.group(1);
+                if (merchant.isEmpty() && t.contains(" | ")) {
+                    merchant = t.substring(0, t.indexOf(" | ")).trim();
+                }
+                continue;
+            }
+
+            // Payment amount line — first non-잔액 line with 원
+            if (amount < 0 && KBANK_AMOUNT.matcher(t).find()) {
+                Matcher am = KBANK_AMOUNT.matcher(t);
+                am.find();
+                try {
+                    amount = Integer.parseInt(am.group(1).replace(",", ""));
+                } catch (NumberFormatException e) {
+                    Log.d(TAG, "[KBank] amount parse failed: " + am.group(1));
+                }
+                continue;
+            }
+
+            // Standalone merchant line (old card format: "주식회사 무신사페이")
+            if (merchant.isEmpty()) merchant = t;
         }
 
-        return new ParsedPayment(merchant, amount, "케이뱅크", cardLast4);
+        if (cardLast4 == null) { Log.d(TAG, "[KBank] could not extract card last4"); return null; }
+        if (amount < 0)        { Log.d(TAG, "[KBank] could not extract amount");      return null; }
+        if (merchant.isEmpty()) { Log.d(TAG, "[KBank] could not extract merchant");   return null; }
+
+        return new ParsedPayment(merchant, amount, "KBANK", cardLast4);
     }
 
     // ── Dispatch ──────────────────────────────────────────────────────────────

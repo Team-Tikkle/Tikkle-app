@@ -84,6 +84,12 @@ const router = createRouter({
       component: () => import('@/views/settings/CategoryRulesView.vue'),
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
+    {
+      path: '/settings/kbank-card',
+      name: 'settings-kbank-card',
+      component: () => import('@/views/settings/KbankCardView.vue'),
+      meta: { requiresAuth: true, requiresOnboarding: true },
+    },
 
     // ══════════════════════════════════════
     // Catch-all unknown paths

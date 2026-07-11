@@ -102,6 +102,18 @@ const legalTitles = { privacy: '개인정보 처리방침', terms: '이용약관
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
         </button>
+        <!-- 케이뱅크 카드 변경 -->
+        <button
+          class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
+          @click="router.push('/settings/kbank-card')"
+        >
+          <div class="flex flex-col gap-1 text-left">
+            <span class="text-base font-medium text-text-primary">케이뱅크 카드 변경</span>
+            <span class="text-sm text-text-tertiary">잔돈 출금 카드 번호 변경</span>
+          </div>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <span v-html="chevronRight" />
+        </button>
         <!-- 업비트 계정 및 API 키 관리 -->
         <button
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"

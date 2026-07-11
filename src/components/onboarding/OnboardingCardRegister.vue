@@ -75,7 +75,7 @@ const isValid = computed(() => /^\d{4}$/.test(cardLast4.value));
           inputmode="numeric"
           maxlength="4"
           placeholder="0000"
-          class="w-full px-4 py-3.5 rounded-xl bg-white border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 transition-all"
+          class="w-full px-4 py-3.5 rounded-xl bg-white border text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 transition-all tracking-widest text-center text-lg font-semibold"
           :class="
             cardLast4 && !isValid
               ? 'border-danger focus:border-danger focus:ring-danger/20'
