@@ -72,23 +72,16 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
     // ── K뱅크 (KBank) patterns ─────────────────────────────────────────────────
     //
-    // K뱅크 알림은 두 가지 형태가 확인됨:
-    //
-    // [카드 결제]
+    // 카드 결제 알림 형태:
     //   승인 17,500원
     //   주식회사 무신사페이
     //   카드(1586) | 06/23 11:26
     //
-    // [계좌 출금]
-    //   출금 2,000원
-    //   무신사페이 | 생활통장(1809)
-    //   잔액 18,002원
-    //
-    // KBANK_LAST4  — 4 digits inside any (NNNN) marker (카드/통장 모두 대응)
+    // KBANK_LAST4  — "카드(NNNN)" 마커 안의 4자리 (계좌 출금 알림 자동 배제)
     // KBANK_AMOUNT — digits-with-commas before 원 (잔액 줄은 별도로 스킵)
-    // Merchant     — 가맹점+카드가 같은 줄이면 " | " 앞부분, 아니면 독립 줄
+    // Merchant     — 카드 줄·금액 줄 외의 첫 번째 줄
 
-    private static final Pattern KBANK_LAST4  = Pattern.compile("[\\(（](\\d{4})[\\)）]");
+    private static final Pattern KBANK_LAST4  = Pattern.compile("카드[\\(（](\\d{4})[\\)）]");
     private static final Pattern KBANK_AMOUNT = Pattern.compile("([\\d,]+)원");
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
