@@ -3,25 +3,34 @@ import { ref } from 'vue'
 import AppHeader from '@/components/common/AppHeader.vue'
 import { useSettingsStore } from '@/stores/useSettingsStore'
 import { useAsyncAction } from '@/composables/useAsyncAction'
+import type { TwoFactorProvider } from '@/types'
 
 const settingsStore = useSettingsStore()
 
 const accessKey = ref('')
 const secretKey = ref('')
+const twoFactorProvider = ref<TwoFactorProvider | ''>('')
 const successMsg = ref('')
+
+const TWO_FACTOR_OPTIONS: { key: TwoFactorProvider; label: string; emoji: string }[] = [
+  { key: 'KAKAO', label: '카카오톡', emoji: '💬' },
+  { key: 'NAVER', label: '네이버',   emoji: '🇳' },
+  { key: 'HANA',  label: '하나원큐', emoji: '🏦' },
+]
 
 const { isLoading, errorMsg, run } = useAsyncAction('저장에 실패했습니다. 다시 시도해 주세요.')
 
 function handleSave() {
-  if (!accessKey.value.trim() || !secretKey.value.trim()) {
+  if (!accessKey.value.trim() || !secretKey.value.trim() || !twoFactorProvider.value) {
     errorMsg.value = '모든 항목을 입력해 주세요.'
     return
   }
   successMsg.value = ''
   run(async () => {
-    await settingsStore.updateLinkedAccount({
-      upbitAccessKey: accessKey.value.trim(),
-      upbitSecretKey: secretKey.value.trim(),
+    await settingsStore.updateUpbit({
+      upbitAccessKey:    accessKey.value.trim(),
+      upbitSecretKey:    secretKey.value.trim(),
+      twoFactorProvider: twoFactorProvider.value as TwoFactorProvider,
     })
     successMsg.value = '업비트 계정 정보가 업데이트되었습니다.'
     secretKey.value = ''
@@ -81,6 +90,25 @@ function handleSave() {
             placeholder="Secret Key를 붙여넣으세요"
             class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
           >
+        </div>
+
+        <!-- 2차 인증 수단 -->
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-semibold text-text-secondary">2차 인증 수단</label>
+          <div class="grid grid-cols-3 gap-2">
+            <button
+              v-for="opt in TWO_FACTOR_OPTIONS"
+              :key="opt.key"
+              class="py-3 rounded-xl border text-sm font-medium transition-colors flex flex-col items-center gap-1"
+              :class="twoFactorProvider === opt.key
+                ? 'border-brand bg-brand-bg text-brand'
+                : 'border-surface-border bg-white text-text-secondary'"
+              @click="twoFactorProvider = opt.key"
+            >
+              <span>{{ opt.emoji }}</span>
+              <span>{{ opt.label }}</span>
+            </button>
+          </div>
         </div>
       </div>
 

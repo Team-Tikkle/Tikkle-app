@@ -4,6 +4,7 @@ import { useAsyncAction } from '@/composables/useAsyncAction';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/useUserStore';
 import { useOnboardingStore } from '@/stores/useOnboardingStore';
+import { useSettingsStore } from '@/stores/useSettingsStore';
 import type {
   RiskTolerance,
   TrendSensitivity,
@@ -30,11 +31,28 @@ import {
 const router = useRouter();
 const userStore = useUserStore();
 const onboardingStore = useOnboardingStore();
+const settingsStore = useSettingsStore();
 
 // ── 스텝 추적 ──
 // 1: 카드 등록  2: 업비트 연결 + 2차 인증 수단  3~7: 투자 성향 Q1~Q5  8: 잔돈 규칙
-const step = ref(1);
 const TOTAL_STEPS = 8;
+
+// 부분 완료 유저는 첫 미완료 스텝부터 시작한다.
+function getInitialStep(): number {
+  const p = userStore.profile;
+  if (!p || !p.hasKbankAccount) return 1;
+  if (!p.hasUpbitKey)           return 2;
+  if (!p.hasInvestmentProfile)  return 3;
+  return 1;
+}
+
+const step = ref(getInitialStep());
+
+// 기존 유저인데 업비트 키만 만료된 경우 (kbank·profile 완료, upbit만 false)
+const isUpbitKeyExpired = computed(() => {
+  const p = userStore.profile;
+  return !!(p?.hasInvestmentProfile && p?.hasKbankAccount && !p?.hasUpbitKey);
+});
 
 // ── 자격증명 ──
 const accessKey         = ref('');
@@ -59,6 +77,8 @@ const selectedRule = ref<RuleType>('ROUND_UP_10000');
 
 // ── UI 상태 ──
 const { isLoading, errorMsg, run } = useAsyncAction();
+const isValidatingKbank = ref(false);
+const isValidatingUpbit = ref(false);
 
 // ── 단계별 진행 가능 여부 ──
 const canProceed = computed(() => {
@@ -70,12 +90,52 @@ const canProceed = computed(() => {
   }
 });
 
-function goNext() {
-  if (step.value < TOTAL_STEPS) {
-    step.value++;
+async function goNext() {
+  if (step.value >= TOTAL_STEPS) return;
+
+  // step 1: 케이뱅크 카드 즉시 저장
+  if (step.value === 1) {
+    isValidatingKbank.value = true;
     errorMsg.value = '';
+    try {
+      await settingsStore.updateKbank({ targetCardLast4: cardLast4.value });
+    } catch (err) {
+      errorMsg.value = err instanceof Error ? err.message : '케이뱅크 카드 등록에 실패했습니다.';
+      isValidatingKbank.value = false;
+      return;
+    }
+    isValidatingKbank.value = false;
   }
+
+  // step 2: 업비트 키 즉시 검증·저장
+  if (step.value === 2) {
+    isValidatingUpbit.value = true;
+    errorMsg.value = '';
+    try {
+      await settingsStore.updateUpbit({
+        upbitAccessKey:    accessKey.value.trim(),
+        upbitSecretKey:    secretKey.value.trim(),
+        twoFactorProvider: twoFactorProvider.value,
+      });
+    } catch (err) {
+      errorMsg.value = err instanceof Error ? err.message : '업비트 키 검증에 실패했습니다.';
+      isValidatingUpbit.value = false;
+      return;
+    }
+    isValidatingUpbit.value = false;
+
+    // 키 만료 후 재연동 완료 → 더 이상 남은 미완료 단계가 없으므로 홈으로
+    if (isUpbitKeyExpired.value) {
+      if (userStore.profile) userStore.profile.hasUpbitKey = true;
+      router.replace('/');
+      return;
+    }
+  }
+
+  step.value++;
+  errorMsg.value = '';
 }
+
 function goBack() {
   if (step.value > 1) step.value--;
 }
@@ -133,14 +193,28 @@ function handleSubmit() {
     <div class="flex-1 overflow-y-auto pb-36">
       <OnboardingCardRegister v-if="step === 1" v-model="cardLast4" />
 
-      <!-- ── DEV ONLY: @skip 핸들러 — 이 속성만 삭제하면 됩니다 ── -->
-      <OnboardingUpbitConnect
-        v-else-if="step === 2"
-        v-model:accessKey="accessKey"
-        v-model:secretKey="secretKey"
-        v-model:twoFactorProvider="twoFactorProvider"
-        @skip="() => { userStore.completeOnboarding(); router.replace('/'); }"
-      />
+      <template v-else-if="step === 2">
+        <!-- 업비트 키 만료 배너 -->
+        <div
+          v-if="isUpbitKeyExpired"
+          class="mx-6 mt-6 bg-danger-bg border border-danger rounded-xl px-4 py-3.5 flex items-start gap-3"
+        >
+          <svg class="shrink-0 mt-0.5" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          <p class="text-sm text-danger leading-relaxed">
+            보안을 위해 업비트 권한이 만료되었습니다. 업비트 API 키를 다시 연동해 주세요.
+          </p>
+        </div>
+
+        <!-- ── DEV ONLY: @skip 핸들러 — 이 속성만 삭제하면 됩니다 ── -->
+        <OnboardingUpbitConnect
+          v-model:accessKey="accessKey"
+          v-model:secretKey="secretKey"
+          v-model:twoFactorProvider="twoFactorProvider"
+          @skip="() => { userStore.completeOnboarding(); router.replace('/'); }"
+        />
+      </template>
 
       <OnboardingSingleChoice
         v-else-if="step === 3"
@@ -202,12 +276,16 @@ function handleSubmit() {
     >
       <button
         v-if="step < TOTAL_STEPS"
-        class="w-full py-4 rounded-xl text-md font-semibold text-white transition-colors"
-        :class="canProceed ? 'bg-brand active:bg-brand-hover' : 'bg-text-disabled'"
-        :disabled="!canProceed"
+        class="w-full py-4 rounded-xl text-md font-semibold text-white transition-colors flex items-center justify-center gap-2"
+        :class="(canProceed && !isValidatingKbank && !isValidatingUpbit) ? 'bg-brand active:bg-brand-hover' : 'bg-text-disabled'"
+        :disabled="!canProceed || isValidatingKbank || isValidatingUpbit"
         @click="goNext"
       >
-        다음
+        <span
+          v-if="isValidatingKbank || isValidatingUpbit"
+          class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
+        />
+        {{ isValidatingKbank ? '저장 중...' : isValidatingUpbit ? '검증 중...' : '다음' }}
       </button>
       <button
         v-else

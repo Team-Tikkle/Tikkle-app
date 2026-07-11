@@ -7,5 +7,7 @@ export const mockUser: UserProfile = {
   rule: 'UNDER_1000',
   is_auto: true,
   kis_account_number: '50123456789',
-  onboarding_completed: true, // set to false to test the onboarding flow
+  hasInvestmentProfile: true,
+  hasKbankAccount: true,
+  hasUpbitKey: true,
 }

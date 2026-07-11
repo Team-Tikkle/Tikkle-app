@@ -9,15 +9,12 @@ import type {
   MemeAcceptance,
   TwoFactorProvider,
   CategoryRule,
-  OnboardingRequest,
 } from '@/types'
 
-// Business error code → Korean UI message
 const ERROR_MESSAGES: Record<string, string> = {
-  'COMMON-002':      '잘못된 입력값입니다. 카드 번호 4자리 혹은 7개 카테고리 규칙 설정을 확인해 주세요.',
-  'ONBOARDING-001':  '이미 온보딩 등록을 완료한 사용자입니다.',
-  'ONBOARDING-002':  '중복된 카테고리 규칙이 포함되어 있습니다.',
-  'USER-001':        '사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요.',
+  'COMMON-002':        '잘못된 입력값입니다.',
+  'USER-001':          '사용자 정보를 찾을 수 없습니다. 다시 로그인해 주세요.',
+  'UPBIT_INVALID_KEY': '업비트 API 키가 유효하지 않거나 필수 권한이 부족합니다. 키를 다시 확인해 주세요.',
 }
 
 // The API requires exactly 7 CategoryRule entries. These defaults are applied
@@ -83,44 +80,33 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     categoryRules.value = rules
   }
 
-  // ── POST /api/onboarding ──
-  // Assembles the full OnboardingRequest from stored state, dispatches it,
-  // and throws a localized Error for any business error code so callers can
-  // display the message directly in the UI.
+  // 초기 설정을 3개의 PATCH로 분리 저장한다.
+  // 1. PATCH /api/settings/profile  — 투자 성향
+  // 2. PATCH /api/settings/kbank    — 케이뱅크 카드 + 2차 인증
+  // 3. PATCH /api/settings/upbit    — 업비트 API 키 (키 유효성 실시간 검증)
   async function submitOnboarding(): Promise<void> {
-    const payload: OnboardingRequest = {
-      upbitAccessKey:      upbitAccessKey.value,
-      upbitSecretKey:      upbitSecretKey.value,
-      targetCardLast4:     targetCardLast4.value,
-      twoFactorProvider:   twoFactorProvider.value as TwoFactorProvider,
-      riskTolerance:       riskTolerance.value,
-      trendSensitivity:    trendSensitivity.value,
-      cryptoThemes:        cryptoThemes.value,
-      diversificationType: diversificationType.value,
-      memeAcceptance:      memeAcceptance.value,
-      categoryRules:       categoryRules.value,
-    }
-
     const { default: api } = await import('@/utils/api')
 
-    try {
-      await api.post<{ code: string; message: string; data: null }>(
-        '/api/onboarding',
-        payload,
-      )
-      // HTTP 201 + code === 'SUCCESS' — caller handles navigation & store update
-    } catch (err) {
-      // Extract backend business error code from the response body
-      const axiosErr = err as AxiosError<{ code?: string; message?: string }>
-      const code = axiosErr.response?.data?.code
-
-      if (code && ERROR_MESSAGES[code]) {
-        throw new Error(ERROR_MESSAGES[code])
-      }
-
-      // Re-throw unknown network/server errors as-is
-      throw err
+    function mapErr(err: unknown): never {
+      const code = (err as AxiosError<{ code?: string }>).response?.data?.code
+      throw new Error(code && ERROR_MESSAGES[code] ? ERROR_MESSAGES[code] : '설정 저장에 실패했습니다.')
     }
+
+    // 1. 투자 성향
+    try {
+      await api.patch('/api/settings/profile', {
+        riskTolerance:       riskTolerance.value,
+        trendSensitivity:    trendSensitivity.value,
+        cryptoThemes:        cryptoThemes.value,
+        diversificationType: diversificationType.value,
+        memeAcceptance:      memeAcceptance.value,
+      })
+    } catch (err) { mapErr(err) }
+
+    // 2. 케이뱅크 카드 (step 1에서 이미 검증·저장됨 — 여기서 재호출 불필요)
+    // 업비트 API 키는 온보딩 step 2에서 이미 검증·저장됨 — 여기서 재호출 불필요
+
+    // 업비트 API 키는 온보딩 step 2에서 이미 검증·저장됨 — 여기서 재호출 불필요
   }
 
   return {

@@ -20,6 +20,7 @@ import AppHeader from '@/components/common/AppHeader.vue';
 import { fmtKRW } from '@/utils/format';
 import { coinIconUrl, coinIconFallback } from '@/utils/coin';
 import type { SseTradeResult } from '@/types';
+import type { AxiosError } from 'axios';
 
 const route = useRoute();
 const router = useRouter();
@@ -36,8 +37,8 @@ const ticker = (route.query.ticker as string) || '';
 const isActionable = computed(() => !!eventId);
 
 // ── Phase state machine ──
-// idle → approving → waiting → success | pending_trade | deposit_failed | trade_failed | failed
-type Phase = 'idle' | 'approving' | 'waiting' | 'success' | 'pending_trade' | 'deposit_failed' | 'trade_failed' | 'failed';
+// idle → approving → waiting → success | pending_trade | deposit_failed | trade_failed | timeout | upbit_invalid_key | failed
+type Phase = 'idle' | 'approving' | 'waiting' | 'success' | 'pending_trade' | 'deposit_failed' | 'trade_failed' | 'timeout' | 'upbit_invalid_key' | 'failed';
 const phase = ref<Phase>('idle');
 const errorMsg = ref('');
 const sseResult = ref<SseTradeResult | null>(null);
@@ -54,10 +55,14 @@ async function handleApprove() {
   errorMsg.value = '';
   try {
     await paymentStore.approvePaymentEvent(eventId);
-  } catch {
-    phase.value = 'idle';
-    errorMsg.value =
-      '오류가 발생해 투자 요청에 실패했어요. 다시 시도해 주세요.';
+  } catch (err) {
+    const code = (err as AxiosError<{ code?: string }>).response?.data?.code;
+    if (code === 'UPBIT_INVALID_KEY') {
+      phase.value = 'upbit_invalid_key';
+    } else {
+      phase.value = 'idle';
+      errorMsg.value = '오류가 발생해 투자 요청에 실패했어요. 다시 시도해 주세요.';
+    }
     return;
   }
 
@@ -101,8 +106,13 @@ async function handleApprove() {
         errorMsg.value = data.message || '업비트 매수 주문이 거절되거나 취소되었습니다.';
         if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'trade_failed';
+      } else if (name === 'UPBIT_INVALID_KEY') {
+        phase.value = 'upbit_invalid_key';
+      } else if (name === 'TIMEOUT') {
+        errorMsg.value = data.message || '업비트 2차 인증 시간이 초과되었습니다.';
+        if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
+        phase.value = 'timeout';
       } else {
-        // TIMEOUT | 기타 — 피드 항목을 CANCELED로 낙관적 업데이트
         errorMsg.value = data.message || '매수에 실패했어요.';
         if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'failed';
@@ -422,7 +432,64 @@ const fmt = fmtKRW;
       </div>
     </template>
 
-    <!-- ════ Phase: failed (TIMEOUT · 파싱 오류 등) ════ -->
+    <!-- ════ Phase: timeout (2차 인증 시간 초과) ════ -->
+    <template v-else-if="phase === 'timeout'">
+      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
+        <div class="w-24 h-24 rounded-full bg-surface flex items-center justify-center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="flex flex-col items-center gap-2 text-center">
+          <p class="text-2xl font-bold text-text-primary">인증 시간 초과</p>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            2차 인증 시간이 초과되었습니다.<br>다시 시도해 주세요.
+          </p>
+        </div>
+      </div>
+      <div class="px-6 pb-10 pt-4">
+        <button
+          class="w-full py-4 rounded-2xl bg-surface text-text-primary text-lg font-semibold active:bg-surface-border"
+          @click="router.replace('/payments')"
+        >
+          돌아가기
+        </button>
+      </div>
+    </template>
+
+    <!-- ════ Phase: upbit_invalid_key (업비트 키 만료) ════ -->
+    <template v-else-if="phase === 'upbit_invalid_key'">
+      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
+        <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </div>
+        <div class="flex flex-col items-center gap-2 text-center">
+          <p class="text-2xl font-bold text-text-primary">업비트 인증 만료</p>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            업비트 인증이 만료되었습니다.<br>다시 연동해 주세요.
+          </p>
+        </div>
+      </div>
+      <div class="px-6 pb-10 pt-4 flex flex-col gap-3">
+        <button
+          class="w-full py-4 rounded-2xl bg-brand text-white text-lg font-bold active:bg-brand-hover"
+          @click="router.replace('/settings/api-key')"
+        >
+          업비트 재연동
+        </button>
+        <button
+          class="w-full py-3 text-base text-text-tertiary font-medium"
+          @click="router.replace('/payments')"
+        >
+          나중에 하기
+        </button>
+      </div>
+    </template>
+
+    <!-- ════ Phase: failed (파싱 오류 등) ════ -->
     <template v-else-if="phase === 'failed'">
       <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
         <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center">

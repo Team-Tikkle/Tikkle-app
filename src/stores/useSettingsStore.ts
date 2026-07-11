@@ -7,6 +7,18 @@ import type { CategoryRule, CategoryType } from '@/types'
 export interface SettingsData {
   spareChangeRules: CategoryRule[]
   isInvestmentEnabled: boolean
+  linkedAccount: {
+    targetCardCompany: string
+    targetCardLast4:   string
+    twoFactorProvider: string
+  } | null
+  investmentProfile: {
+    riskTolerance:       string
+    trendSensitivity:    string
+    cryptoThemes:        string[]
+    diversificationType: string
+    memeAcceptance:      string
+  } | null
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -76,15 +88,27 @@ export const useSettingsStore = defineStore('settings', () => {
     }
   }
 
-  // PATCH /api/settings/linked-account
-  // 업비트 Open API 키(Access Key·Secret Key)를 변경한다.
-  async function updateLinkedAccount(params: {
-    upbitAccessKey: string
-    upbitSecretKey: string
+  // PATCH /api/settings/kbank — 케이뱅크 카드 등록/수정
+  async function updateKbank(params: {
+    targetCardLast4: string
   }): Promise<void> {
     const { default: api } = await import('@/utils/api')
     try {
-      await api.patch('/api/settings/linked-account', params)
+      await api.patch('/api/settings/kbank', params)
+    } catch (err) {
+      mapError(err)
+    }
+  }
+
+  // PATCH /api/settings/upbit — 업비트 API 키 변경 (서버에서 권한 실시간 검증)
+  async function updateUpbit(params: {
+    upbitAccessKey:    string
+    upbitSecretKey:    string
+    twoFactorProvider: string
+  }): Promise<void> {
+    const { default: api } = await import('@/utils/api')
+    try {
+      await api.patch('/api/settings/upbit', params)
     } catch (err) {
       mapError(err)
     }
@@ -96,6 +120,7 @@ export const useSettingsStore = defineStore('settings', () => {
     fetchSettings,
     updateSpareChangeRules,
     updateInvestmentEnabled,
-    updateLinkedAccount,
+    updateKbank,
+    updateUpbit,
   }
 })

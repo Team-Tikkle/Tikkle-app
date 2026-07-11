@@ -46,13 +46,15 @@ export interface SseTradeResult {
 
 export interface UserProfile {
   id: string
-  name: string              // display name returned by GET /api/users/me
-  email?: string            // email returned by GET /api/users/me
+  name: string
+  email?: string
   risk_type: RiskType
   rule: RoundUpRule
   is_auto: boolean
   kis_account_number?: string
-  onboarding_completed: boolean
+  hasInvestmentProfile: boolean
+  hasKbankAccount: boolean
+  hasUpbitKey: boolean
 }
 
 // Payments & Transactions

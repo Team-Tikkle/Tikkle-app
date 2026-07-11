@@ -100,7 +100,7 @@ function confirmOff() {
       <div v-if="!enabled" class="bg-danger-bg rounded-xl px-5 py-4 flex gap-3">
         <span class="text-base shrink-0">⚠️</span>
         <p class="text-sm text-text-tertiary leading-relaxed">
-          서비스를 중단하면 이후 발생하는 결제 내역과 잔돈 내역은 앱에 기록·저장되지 않습니다.
+          서비스를 중단할 경우, 티끌 앱 내에 결제 내역(영수증) 자체가 아예 저장되지 않습니다.
         </p>
       </div>
 
@@ -152,7 +152,7 @@ function confirmOff() {
 
               <div class="bg-danger-bg rounded-xl p-4">
                 <p class="text-sm text-text-tertiary leading-relaxed">
-                  서비스를 중단하면 이후 발생하는 결제 내역과 잔돈 내역은 앱에 기록·저장되지 않습니다.
+                  서비스를 중단할 경우, 티끌 앱 내에 결제 내역(영수증) 자체가 아예 저장되지 않습니다.
                 </p>
               </div>
 

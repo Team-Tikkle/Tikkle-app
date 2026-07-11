@@ -141,7 +141,9 @@ api.interceptors.response.use(
         store.accessToken  = tokens.accessToken
         store.refreshToken = tokens.refreshToken
         if (store.profile) {
-          store.profile.onboarding_completed = !tokens.isNewUser
+          store.profile.hasInvestmentProfile = !tokens.isNewUser
+          store.profile.hasKbankAccount      = !tokens.isNewUser
+          store.profile.hasUpbitKey          = !tokens.isNewUser
         }
       } catch {
         // Store not yet available — localStorage update above is sufficient

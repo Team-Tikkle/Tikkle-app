@@ -9,14 +9,15 @@ const LS_ACCESS  = 'tikkle_access_token'
 const LS_REFRESH = 'tikkle_refresh_token'
 
 // ── Backend response shape for GET /api/users/me ──
-// Wrapped in the standard envelope: { code, message, data: UserMeData }
 interface UserMeData {
   id: number
   name: string
   email: string
   status: string
   createdAt: string
-  isNewUser: boolean  // true → 온보딩 미완료
+  hasInvestmentProfile: boolean
+  hasKbankAccount: boolean
+  hasUpbitKey: boolean
 }
 interface UserMeEnvelope {
   code: string
@@ -51,7 +52,9 @@ export const useUserStore = defineStore('user', () => {
   // ════════════════════════════════════════════════
 
   const isAuthenticated     = computed(() => !!accessToken.value)
-  const isOnboardingComplete = computed(() => profile.value?.onboarding_completed ?? false)
+  const isOnboardingComplete = computed(() =>
+    !!(profile.value?.hasInvestmentProfile && profile.value?.hasKbankAccount && profile.value?.hasUpbitKey),
+  )
 
   // ════════════════════════════════════════════════
   // Private helpers
@@ -115,14 +118,17 @@ export const useUserStore = defineStore('user', () => {
     const tokenData = envelope.data
     _persistTokens(tokenData.accessToken, tokenData.refreshToken)
 
-    // isNewUser=true → 온보딩 화면으로 보내야 하므로 onboarding_completed=false
+    // 로그인 직후에는 /api/users/me를 아직 호출하지 않았으므로 임시값 세팅.
+    // bootstrap → fetchProfile()이 즉시 덮어씌운다.
     profile.value = {
       id:   tokenData.userId ?? '',
       name: '',
       risk_type: 'NEUTRAL',
       rule: 'UNDER_1000',
       is_auto: true,
-      onboarding_completed: !tokenData.isNewUser,
+      hasInvestmentProfile: !tokenData.isNewUser,
+      hasKbankAccount:      !tokenData.isNewUser,
+      hasUpbitKey:          !tokenData.isNewUser,
     }
   }
 
@@ -173,9 +179,10 @@ export const useUserStore = defineStore('user', () => {
     )
     const tokenData = envelope.data
     _persistTokens(tokenData.accessToken, tokenData.refreshToken)
-    // Sync onboarding status in case it changed server-side
     if (profile.value) {
-      profile.value.onboarding_completed = !tokenData.isNewUser
+      profile.value.hasInvestmentProfile = !tokenData.isNewUser
+      profile.value.hasKbankAccount      = !tokenData.isNewUser
+      profile.value.hasUpbitKey          = !tokenData.isNewUser
     }
     return tokenData
   }
@@ -217,16 +224,15 @@ export const useUserStore = defineStore('user', () => {
     const { data: envelope } = await api.get<UserMeEnvelope>('/api/users/me')
     const fetched = envelope.data
     profile.value = {
-      // Preserve login-seeded investment prefs (defaults if not yet available)
       risk_type: profile.value?.risk_type ?? 'NEUTRAL',
       rule:      profile.value?.rule      ?? 'UNDER_1000',
       is_auto:   profile.value?.is_auto   ?? true,
-      // isNewUser is the canonical onboarding flag — always trust the server value
-      onboarding_completed: !fetched.isNewUser,
-      // Fields owned by GET /api/users/me
       id:    String(fetched.id),
       name:  fetched.name,
       email: fetched.email,
+      hasInvestmentProfile: fetched.hasInvestmentProfile,
+      hasKbankAccount:      fetched.hasKbankAccount,
+      hasUpbitKey:          fetched.hasUpbitKey,
     }
 
     // Bridge userId to native Android so PaymentNotificationListener can read it
@@ -304,7 +310,11 @@ export const useUserStore = defineStore('user', () => {
   }
 
   function completeOnboarding() {
-    if (profile.value) profile.value.onboarding_completed = true
+    if (profile.value) {
+      profile.value.hasInvestmentProfile = true
+      profile.value.hasKbankAccount      = true
+      profile.value.hasUpbitKey          = true
+    }
   }
 
   function saveCategoryRules(rules: CategoryRoundUpRule[]) {
