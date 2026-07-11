@@ -228,7 +228,7 @@ onMounted(async () => {
     <div class="flex flex-col items-center gap-4 mb-12">
       <!-- App icon -->
       <div class="w-20 h-20 rounded-3xl overflow-hidden shadow-lg">
-        <img src="/logo.png" alt="Tikkle" class="w-full h-full object-cover" />
+        <img src="/logo.png" alt="Tikkle" class="block w-full h-full object-cover" />
       </div>
       <div class="flex flex-col items-center gap-1.5">
         <h1 class="text-4xl font-bold text-text-primary tracking-tight">
