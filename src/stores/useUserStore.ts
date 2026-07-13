@@ -197,29 +197,6 @@ export const useUserStore = defineStore('user', () => {
     return tokenData
   }
 
-  // ── Dev-only: issue a JWT for an existing user by email (POST /api/auth/test-token) ──
-  // Local environment only. Persists the returned tokens like a real login.
-  async function issueTestToken(email: string): Promise<void> {
-    const { default: api } = await import('@/utils/api')
-    const { data: envelope } = await api.post<{
-      code: string
-      message: string
-      data: { accessToken: string; refreshToken: string }
-    }>('/api/auth/test-token', { email })
-    _persistTokens(envelope.data.accessToken, envelope.data.refreshToken)
-  }
-
-  // ── Dev-only: create a user (or reuse if exists) and issue a JWT (POST /api/auth/test-signup) ──
-  // Local environment only. Persists the returned tokens like a real login.
-  async function testSignup(email: string, name: string): Promise<void> {
-    const { default: api } = await import('@/utils/api')
-    const { data: envelope } = await api.post<{
-      code: string
-      message: string
-      data: { accessToken: string; refreshToken: string }
-    }>('/api/auth/test-signup', { email, name })
-    _persistTokens(envelope.data.accessToken, envelope.data.refreshToken)
-  }
 
   // ════════════════════════════════════════════════
   // User API actions
@@ -350,8 +327,6 @@ export const useUserStore = defineStore('user', () => {
     logout,
     forceLogout,
     reissueTokens,
-    issueTestToken,
-    testSignup,
     // user APIs
     fetchProfile,
     updateProfile,
