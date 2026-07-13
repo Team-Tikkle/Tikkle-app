@@ -13,6 +13,12 @@ const router = createRouter({
       component: () => import('@/views/auth/LoginView.vue'),
       meta: { guestOnly: true },
     },
+    {
+      path: '/signup',
+      name: 'signup',
+      component: () => import('@/views/auth/SignupView.vue'),
+      meta: { guestOnly: true },
+    },
 
     // ══════════════════════════════════════
     // Protected — authenticated, any onboarding status

@@ -23,9 +23,19 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+// 인증 헤더를 붙이지 않아야 하는 공개 엔드포인트
+const PUBLIC_ENDPOINTS = [
+  '/api/auth/sms/send',
+  '/api/auth/sms/verify',
+  '/api/auth/signup',
+  '/api/auth/login',
+  '/api/auth/reissue',
+]
+
 // ── Request interceptor: attach access token ──
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem(LS_ACCESS)
+  const isPublic = PUBLIC_ENDPOINTS.some((p) => config.url?.startsWith(p))
+  const token = isPublic ? null : localStorage.getItem(LS_ACCESS)
 
   // Guard against the literal string "null" being stored in localStorage
   if (token && token !== 'null') {
@@ -74,8 +84,10 @@ api.interceptors.response.use(
 
     devWarn(`← ${status} ${originalRequest?.url} | code=${errorCode ?? '—'} msg=${error.response?.data?.message ?? error.message}`)
 
-    // Only intercept 401s that haven't already been retried
-    if (status !== 401 || originalRequest._retry) {
+    // Only intercept 401s that haven't already been retried,
+    // and never try to reissue for public (no-auth) endpoints.
+    const isPublicRequest = PUBLIC_ENDPOINTS.some((p) => originalRequest.url?.startsWith(p))
+    if (status !== 401 || originalRequest._retry || isPublicRequest) {
       return Promise.reject(error)
     }
 

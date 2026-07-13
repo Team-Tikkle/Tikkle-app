@@ -83,45 +83,23 @@ export const useUserStore = defineStore('user', () => {
   // Auth actions
   // ════════════════════════════════════════════════
 
-  // ── Login via Google OAuth token (POST /api/auth/oauth/google) ──
-  // Backend returns tokens + onboarding status so the router can redirect
-  // immediately without a separate profile fetch.
-  async function login(googleAccessToken: string): Promise<void> {
-    // Defensive check: ensure we are sending a plain non-empty string
-    if (!googleAccessToken || typeof googleAccessToken !== 'string') {
-      throw new Error('[login] Google access token is missing or not a string')
-    }
-
+  // ── Login (POST /api/auth/login) ──
+  async function login(params: { phoneNumber: string; password: string }): Promise<void> {
     const { default: api } = await import('@/utils/api')
-
-    // Send EXACTLY { "accessToken": "string_value" } — verified payload shape
-    const payload = { accessToken: googleAccessToken }
-    if (import.meta.env.DEV) {
-      console.log('[login] POST /api/auth/oauth/google payload key:', Object.keys(payload))
-      console.log('[login] accessToken type:', typeof googleAccessToken, '| length:', googleAccessToken.length)
-    }
-
     const { data: envelope } = await api.post<{
       code: string
       message: string
       data: {
         accessToken: string
         refreshToken: string
-        isNewUser: boolean  // true → 온보딩 미완료, false → 기존 사용자
-        userId?: string
+        isNewUser: boolean
       }
-    }>(
-      '/api/auth/oauth/google',
-      payload,
-    )
+    }>('/api/auth/login', params)
 
     const tokenData = envelope.data
     _persistTokens(tokenData.accessToken, tokenData.refreshToken)
-
-    // 로그인 직후에는 /api/users/me를 아직 호출하지 않았으므로 임시값 세팅.
-    // bootstrap → fetchProfile()이 즉시 덮어씌운다.
     profile.value = {
-      id:   tokenData.userId ?? '',
+      id: '',
       name: '',
       risk_type: 'NEUTRAL',
       rule: 'UNDER_1000',
@@ -129,6 +107,38 @@ export const useUserStore = defineStore('user', () => {
       hasInvestmentProfile: !tokenData.isNewUser,
       hasKbankAccount:      !tokenData.isNewUser,
       hasUpbitKey:          !tokenData.isNewUser,
+    }
+  }
+
+  // ── Signup (POST /api/auth/signup) ──
+  async function signup(params: {
+    name: string
+    phoneNumber: string
+    password: string
+    signupToken: string
+  }): Promise<void> {
+    const { default: api } = await import('@/utils/api')
+    const { data: envelope } = await api.post<{
+      code: string
+      message: string
+      data: {
+        accessToken: string
+        refreshToken: string
+        isNewUser: boolean
+      }
+    }>('/api/auth/signup', params)
+
+    const tokenData = envelope.data
+    _persistTokens(tokenData.accessToken, tokenData.refreshToken)
+    profile.value = {
+      id: '',
+      name: params.name,
+      risk_type: 'NEUTRAL',
+      rule: 'UNDER_1000',
+      is_auto: true,
+      hasInvestmentProfile: false,
+      hasKbankAccount:      false,
+      hasUpbitKey:          false,
     }
   }
 
@@ -336,6 +346,7 @@ export const useUserStore = defineStore('user', () => {
     // auth
     bootstrap,
     login,
+    signup,
     logout,
     forceLogout,
     reissueTokens,
