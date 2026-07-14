@@ -118,22 +118,22 @@ export interface ApiEnvelope<T> {
   data:    T
 }
 
-// Portfolio (GET /api/portfolios) — coin holdings combined with live Upbit prices
+// Portfolio (GET /api/upbit/portfolios) — 업비트 실보유 동기화, 코인 + 원화잔액
+// holdings 는 코인 항목과 원화잔액 항목(market: "KRW")을 함께 담는다.
+// 원화 항목은 quantity 에 잔액(KRW)이 담기고 averagePurchasePrice: 1, 실시간
+// 시세/등락률이 없다 — 화면에서 코인과 다르게(시세 없이, 최상단) 표시한다.
 export interface PortfolioHolding {
-  market:               string  // 페어 코드, e.g. "KRW-BTC"
-  coinName:             string  // 코인명, e.g. "비트코인"
-  quantity:             number  // 보유 수량
-  averagePurchasePrice: number  // 평균 매입 단가
+  market:               string  // 페어 코드, e.g. "KRW-BTC" | 원화는 "KRW"
+  coinName:             string  // 코인명, e.g. "비트코인" | 원화는 "원화"
+  quantity:             number  // 보유 수량 (원화 항목은 잔액 그 자체)
+  averagePurchasePrice: number  // 평균 매입 단가 (원화 항목은 1)
   principalAmount:      number  // 매입 원금
-  currentPrice:         number  // 현재가 (실시간 시세)
-  evaluationAmount:     number  // 평가 금액
 }
 
 export interface Portfolio {
-  totalPrincipalAmount:  number   // 총 투자금
-  totalEvaluationAmount: number   // 총 평가금 (= 총 자산)
-  holdingMarketCodes:    string[] // 보유 코인 페어 코드 목록
-  holdings:              PortfolioHolding[]
+  totalPrincipalAmount: number   // 총자산(원화잔액 + 보유 코인 총 금액) — 서버 스냅샷
+  holdingMarketCodes:   string[] // 실시간 시세 구독용 코인 페어 코드 목록 (원화 제외)
+  holdings:             PortfolioHolding[]
 }
 
 // News & Insights

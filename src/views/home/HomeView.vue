@@ -23,12 +23,18 @@ onUnmounted(() => {
   marketStore.disconnect()
 })
 
-// 보유 코인 1건의 표시값. 실시간 시세가 도착하면 그 값을, 아직이면 스냅샷을 쓴다.
+// 보유 코인 1건의 표시값. 실시간 시세가 도착하면 그 값을, 아직이면 매입 단가를 스냅샷으로 쓴다.
+// 원화잔액 항목(market === "KRW")은 시세가 없는 현금이므로 그대로 잔액만 표시한다.
 function holdingView(h: PortfolioHolding) {
+  const isKRW = h.market === 'KRW'
+  if (isKRW) {
+    return { isKRW, price: 1, evaluation: h.quantity, profitLoss: 0, changeRate: null as number | null }
+  }
   const t          = marketStore.tickers.get(h.market)
-  const price      = t ? t.tradePrice : h.currentPrice
-  const evaluation = t ? t.tradePrice * h.quantity : h.evaluationAmount
+  const price      = t ? t.tradePrice : h.averagePurchasePrice
+  const evaluation = t ? t.tradePrice * h.quantity : h.principalAmount
   return {
+    isKRW,
     price,
     evaluation,
     profitLoss: evaluation - h.principalAmount,
@@ -36,16 +42,25 @@ function holdingView(h: PortfolioHolding) {
   }
 }
 
-// 보유 코인 + 실시간 표시값을 한 번에. tickers 변동 시 자동 갱신된다.
+// 보유 코인 + 원화잔액 + 실시간 표시값을 한 번에. 원화잔액을 항상 최상단에 둔다.
 const holdingRows = computed(() =>
-  (portfolioStore.portfolio?.holdings ?? []).map((h) => ({ h, ...holdingView(h) })),
+  (portfolioStore.portfolio?.holdings ?? [])
+    .map((h) => ({ h, ...holdingView(h) }))
+    .sort((a, b) => Number(b.isKRW) - Number(a.isKRW)),
 )
 
-// ── 실시간 자산 합계 (보유 코인 평가금 합산) ──
+// 원화잔액을 제외한 실제 코인 보유 여부. 원화 행은 항상 존재하므로
+// holdingRows.length만으로는 "보유 코인 없음"을 판별할 수 없다.
+const hasCoinHoldings = computed(() => holdingRows.value.some((r) => !r.isKRW))
+
+// ── 실시간 자산 합계 (원화잔액 + 보유 코인 평가금 합산 = 총자산) ──
 const liveTotalEvaluation = computed(() =>
   holdingRows.value.reduce((sum, r) => sum + r.evaluation, 0),
 )
-const totalPrincipal = computed(() => portfolioStore.portfolio?.totalPrincipalAmount ?? 0)
+// 총 투자금 = 원금 합계 (원화잔액의 원금은 잔액 자체와 같아 손익에 영향 없음)
+const totalPrincipal = computed(() =>
+  (portfolioStore.portfolio?.holdings ?? []).reduce((sum, h) => sum + h.principalAmount, 0),
+)
 const liveTotalProfitLoss = computed(() => liveTotalEvaluation.value - totalPrincipal.value)
 
 // ── 포트폴리오 도넛 차트 (보유 금액 비중, 실시간) ──
@@ -55,7 +70,10 @@ const ETC_COLOR = '#d1d5db'        // 옅은 회색 — 기타 묶음
 const DONUT_THRESHOLD = 80         // 누적 비중이 이 %에 도달할 때까지만 개별 표시
 
 const donutSegments = computed(() => {
-  const rows = [...holdingRows.value].sort((a, b) => b.evaluation - a.evaluation)
+  // 원화잔액은 코인 배분 비중 차트에서 제외한다 (현금은 배분 대상이 아님).
+  const rows = holdingRows.value
+    .filter((r) => !r.isKRW)
+    .sort((a, b) => b.evaluation - a.evaluation)
   const total = rows.reduce((s, r) => s + r.evaluation, 0)
   if (total <= 0) return []
 
@@ -179,11 +197,11 @@ function fmtPrice(n: number): string {
       </div>
 
       <!-- ── 포트폴리오 현황 (보유 금액 비중, 실시간) ── -->
-      <div v-if="portfolioStore.portfolio && donutSegments.length > 0" class="bg-white rounded-xl px-6 py-5">
+      <div v-if="portfolioStore.portfolio" class="bg-white rounded-xl px-6 py-5">
         <h2 class="text-md font-bold text-text-primary mb-4">포트폴리오 현황</h2>
 
         <div class="flex items-center gap-6">
-          <!-- 도넛 차트 -->
+          <!-- 도넛 차트 — 보유 코인 없으면 빈 링만 표시 -->
           <svg viewBox="0 0 36 36" class="w-28 h-28 shrink-0">
             <circle cx="18" cy="18" r="14" fill="none" stroke="#f2f4f6" stroke-width="6" />
             <circle
@@ -201,8 +219,11 @@ function fmtPrice(n: number): string {
             />
           </svg>
 
-          <!-- 범례 -->
+          <!-- 범례 / 보유 코인 없음 안내 -->
           <div class="flex-1 flex flex-col gap-2.5 min-w-0">
+            <p v-if="donutSegments.length === 0" class="text-sm text-text-tertiary">
+              아직 보유한 코인이 없어요.
+            </p>
             <div v-for="seg in donutSegments" :key="seg.name" class="flex items-center gap-2.5">
               <span class="w-2 h-2 rounded-full shrink-0" :style="{ background: seg.color }" />
               <span class="text-sm font-medium text-text-primary truncate">{{ seg.name }}</span>
@@ -216,8 +237,8 @@ function fmtPrice(n: number): string {
       <div v-if="portfolioStore.portfolio" class="bg-white rounded-xl px-6 py-5">
         <div class="flex items-center justify-between mb-4">
           <h2 class="text-md font-bold text-text-primary">보유 코인 시세</h2>
-          <!-- 연결 상태 인디케이터 -->
-          <div v-if="holdingRows.length > 0" class="flex items-center gap-1.5">
+          <!-- 연결 상태 인디케이터 — 보유 코인이 없으면 애초에 시세 구독을 하지 않으므로 별도 문구 -->
+          <div v-if="hasCoinHoldings" class="flex items-center gap-1.5">
             <span
               class="inline-block w-1.5 h-1.5 rounded-full"
               :class="marketStore.isConnected ? 'bg-brand animate-pulse' : 'bg-surface-border'"
@@ -226,14 +247,18 @@ function fmtPrice(n: number): string {
               {{ marketStore.isConnected ? '실시간' : '연결 중...' }}
             </span>
           </div>
+          <div v-else class="flex items-center gap-1.5">
+            <span class="inline-block w-1.5 h-1.5 rounded-full bg-surface-border" />
+            <span class="text-xs2 text-text-disabled">보유 코인 없음</span>
+          </div>
         </div>
 
-        <!-- 보유 코인 없음 -->
+        <!-- 보유 자산 없음 -->
         <p v-if="holdingRows.length === 0" class="text-sm text-text-tertiary">
-          아직 보유한 코인이 없어요.
+          아직 보유한 자산이 없어요.
         </p>
 
-        <!-- 보유 코인 목록 (실시간 시세, 미수신 시 스냅샷) -->
+        <!-- 보유 자산 목록 (원화잔액 최상단 고정 + 코인 실시간 시세, 미수신 시 스냅샷) -->
         <div v-else class="flex flex-col divide-y divide-surface-border">
           <div
             v-for="row in holdingRows"
@@ -241,7 +266,14 @@ function fmtPrice(n: number): string {
             class="flex items-center justify-between py-3 first:pt-0 last:pb-0"
           >
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-surface overflow-hidden shrink-0">
+              <!-- 원화잔액: 전용 아이콘, 코인 아이콘/실시간 시세 없음 -->
+              <div
+                v-if="row.isKRW"
+                class="w-8 h-8 rounded-full bg-brand-bg text-brand flex items-center justify-center shrink-0 text-sm font-bold"
+              >
+                ₩
+              </div>
+              <div v-else class="w-8 h-8 rounded-full bg-surface overflow-hidden shrink-0">
                 <img
                   :src="coinIconUrl(row.h.market)"
                   :alt="row.h.coinName"
@@ -251,8 +283,9 @@ function fmtPrice(n: number): string {
               </div>
               <div class="flex flex-col gap-0.5">
                 <span class="text-base font-medium text-text-primary">{{ row.h.coinName }}</span>
-                <!-- 현재가 + 등락률 (실시간 시장 현황) -->
-                <span class="text-xs2" :class="row.changeRate !== null ? plColorClass(row.changeRate) : 'text-text-disabled'">
+                <!-- 원화잔액: 라벨만 표시 / 코인: 현재가 + 등락률 (실시간 시장 현황) -->
+                <span v-if="row.isKRW" class="text-xs2 text-text-disabled">보유 현금</span>
+                <span v-else class="text-xs2" :class="row.changeRate !== null ? plColorClass(row.changeRate) : 'text-text-disabled'">
                   ₩{{ fmtPrice(row.price) }}
                   <template v-if="row.changeRate !== null">
                     · {{ row.changeRate > 0 ? '+' : '' }}{{ (row.changeRate * 100).toFixed(2) }}%
@@ -266,8 +299,8 @@ function fmtPrice(n: number): string {
               <p class="text-base font-semibold text-text-primary">
                 ₩{{ fmtAmount(row.evaluation) }}
               </p>
-              <!-- 평가손익 -->
-              <p class="text-sm font-medium" :class="plColorClass(row.profitLoss)">
+              <!-- 평가손익 — 원화잔액은 손익이 없으므로 생략 -->
+              <p v-if="!row.isKRW" class="text-sm font-medium" :class="plColorClass(row.profitLoss)">
                 {{ fmtSignedPL(row.profitLoss, row.h.principalAmount) }}
               </p>
             </div>
