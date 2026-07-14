@@ -15,8 +15,8 @@ const PERCENT_VALUES: Partial<Record<RuleType, number>> = {
   PERCENT_30: 30,
 };
 
-/** 1만 / 15% 처럼 짧은 값 라벨 */
-export function ruleLabel(rule: RuleType): string {
+/** 1만 / 15% 처럼 짧은 값 라벨 (ruleSummary 내부 전용) */
+function ruleLabel(rule: RuleType): string {
   const amount = ROUND_UP_AMOUNTS[rule];
   if (amount !== undefined) return `${amount.toLocaleString('ko-KR')}원`;
   const percent = PERCENT_VALUES[rule];

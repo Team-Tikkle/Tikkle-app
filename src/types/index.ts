@@ -22,19 +22,6 @@ export interface CategoryRule {
   ruleType: RuleType
 }
 
-export interface OnboardingRequest {
-  upbitAccessKey:      string
-  upbitSecretKey:      string
-  targetCardLast4:     string       // exactly 4-digit numeric string
-  twoFactorProvider:   TwoFactorProvider
-  riskTolerance:       RiskTolerance
-  trendSensitivity:    TrendSensitivity
-  cryptoThemes:        CryptoTheme[]
-  diversificationType: DiversificationType
-  memeAcceptance:      MemeAcceptance
-  categoryRules:       CategoryRule[] // length must be exactly 7
-}
-
 // SSE 이벤트 데이터 (GET /api/payments/{eventId}/stream)
 export interface SseTradeResult {
   status:          string
@@ -159,13 +146,6 @@ export interface NewsArticle {
   published_at: string
 }
 
-// Category-specific round-up rule (overrides global rule per spending category)
-export interface CategoryRoundUpRule {
-  category: string
-  type: 'fixed' | 'percent'
-  value: number // unit in KRW if fixed (100 | 500 | 1000), percentage if percent (1-20)
-}
-
 // Investment glossary term (GET /api/insights/terms)
 export interface GlossaryTerm {
   id: string
@@ -192,7 +172,15 @@ export interface RecommendedVideo {
   channel_name?: string
 }
 
-// Payment scraping (POST /api/payments — HMAC signed, no JWT)
+// ────────────────────────────────────────────────────────────────
+// 결제 스크래핑 계약 (POST /api/payments — HMAC 서명, JWT 없음)
+//
+// ⚠️ 이 타입들은 TS 코드에서 import되지 않지만 삭제하지 말 것.
+//    네이티브 Android의 PaymentNotificationListener.java가 이 구조를
+//    그대로 미러링해 요청 payload를 만들고 응답을 파싱한다
+//    (해당 파일 주석이 PaymentRequest를 명시적으로 참조). 프론트-네이티브
+//    간 계약의 단일 출처(source of truth) 문서 역할을 한다.
+// ────────────────────────────────────────────────────────────────
 export interface PaymentRequest {
   userId:          number   // unique user identifier
   cardCompany:     string   // named card issuer, e.g. "신한카드"
@@ -230,3 +218,4 @@ export interface PaymentResponse {
   message: string
   data:    PaymentResult
 }
+

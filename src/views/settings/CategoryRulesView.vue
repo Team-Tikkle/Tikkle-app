@@ -36,7 +36,9 @@ onMounted(async () => {
   try {
     await settingsStore.fetchSettings();
     for (const rule of settingsStore.spareChangeRules) {
-      if (rule.category in localRules) {
+      // 서버가 미설정 카테고리에 ruleType: null 을 반환하므로,
+      // null/빈 값은 건너뛰고 기본값(ROUND_UP_10000)을 유지한다.
+      if (rule.category in localRules && rule.ruleType) {
         localRules[rule.category]  = rule.ruleType;
         savedRules[rule.category]  = rule.ruleType;
       }

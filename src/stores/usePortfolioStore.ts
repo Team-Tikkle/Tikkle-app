@@ -24,7 +24,6 @@ export const usePortfolioStore = defineStore('portfolio', () => {
 
   return {
     portfolio,
-    isLoading,
     error,
     fetchPortfolio,
   }

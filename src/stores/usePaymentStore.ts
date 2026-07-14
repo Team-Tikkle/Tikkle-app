@@ -118,13 +118,10 @@ export const usePaymentStore = defineStore('payment', () => {
     rejectPaymentEvent,
     markFeedItemCanceled,
     updateCategory,
-    fetchPaymentFeed,
-    fetchPaymentDashboard,
     // feed / dashboard state for the 결제 내역 tab
     feed,
     feedStatus,
     feedMonth,
-    feedLast,
     feedLoading,
     dashboard,
     loadFeed,

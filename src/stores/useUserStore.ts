@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { Preferences } from '@capacitor/preferences'
-import type { UserProfile, RoundUpRule, CategoryRoundUpRule } from '@/types'
+import type { UserProfile } from '@/types'
 import { mockUser } from '@/mocks'
 
 // ── localStorage keys ──
@@ -33,9 +33,6 @@ export const useUserStore = defineStore('user', () => {
 
   // Full user profile (null until fetchProfile succeeds)
   const profile = ref<UserProfile | null>(null)
-
-  // Per-category round-up overrides
-  const categoryRules = ref<CategoryRoundUpRule[]>([])
 
   // In development, VITE_SKIP_AUTH=true hydrates placeholder tokens so the
   // router guard doesn't block navigation while working without a real backend.
@@ -165,38 +162,6 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  // ── Token reissue (POST /api/auth/reissue) ──
-  // Called internally by the Axios response interceptor on 401.
-  // The interceptor already guards against null refresh tokens,
-  // but we add the same guard here for calls made directly.
-  async function reissueTokens(): Promise<{ accessToken: string; refreshToken: string }> {
-    const token = refreshToken.value ?? localStorage.getItem(LS_REFRESH)
-    if (!token || token === 'null') {
-      throw new Error('[reissueTokens] No refresh token available')
-    }
-    const { default: api } = await import('@/utils/api')
-    const { data: envelope } = await api.post<{
-      code: string
-      message: string
-      data: {
-        accessToken: string
-        refreshToken: string
-        isNewUser: boolean
-      }
-    }>(
-      '/api/auth/reissue',
-      { refreshToken: token },
-    )
-    const tokenData = envelope.data
-    _persistTokens(tokenData.accessToken, tokenData.refreshToken)
-    if (profile.value) {
-      profile.value.hasInvestmentProfile = !tokenData.isNewUser
-      profile.value.hasKbankAccount      = !tokenData.isNewUser
-      profile.value.hasUpbitKey          = !tokenData.isNewUser
-    }
-    return tokenData
-  }
-
 
   // ════════════════════════════════════════════════
   // User API actions
@@ -224,13 +189,6 @@ export const useUserStore = defineStore('user', () => {
 
     // Bridge userId to native Android so PaymentNotificationListener can read it
     await Preferences.set({ key: 'userId', value: String(fetched.id) })
-  }
-
-  // ── Update profile name (PATCH /api/users/me) ──
-  async function updateProfile(name: string): Promise<void> {
-    const { default: api } = await import('@/utils/api')
-    const { data } = await api.patch<{ name: string }>('/api/users/me', { name })
-    if (profile.value) profile.value.name = data.name
   }
 
   // ── Delete account (DELETE /api/users/me) ──
@@ -284,18 +242,6 @@ export const useUserStore = defineStore('user', () => {
     })
   }
 
-  function setProfile(newProfile: UserProfile) {
-    profile.value = newProfile
-  }
-
-  function updateRoundUpRule(rule: RoundUpRule) {
-    if (profile.value) profile.value.rule = rule
-  }
-
-  function updateTradingMode(is_auto: boolean) {
-    if (profile.value) profile.value.is_auto = is_auto
-  }
-
   function completeOnboarding() {
     if (profile.value) {
       profile.value.hasInvestmentProfile = true
@@ -304,17 +250,12 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  function saveCategoryRules(rules: CategoryRoundUpRule[]) {
-    categoryRules.value = [...rules]
-  }
-
   // ════════════════════════════════════════════════
   // Exports
   // ════════════════════════════════════════════════
   return {
     // state
     profile,
-    categoryRules,
     accessToken,
     refreshToken,
     // computed
@@ -326,16 +267,10 @@ export const useUserStore = defineStore('user', () => {
     signup,
     logout,
     forceLogout,
-    reissueTokens,
     // user APIs
     fetchProfile,
-    updateProfile,
     deleteAccount,
     // profile mutations
-    setProfile,
-    updateRoundUpRule,
-    updateTradingMode,
     completeOnboarding,
-    saveCategoryRules,
   }
 })

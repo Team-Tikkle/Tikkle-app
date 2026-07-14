@@ -14,7 +14,6 @@ import type {
   TwoFactorProvider,
   CategoryType,
   RuleType,
-  CategoryRule,
 } from '@/types';
 import OnboardingUpbitConnect from '@/components/onboarding/OnboardingUpbitConnect.vue';
 import OnboardingCardRegister from '@/components/onboarding/OnboardingCardRegister.vue';
@@ -142,12 +141,6 @@ function goBack() {
 
 function handleSubmit() {
   run(async () => {
-    onboardingStore.setCredentials({
-      upbitAccessKey:    accessKey.value.trim(),
-      upbitSecretKey:    secretKey.value.trim(),
-      targetCardLast4:   cardLast4.value,
-      twoFactorProvider: twoFactorProvider.value as TwoFactorProvider,
-    });
     onboardingStore.setPreferences({
       riskTolerance: prefs.riskTolerance,
       trendSensitivity: prefs.trendSensitivity,
@@ -155,10 +148,11 @@ function handleSubmit() {
       diversificationType: prefs.diversificationType,
       memeAcceptance: prefs.memeAcceptance,
     });
-    onboardingStore.setCategoryRules(
-      ALL_CATEGORIES.map(
-        (category) => ({ category, ruleType: selectedRule.value }) as CategoryRule,
-      ),
+    // 온보딩에서 고른 잔돈 규칙을 전 카테고리에 동일 적용해 저장한다.
+    // (투자 성향 프로필 저장보다 먼저 — 실패 시 hasInvestmentProfile이 false로 남아
+    //  재시작 시 온보딩 설문 단계로 다시 라우팅되도록)
+    await settingsStore.updateSpareChangeRules(
+      ALL_CATEGORIES.map((category) => ({ category, ruleType: selectedRule.value })),
     );
     await onboardingStore.submitOnboarding();
     userStore.completeOnboarding();
