@@ -6,6 +6,16 @@ import router from './router'
 import { useUserStore } from './stores/useUserStore'
 import './style.css'
 
+// ── Splash screen (index.html #app-splash) ──
+// Fades out and removes the static splash once the router's initial
+// navigation has resolved, so the first view the user sees is fully formed.
+function hideSplash() {
+  const splash = document.getElementById('app-splash')
+  if (!splash) return
+  splash.classList.add('app-splash--hidden')
+  splash.addEventListener('transitionend', () => splash.remove(), { once: true })
+}
+
 // ── Deep-link handler ──
 // Native payment-approval notifications open tikkle://payments/review?...
 // Parse the URL and route to the in-app review screen.
@@ -45,7 +55,11 @@ function navigateFromDeepLink(url: string) {
   await userStore.bootstrap()
 
   app.use(router)
+  // 초기 내비게이션이 완전히 끝난 뒤 마운트해야, 스플래시가 사라졌을 때
+  // 화면이 비어있거나 잘못된 라우트가 잠깐 보이는 일이 없다.
+  await router.isReady()
   app.mount('#app')
+  hideSplash()
 
   // Deep links (native only; no-ops on web). Handle both warm (appUrlOpen)
   // and cold-start (getLaunchUrl) cases.

@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Inter 폰트는 index.html의 <link rel="preconnect">/<link rel="stylesheet">로
+   로드한다 — @import는 렌더링을 막고 커넥션을 미리 열어둘 수 없다. */
 @import "tailwindcss";
 
 /* ══════════════════════════════════════════
