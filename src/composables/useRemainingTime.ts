@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref, type ComputedRef } from 'vue'
 
 export type RemainingTimeStatus = 'hours' | 'minutes' | 'expired'
 
@@ -7,13 +7,35 @@ export interface RemainingTimeResult {
   status: RemainingTimeStatus
 }
 
+// 모든 useRemainingTime 인스턴스가 공유하는 단일 60초 틱.
+// 잔여 시간이 다른 여러 행이 있어도 setInterval은 하나만 돈다 — 구독자가
+// 있을 때만 타이머를 켜고, 마지막 구독자가 사라지면 끈다.
+const now = ref(Date.now())
+let timer: ReturnType<typeof setInterval> | null = null
+let subscriberCount = 0
+
+function subscribe() {
+  subscriberCount += 1
+  if (timer === null) {
+    timer = setInterval(() => { now.value = Date.now() }, 60_000)
+  }
+}
+
+function unsubscribe() {
+  subscriberCount -= 1
+  if (subscriberCount <= 0 && timer !== null) {
+    clearInterval(timer)
+    timer = null
+  }
+}
+
 /**
  * Reactive countdown based on an ISO expiry timestamp.
- * Updates every 60 seconds. Clears interval on unmount.
+ * Updates every 60 seconds via a single shared timer (see above).
  */
-export function useRemainingTime(expiredAt: string): { remaining: ReturnType<typeof ref<RemainingTimeResult>> } {
-  function compute(): RemainingTimeResult {
-    const diffMs = new Date(expiredAt).getTime() - Date.now()
+export function useRemainingTime(expiredAt: string): { remaining: ComputedRef<RemainingTimeResult> } {
+  const remaining = computed<RemainingTimeResult>(() => {
+    const diffMs = new Date(expiredAt).getTime() - now.value
     if (diffMs <= 0) {
       return { label: '만료됨', status: 'expired' }
     }
@@ -27,21 +49,10 @@ export function useRemainingTime(expiredAt: string): { remaining: ReturnType<typ
       }
     }
     return { label: `${minutes}분 남음`, status: 'minutes' }
-  }
-
-  const remaining = ref<RemainingTimeResult>(compute())
-
-  let timer: ReturnType<typeof setInterval> | null = null
-
-  onMounted(() => {
-    timer = setInterval(() => {
-      remaining.value = compute()
-    }, 60_000)
   })
 
-  onUnmounted(() => {
-    if (timer !== null) clearInterval(timer)
-  })
+  onMounted(subscribe)
+  onUnmounted(unsubscribe)
 
   return { remaining }
 }

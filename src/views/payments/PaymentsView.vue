@@ -236,7 +236,15 @@ onUnmounted(() => observer?.disconnect())
       </Teleport>
 
       <!-- ── Summary stats ── -->
-      <div v-if="paymentStore.dashboard" class="grid grid-cols-3 gap-2">
+      <!-- 로딩 skeleton (첫 데이터 도착 전) -->
+      <div v-if="paymentStore.dashboardLoading && !paymentStore.dashboard" class="grid grid-cols-3 gap-2">
+        <div v-for="i in 3" :key="i" class="bg-white rounded-xl p-3 flex flex-col gap-1.5">
+          <div class="h-3 w-14 bg-surface rounded" />
+          <div class="h-5 w-20 bg-surface rounded" />
+        </div>
+      </div>
+
+      <div v-else-if="paymentStore.dashboard" class="grid grid-cols-3 gap-2">
         <!-- Total payment -->
         <div class="bg-white rounded-xl p-3 flex flex-col gap-1.5">
           <span class="text-xs2 text-text-tertiary leading-none">총 결제 금액</span>
@@ -258,7 +266,17 @@ onUnmounted(() => observer?.disconnect())
       <div class="bg-white rounded-xl px-5 py-5">
         <h2 class="text-md font-bold text-text-primary mb-4">소비 카테고리</h2>
 
-        <EmptyState v-if="categories.length === 0" message="이번 달 소비 내역이 없어요." />
+        <!-- 로딩 skeleton (첫 데이터 도착 전) -->
+        <div v-if="paymentStore.dashboardLoading && !paymentStore.dashboard" class="flex flex-col gap-3">
+          <div v-for="i in 4" :key="i" class="flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full shrink-0 bg-surface" />
+            <div class="h-3 w-8 bg-surface rounded shrink-0" />
+            <div class="flex-1 h-4 bg-surface rounded-pill" />
+            <div class="h-3 w-16 bg-surface rounded shrink-0" />
+          </div>
+        </div>
+
+        <EmptyState v-else-if="categories.length === 0" message="이번 달 소비 내역이 없어요." />
 
         <div v-else class="flex flex-col gap-3">
           <div v-for="cat in categories" :key="cat.label" class="flex items-center gap-3">
@@ -307,9 +325,24 @@ onUnmounted(() => observer?.disconnect())
           </button>
         </div>
 
-        <EmptyState v-if="paymentStore.feed.length === 0 && !paymentStore.feedLoading" message="해당하는 결제 내역이 없어요." />
+        <!-- 로딩 skeleton (첫 페이지 도착 전) -->
+        <div v-if="paymentStore.feed.length === 0 && paymentStore.feedLoading" class="flex flex-col divide-y divide-surface-border">
+          <div v-for="i in 3" :key="i" class="py-3.5 flex items-center gap-3 first:pt-0">
+            <div class="w-10 h-10 rounded-lg bg-surface shrink-0" />
+            <div class="flex-1 flex flex-col gap-1.5">
+              <div class="h-4 w-28 bg-surface rounded" />
+              <div class="h-3 w-16 bg-surface rounded" />
+            </div>
+            <div class="flex flex-col items-end gap-1.5 shrink-0">
+              <div class="h-4 w-16 bg-surface rounded" />
+              <div class="h-3 w-12 bg-surface rounded" />
+            </div>
+          </div>
+        </div>
 
-        <div class="flex flex-col divide-y divide-surface-border">
+        <EmptyState v-else-if="paymentStore.feed.length === 0 && !paymentStore.feedLoading" message="해당하는 결제 내역이 없어요." />
+
+        <div v-else class="flex flex-col divide-y divide-surface-border">
           <div
             v-for="tx in paymentStore.feed"
             :key="tx.id"

@@ -78,6 +78,7 @@ export const usePaymentStore = defineStore('payment', () => {
   const feedLast    = ref(false)
   const feedLoading = ref(false)
   const dashboard   = ref<PaymentDashboard | null>(null)
+  const dashboardLoading = ref(false)
 
   // Load the first chunk, resetting any previous filter/page state.
   async function loadFeed(opts?: { status?: PaymentFeedStatus; month?: string }) {
@@ -110,7 +111,12 @@ export const usePaymentStore = defineStore('payment', () => {
   // Load the monthly dashboard (summary cards, category chart, pending count).
   async function loadDashboard(month?: string) {
     if (month) feedMonth.value = month
-    dashboard.value = await fetchPaymentDashboard(feedMonth.value)
+    dashboardLoading.value = true
+    try {
+      dashboard.value = await fetchPaymentDashboard(feedMonth.value)
+    } finally {
+      dashboardLoading.value = false
+    }
   }
 
   return {
@@ -124,6 +130,7 @@ export const usePaymentStore = defineStore('payment', () => {
     feedMonth,
     feedLoading,
     dashboard,
+    dashboardLoading,
     loadFeed,
     loadMoreFeed,
     loadDashboard,

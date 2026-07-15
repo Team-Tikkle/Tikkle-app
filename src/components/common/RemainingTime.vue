@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /**
  * Reactive countdown label for a PENDING payment's approval deadline.
- * Wraps useRemainingTime so each row gets its own 60s-ticking instance
- * (a composable can't be called inside a v-for, hence this per-item component).
+ * Wraps useRemainingTime (a composable can't be called inside a v-for,
+ * hence this per-item component) — the 60s timer itself is shared across
+ * every instance, so having many PENDING rows doesn't add extra timers.
  */
 import { computed } from 'vue'
 import { useRemainingTime } from '@/composables/useRemainingTime'
