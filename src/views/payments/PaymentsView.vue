@@ -417,7 +417,6 @@ onUnmounted(() => observer?.disconnect())
     </div>
 
     <BottomNav />
-  </div>
 
   <!-- ════ Category change sheet ════ -->
   <Teleport to="body">
@@ -480,4 +479,5 @@ onUnmounted(() => observer?.disconnect())
       </div>
     </Transition>
   </Teleport>
+  </div>
 </template>
