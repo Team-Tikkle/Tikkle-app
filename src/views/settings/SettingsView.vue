@@ -198,7 +198,7 @@ const legalTitles = { privacy: '개인정보 처리방침', terms: '이용약관
           @click="showWithdrawalModal = true"
         >
           <span class="text-base font-medium text-danger">서비스 탈퇴</span>
-          <span class="text-sm text-danger-light">탈퇴 시 보유 코인이 즉시 매도됩니다</span>
+          <span class="text-sm text-danger-light">탈퇴 시 계정 정보가 삭제되며 되돌릴 수 없습니다</span>
         </button>
       </div>
 
@@ -291,7 +291,7 @@ const legalTitles = { privacy: '개인정보 처리방침', terms: '이용약관
                   <span class="text-base font-semibold text-danger">⚠️ 주의</span>
                 </div>
                 <p class="text-sm text-text-tertiary leading-relaxed">
-                  보유 중인 코인이 즉시 시장가로 일괄 매도됩니다.<br>
+                  탈퇴 시 계정 정보가 삭제됩니다.<br>
                   이 작업은 되돌릴 수 없습니다.
                 </p>
               </div>
