@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { toastMessage } from '@/composables/useAndroidBack'
 
 // 하단 탭(BottomNav) 간 이동은 화면이 위아래로 움직이는 게 아니라
 // 즉시 전환되어야 하므로, 탭↔탭 이동일 때만 트랜지션을 끈다.
@@ -23,6 +24,21 @@ router.beforeEach((to, from) => {
           <component :is="Component" />
         </Transition>
       </RouterView>
+
+      <!-- Android back-button toast -->
+      <Transition
+        enter-active-class="transition-opacity duration-150"
+        enter-from-class="opacity-0"
+        leave-active-class="transition-opacity duration-200"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="toastMessage"
+          class="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] px-5 py-2.5 rounded-full bg-gray-800/90 text-white text-sm font-medium whitespace-nowrap"
+        >
+          {{ toastMessage }}
+        </div>
+      </Transition>
     </div>
   </div>
 </template>

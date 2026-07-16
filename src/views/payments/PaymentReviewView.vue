@@ -18,6 +18,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { usePaymentStore } from '@/stores/usePaymentStore';
 import AppHeader from '@/components/common/AppHeader.vue';
 import { fmtKRW } from '@/utils/format';
+import { useBackHandler } from '@/composables/useAndroidBack';
 import { coinIconUrl, coinIconFallback } from '@/utils/coin';
 import type { SseTradeResult } from '@/types';
 import type { AxiosError } from 'axios';
@@ -25,6 +26,9 @@ import type { AxiosError } from 'axios';
 const route = useRoute();
 const router = useRouter();
 const paymentStore = usePaymentStore();
+
+// 딥링크로 진입 시 히스토리가 없으므로 뒤로가기는 결제내역 탭으로 이동
+useBackHandler(() => { router.replace('/payments'); return true });
 
 // ── Deep-link params ──
 const eventId = route.query.eventId as string | undefined;

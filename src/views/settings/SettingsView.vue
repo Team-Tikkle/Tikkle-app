@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '@/components/common/AppHeader.vue'
 import BottomNav from '@/components/common/BottomNav.vue'
 import { useUserStore } from '@/stores/useUserStore'
 import { useAsyncAction } from '@/composables/useAsyncAction'
+import { useModalBackHandler } from '@/composables/useAndroidBack'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -48,6 +49,10 @@ const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none
 // Legal sheet: 'privacy' | 'terms' | null
 const legalSheet = ref<'privacy' | 'terms' | null>(null)
 const legalTitles = { privacy: '개인정보 처리방침', terms: '이용약관' }
+
+// 뒤로가기 시 열려있는 모달/시트를 닫는다
+useModalBackHandler(computed(() => legalSheet.value !== null), () => { legalSheet.value = null })
+useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = false })
 
 </script>
 

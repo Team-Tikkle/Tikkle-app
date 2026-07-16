@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import { App as CapApp } from '@capacitor/app'
+import { initAndroidBack } from './composables/useAndroidBack'
 import App from './App.vue'
 import router from './router'
 import { useUserStore } from './stores/useUserStore'
@@ -55,6 +56,7 @@ function navigateFromDeepLink(url: string) {
   await userStore.bootstrap()
 
   app.use(router)
+  initAndroidBack(router)
   // 초기 내비게이션이 완전히 끝난 뒤 마운트해야, 스플래시가 사라졌을 때
   // 화면이 비어있거나 잘못된 라우트가 잠깐 보이는 일이 없다.
   await router.isReady()
