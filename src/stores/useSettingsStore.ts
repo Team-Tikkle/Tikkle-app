@@ -28,8 +28,9 @@ const ERROR_MESSAGES: Record<string, string> = {
 }
 
 function mapError(err: unknown): never {
-  const code = (err as AxiosError<{ code?: string }>).response?.data?.code
-  throw new Error(code && ERROR_MESSAGES[code] ? ERROR_MESSAGES[code] : '설정 변경에 실패했습니다.')
+  const data = (err as AxiosError<{ code?: string; message?: string }>).response?.data
+  const mapped = data?.code ? ERROR_MESSAGES[data.code] : undefined
+  throw new Error(mapped ?? data?.message ?? '설정 변경에 실패했습니다.')
 }
 
 export const useSettingsStore = defineStore('settings', () => {

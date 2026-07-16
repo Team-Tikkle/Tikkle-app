@@ -49,8 +49,9 @@ export const useOnboardingStore = defineStore('onboarding', () => {
     const { default: api } = await import('@/utils/api')
 
     function mapErr(err: unknown): never {
-      const code = (err as AxiosError<{ code?: string }>).response?.data?.code
-      throw new Error(code && ERROR_MESSAGES[code] ? ERROR_MESSAGES[code] : '설정 저장에 실패했습니다.')
+      const data = (err as AxiosError<{ code?: string; message?: string }>).response?.data
+      const mapped = data?.code ? ERROR_MESSAGES[data.code] : undefined
+      throw new Error(mapped ?? data?.message ?? '설정 저장에 실패했습니다.')
     }
 
     // 투자 성향 프로필 저장.

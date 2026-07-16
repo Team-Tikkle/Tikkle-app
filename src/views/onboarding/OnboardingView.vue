@@ -76,8 +76,9 @@ const selectedRule = ref<RuleType>('ROUND_UP_10000');
 
 // ── UI 상태 ──
 const { isLoading, errorMsg, run } = useAsyncAction();
-const isValidatingKbank = ref(false);
-const isValidatingUpbit = ref(false);
+const isValidatingKbank   = ref(false);
+const isValidatingUpbit   = ref(false);
+const isValidatingProfile = ref(false);
 
 // ── 단계별 진행 가능 여부 ──
 const canProceed = computed(() => {
@@ -131,6 +132,27 @@ async function goNext() {
     }
   }
 
+  // step 7: 투자 성향 프로필 저장 후 잔돈 규칙 단계로 이동
+  if (step.value === 7) {
+    isValidatingProfile.value = true;
+    errorMsg.value = '';
+    try {
+      onboardingStore.setPreferences({
+        riskTolerance:       prefs.riskTolerance,
+        trendSensitivity:    prefs.trendSensitivity,
+        cryptoThemes:        [...cryptoThemes.value],
+        diversificationType: prefs.diversificationType,
+        memeAcceptance:      prefs.memeAcceptance,
+      });
+      await onboardingStore.submitOnboarding();
+    } catch (err) {
+      errorMsg.value = err instanceof Error ? err.message : '성향 저장에 실패했습니다.';
+      isValidatingProfile.value = false;
+      return;
+    }
+    isValidatingProfile.value = false;
+  }
+
   step.value++;
   errorMsg.value = '';
 }
@@ -139,22 +161,12 @@ function goBack() {
   if (step.value > 1) step.value--;
 }
 
+// Step 8 "시작하기" — 잔돈 규칙을 전 카테고리에 일괄 적용
 function handleSubmit() {
   run(async () => {
-    onboardingStore.setPreferences({
-      riskTolerance: prefs.riskTolerance,
-      trendSensitivity: prefs.trendSensitivity,
-      cryptoThemes: [...cryptoThemes.value],
-      diversificationType: prefs.diversificationType,
-      memeAcceptance: prefs.memeAcceptance,
-    });
-    // 온보딩에서 고른 잔돈 규칙을 전 카테고리에 동일 적용해 저장한다.
-    // (투자 성향 프로필 저장보다 먼저 — 실패 시 hasInvestmentProfile이 false로 남아
-    //  재시작 시 온보딩 설문 단계로 다시 라우팅되도록)
     await settingsStore.updateSpareChangeRules(
       ALL_CATEGORIES.map((category) => ({ category, ruleType: selectedRule.value })),
     );
-    await onboardingStore.submitOnboarding();
     userStore.completeOnboarding();
     router.replace('/');
   });
@@ -268,18 +280,21 @@ function handleSubmit() {
     <div
       class="fixed bottom-0 left-0 right-0 bg-surface px-6 pt-3 pb-5 flex flex-col gap-2 max-w-mobile mx-auto"
     >
+      <p v-if="errorMsg && step !== 8" role="alert" class="text-sm text-danger text-center px-2">
+        {{ errorMsg }}
+      </p>
       <button
         v-if="step < TOTAL_STEPS"
         class="w-full py-4 rounded-xl text-md font-semibold text-white transition-colors flex items-center justify-center gap-2"
-        :class="(canProceed && !isValidatingKbank && !isValidatingUpbit) ? 'bg-brand active:bg-brand-hover' : 'bg-text-disabled'"
-        :disabled="!canProceed || isValidatingKbank || isValidatingUpbit"
+        :class="(canProceed && !isValidatingKbank && !isValidatingUpbit && !isValidatingProfile) ? 'bg-brand active:bg-brand-hover' : 'bg-text-disabled'"
+        :disabled="!canProceed || isValidatingKbank || isValidatingUpbit || isValidatingProfile"
         @click="goNext"
       >
         <span
-          v-if="isValidatingKbank || isValidatingUpbit"
+          v-if="isValidatingKbank || isValidatingUpbit || isValidatingProfile"
           class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
         />
-        {{ isValidatingKbank ? '저장 중...' : isValidatingUpbit ? '검증 중...' : '다음' }}
+        {{ isValidatingKbank ? '저장 중...' : isValidatingUpbit ? '검증 중...' : isValidatingProfile ? '저장 중...' : '다음' }}
       </button>
       <button
         v-else

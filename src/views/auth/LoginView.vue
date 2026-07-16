@@ -34,8 +34,9 @@ async function handleLogin() {
     if (import.meta.env.DEV && isNavigationFailure(nav)) console.warn('[login] nav redirected:', nav);
   } catch (err) {
     if (!isNavigationFailure(err)) {
-      const code = (err as AxiosError<{ errorCode?: string }>).response?.data?.errorCode;
-      errorMsg.value = (code && ERROR_MESSAGES[code]) ? ERROR_MESSAGES[code] : '로그인 중 오류가 발생했습니다.';
+      const data = (err as AxiosError<{ errorCode?: string; message?: string }>).response?.data;
+      const knownMsg = data?.errorCode ? ERROR_MESSAGES[data.errorCode] : undefined;
+      errorMsg.value = knownMsg ?? data?.message ?? '로그인 중 오류가 발생했습니다.';
     }
   } finally {
     isLoading.value = false;
