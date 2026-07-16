@@ -102,6 +102,18 @@ const legalTitles = { privacy: '개인정보 처리방침', terms: '이용약관
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
         </button>
+        <!-- 투자 성향 및 관심 테마 -->
+        <button
+          class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
+          @click="router.push('/settings/investment-profile')"
+        >
+          <div class="flex flex-col gap-1 text-left">
+            <span class="text-base font-medium text-text-primary">투자 성향 및 관심 테마</span>
+            <span class="text-sm text-text-tertiary">AI 종목 추천에 반영되는 투자 성향 변경</span>
+          </div>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <span v-html="chevronRight" />
+        </button>
         <!-- 케이뱅크 카드 변경 -->
         <button
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"

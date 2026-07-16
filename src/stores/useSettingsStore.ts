@@ -37,6 +37,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const spareChangeRules    = ref<CategoryRule[]>([])
   const isInvestmentEnabled = ref<boolean>(true)
   const linkedAccount       = ref<SettingsData['linkedAccount']>(null)
+  const investmentProfile   = ref<SettingsData['investmentProfile']>(null)
 
   // GET /api/settings
   // 전체 카테고리 잔돈 규칙을 조회한다. 미설정 카테고리는 서버가 NONE으로 반환한다.
@@ -51,6 +52,7 @@ export const useSettingsStore = defineStore('settings', () => {
       spareChangeRules.value    = envelope.data.spareChangeRules
       isInvestmentEnabled.value = envelope.data.isInvestmentEnabled
       linkedAccount.value       = envelope.data.linkedAccount
+      investmentProfile.value   = envelope.data.investmentProfile
     } catch (err) {
       mapError(err)
     }
@@ -121,6 +123,7 @@ export const useSettingsStore = defineStore('settings', () => {
     spareChangeRules,
     isInvestmentEnabled,
     linkedAccount,
+    investmentProfile,
     fetchSettings,
     updateSpareChangeRules,
     updateInvestmentEnabled,

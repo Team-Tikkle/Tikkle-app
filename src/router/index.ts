@@ -72,6 +72,12 @@ const router = createRouter({
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
     {
+      path: '/settings/investment-profile',
+      name: 'settings-investment-profile',
+      component: () => import('@/views/settings/InvestmentProfileView.vue'),
+      meta: { requiresAuth: true, requiresOnboarding: true },
+    },
+    {
       // Manage KIS securities account & API keys — reached from Settings
       path: '/settings/api-key',
       name: 'settings-api-key',
