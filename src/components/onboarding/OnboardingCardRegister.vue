@@ -63,8 +63,7 @@ const isValid = computed(() => /^\d{4}$/.test(cardLast4.value));
           케이뱅크 앱 푸시 알림 필수
         </p>
         <p class="text-xs2 text-text-tertiary leading-relaxed">
-          결제 알림을 감지해 자동 투자가 시작됩니다. 케이뱅크 앱의 결제 푸시
-          알림이 켜져 있어야 정상 작동합니다.
+          케이뱅크 앱의 결제 푸시 알림이 켜져 있어야 정상 작동합니다.
         </p>
 
         <!-- 알림 설정 경로 안내 -->
