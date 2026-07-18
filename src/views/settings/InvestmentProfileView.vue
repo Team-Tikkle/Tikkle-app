@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import AppHeader from '@/components/common/AppHeader.vue'
 import OnboardingSingleChoice from '@/components/onboarding/OnboardingSingleChoice.vue'
 import OnboardingThemeChoice from '@/components/onboarding/OnboardingThemeChoice.vue'
@@ -15,7 +14,6 @@ import {
   DIVERS_LABELS,
 } from '@/components/onboarding/onboarding-labels'
 
-const router = useRouter()
 const onboardingStore = useOnboardingStore()
 const settingsStore = useSettingsStore()
 const { isLoading, errorMsg, run } = useAsyncAction()

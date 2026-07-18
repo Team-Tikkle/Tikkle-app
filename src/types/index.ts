@@ -34,7 +34,7 @@ export interface SseTradeResult {
 export interface UserProfile {
   id: string
   name: string
-  email?: string
+  phoneNumber?: string
   risk_type: RiskType
   rule: RoundUpRule
   is_auto: boolean

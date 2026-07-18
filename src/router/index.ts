@@ -19,6 +19,12 @@ const router = createRouter({
       component: () => import('@/views/auth/SignupView.vue'),
       meta: { guestOnly: true },
     },
+    {
+      path: '/password-reset',
+      name: 'password-reset',
+      component: () => import('@/views/auth/PasswordResetView.vue'),
+      meta: { guestOnly: true },
+    },
 
     // ══════════════════════════════════════
     // Protected — authenticated, any onboarding status

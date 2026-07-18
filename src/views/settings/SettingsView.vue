@@ -43,6 +43,14 @@ function handleDeleteAccount() {
   })
 }
 
+// 전화번호를 010-1234-5678 형태로 표시 (11자리 기준, 그 외는 원문 반환)
+function formatPhone(phone?: string): string {
+  if (!phone) return ''
+  if (/^01[0-9]{9}$/.test(phone)) return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3')
+  if (/^01[0-9]{8}$/.test(phone)) return phone.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3')
+  return phone
+}
+
 // Chevron icon (right arrow for menu items)
 const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`
 
@@ -75,7 +83,7 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
               {{ userStore.profile?.name || '티끌 유저' }}
             </p>
             <p class="text-sm text-text-tertiary mt-0.5 truncate">
-              {{ userStore.profile?.email || '' }}
+              {{ formatPhone(userStore.profile?.phoneNumber) }}
             </p>
           </div>
         </div>
@@ -296,8 +304,8 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
                   <span class="text-base font-semibold text-danger">⚠️ 주의</span>
                 </div>
                 <p class="text-sm text-text-tertiary leading-relaxed">
-                  탈퇴 시 계정 정보가 삭제됩니다.<br>
-                  이 작업은 되돌릴 수 없습니다.
+                  탈퇴 시 결제 내역을 포함한 모든 데이터가 삭제되며 복구할 수 없습니다.<br>
+                  동일 번호로 재가입은 가능하나, 과거 내역은 복원되지 않습니다.
                 </p>
               </div>
 

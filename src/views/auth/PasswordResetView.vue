@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRouter, isNavigationFailure } from 'vue-router';
-import { useUserStore } from '@/stores/useUserStore';
+import { useRouter } from 'vue-router';
 import api from '@/utils/api';
 import {
   authErrorMessage,
@@ -13,37 +12,35 @@ import {
 import { useCountdown } from '@/composables/useCountdown';
 
 const router = useRouter();
-const userStore = useUserStore();
 
-// ── 단계: 1=전화번호, 2=인증번호, 3=이름+비밀번호 ──
+// ── 단계: 1=전화번호, 2=인증번호, 3=새 비밀번호 ──
 const step = ref<1 | 2 | 3>(1);
 
 const phoneNumber = ref('');
 const code = ref('');
-const signupToken = ref('');
-const name = ref('');
-const password = ref('');
-const passwordConfirm = ref('');
+const resetToken = ref('');
+const newPassword = ref('');
+const newPasswordConfirm = ref('');
 
 const isLoading = ref(false);
 const errorMsg = ref('');
 
-// 인증번호 재발송 쿨다운 (60초)
 const RESEND_COOLDOWN = 60;
 const { seconds: resendSeconds, start: startResendCooldown } = useCountdown();
 
 // Step 1·재발송: 인증번호 발송
+// ⚠️ 미가입 번호도 200을 반환한다(사용자 열거 방지). "가입되지 않은 번호" 안내를
+//    띄우면 안 되며, 무조건 다음 단계로 진행시킨다. (미가입이면 ②에서 SMS-002)
 async function sendSms() {
   if (!isValidPhone(phoneNumber.value.trim()) || resendSeconds.value > 0) return;
   isLoading.value = true;
   errorMsg.value = '';
   try {
-    await api.post('/api/auth/sms/send', { phoneNumber: phoneNumber.value.trim() });
+    await api.post('/api/auth/password/reset-sms/send', { phoneNumber: phoneNumber.value.trim() });
     code.value = '';
     startResendCooldown(RESEND_COOLDOWN);
     step.value = 2;
   } catch (err) {
-    // 60초 쿨다운 위반(SMS-004)이면 재발송 버튼도 카운트다운으로 막는다
     if (authErrorCode(err) === 'SMS-004') startResendCooldown(RESEND_COOLDOWN);
     errorMsg.value = authErrorMessage(err);
   } finally {
@@ -51,7 +48,7 @@ async function sendSms() {
   }
 }
 
-// Step 2: 인증번호 확인
+// Step 2: 인증번호 확인 — 응답 필드명이 signupToken이지만 값은 재설정용 토큰
 async function verifyCode() {
   if (code.value.length !== 6) return;
   isLoading.value = true;
@@ -59,14 +56,13 @@ async function verifyCode() {
   try {
     const { data: envelope } = await api.post<{
       data: { signupToken: string }
-    }>('/api/auth/sms/verify', {
+    }>('/api/auth/password/reset-sms/verify', {
       phoneNumber: phoneNumber.value.trim(),
       code: code.value.trim(),
     });
-    signupToken.value = envelope.data.signupToken;
+    resetToken.value = envelope.data.signupToken;
     step.value = 3;
   } catch (err) {
-    // 오입력 5회 초과(SMS-006) → 인증번호가 폐기되었으므로 1단계로 되돌려 재발송을 유도
     if (authErrorCode(err) === 'SMS-006') {
       code.value = '';
       step.value = 1;
@@ -78,51 +74,46 @@ async function verifyCode() {
 }
 
 const passwordMismatch = computed(
-  () => passwordConfirm.value.length > 0 && password.value !== passwordConfirm.value,
+  () => newPasswordConfirm.value.length > 0 && newPassword.value !== newPasswordConfirm.value,
 );
 const passwordInvalid = computed(
-  () => password.value.length > 0 && !isValidPassword(password.value),
+  () => newPassword.value.length > 0 && !isValidPassword(newPassword.value),
 );
 
-// Step 3: 회원가입
-async function handleSignup() {
-  if (!name.value.trim() || !isValidPassword(password.value) || passwordMismatch.value) return;
+// Step 3: 비밀번호 변경 → 성공 시 기존 세션이 끊기므로 로그인 화면으로 이동
+async function resetPassword() {
+  if (!isValidPassword(newPassword.value) || passwordMismatch.value) return;
   isLoading.value = true;
   errorMsg.value = '';
   try {
-    await userStore.signup({
-      name: name.value.trim(),
+    await api.post('/api/auth/password/reset', {
       phoneNumber: phoneNumber.value.trim(),
-      password: password.value,
-      signupToken: signupToken.value,
+      newPassword: newPassword.value,
+      resetToken: resetToken.value,
     });
-    const nav = await router.replace({ name: 'onboarding-survey' });
-    if (import.meta.env.DEV && isNavigationFailure(nav)) console.warn('[signup] nav redirected:', nav);
+    router.replace({ name: 'login', query: { reset: '1' } });
   } catch (err) {
-    if (!isNavigationFailure(err)) {
-      // signupToken 만료(SMS-003) → 인증부터 다시
-      if (authErrorCode(err) === 'SMS-003') {
-        code.value = '';
-        step.value = 1;
-      }
-      errorMsg.value = authErrorMessage(err);
+    // resetToken 만료(SMS-003) → 인증부터 다시
+    if (authErrorCode(err) === 'SMS-003') {
+      code.value = '';
+      step.value = 1;
     }
+    errorMsg.value = authErrorMessage(err);
   } finally {
     isLoading.value = false;
   }
 }
 
-// 단계별 진행 가능 여부
 const canProceed = computed(() => {
   if (step.value === 1) return isValidPhone(phoneNumber.value.trim());
   if (step.value === 2) return code.value.length === 6;
-  return Boolean(name.value.trim()) && isValidPassword(password.value) && !passwordMismatch.value;
+  return isValidPassword(newPassword.value) && !passwordMismatch.value;
 });
 
 function handleCta() {
   if (step.value === 1) sendSms();
   else if (step.value === 2) verifyCode();
-  else handleSignup();
+  else resetPassword();
 }
 </script>
 
@@ -138,7 +129,7 @@ function handleCta() {
           <polyline points="15 18 9 12 15 6" />
         </svg>
       </button>
-      <h2 class="text-lg font-bold text-text-primary">회원가입</h2>
+      <h2 class="text-lg font-bold text-text-primary">비밀번호 재설정</h2>
     </div>
 
     <!-- 진행 바 -->
@@ -156,7 +147,7 @@ function handleCta() {
         <div class="flex flex-col gap-2">
           <span class="text-sm font-semibold text-brand">1 / 3단계</span>
           <h3 class="text-2xl font-bold text-text-primary leading-snug">
-            전화번호를<br>입력해 주세요
+            가입한 전화번호를<br>입력해 주세요
           </h3>
           <p class="text-base text-text-tertiary">인증 문자를 발송할게요.</p>
         </div>
@@ -209,29 +200,19 @@ function handleCta() {
         </button>
       </template>
 
-      <!-- ── Step 3: 이름 + 비밀번호 ── -->
+      <!-- ── Step 3: 새 비밀번호 입력 ── -->
       <template v-else>
         <div class="flex flex-col gap-2">
           <span class="text-sm font-semibold text-brand">3 / 3단계</span>
           <h3 class="text-2xl font-bold text-text-primary leading-snug">
-            정보를<br>입력해 주세요
+            새 비밀번호를<br>입력해 주세요
           </h3>
         </div>
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary">이름</label>
+            <label class="text-sm font-semibold text-text-secondary">새 비밀번호</label>
             <input
-              v-model="name"
-              type="text"
-              maxlength="50"
-              placeholder="홍길동"
-              class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
-            />
-          </div>
-          <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary">비밀번호</label>
-            <input
-              v-model="password"
+              v-model="newPassword"
               type="password"
               placeholder="영문·숫자·특수문자 포함 8~20자"
               class="w-full px-4 py-3.5 rounded-xl bg-white border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 transition-all"
@@ -244,9 +225,9 @@ function handleCta() {
             </p>
           </div>
           <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary">비밀번호 확인</label>
+            <label class="text-sm font-semibold text-text-secondary">새 비밀번호 확인</label>
             <input
-              v-model="passwordConfirm"
+              v-model="newPasswordConfirm"
               type="password"
               placeholder="비밀번호를 다시 입력하세요"
               class="w-full px-4 py-3.5 rounded-xl bg-white border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:ring-2 transition-all"
@@ -277,7 +258,7 @@ function handleCta() {
       >
         <span v-if="isLoading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
         <span v-if="!isLoading">
-          {{ step === 1 ? '인증번호 받기' : step === 2 ? '인증 확인' : '가입하기' }}
+          {{ step === 1 ? '인증번호 받기' : step === 2 ? '인증 확인' : '비밀번호 변경' }}
         </span>
         <span v-else>처리 중...</span>
       </button>

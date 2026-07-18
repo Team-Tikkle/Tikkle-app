@@ -30,6 +30,9 @@ const PUBLIC_ENDPOINTS = [
   '/api/auth/signup',
   '/api/auth/login',
   '/api/auth/reissue',
+  '/api/auth/password/reset-sms/send',
+  '/api/auth/password/reset-sms/verify',
+  '/api/auth/password/reset',
 ]
 
 // ── Request interceptor: attach access token ──

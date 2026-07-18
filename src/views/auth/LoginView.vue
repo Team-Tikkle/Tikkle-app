@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { useRouter, isNavigationFailure } from 'vue-router';
+import { useRouter, useRoute, isNavigationFailure } from 'vue-router';
 import { useUserStore } from '@/stores/useUserStore';
-import type { AxiosError } from 'axios';
+import { authErrorMessage } from '@/utils/auth';
 
 const router = useRouter();
+const route = useRoute();
 const userStore = useUserStore();
 
 const phoneNumber = ref('');
@@ -12,10 +13,8 @@ const password = ref('');
 const isLoading = ref(false);
 const errorMsg = ref('');
 
-const ERROR_MESSAGES: Record<string, string> = {
-  USER_NOT_FOUND: '가입되지 않은 전화번호입니다.',
-  INVALID_PASSWORD: '비밀번호가 일치하지 않습니다.',
-};
+// 비밀번호 재설정 완료 후 이 화면으로 돌아온 경우 안내 배너 노출
+const showResetDone = ref(route.query.reset === '1');
 
 onMounted(() => {
   if (userStore.isAuthenticated) {
@@ -34,9 +33,7 @@ async function handleLogin() {
     if (import.meta.env.DEV && isNavigationFailure(nav)) console.warn('[login] nav redirected:', nav);
   } catch (err) {
     if (!isNavigationFailure(err)) {
-      const data = (err as AxiosError<{ errorCode?: string; message?: string }>).response?.data;
-      const knownMsg = data?.errorCode ? ERROR_MESSAGES[data.errorCode] : undefined;
-      errorMsg.value = knownMsg ?? data?.message ?? '로그인 중 오류가 발생했습니다.';
+      errorMsg.value = authErrorMessage(err, '로그인 중 오류가 발생했습니다.');
     }
   } finally {
     isLoading.value = false;
@@ -59,6 +56,14 @@ async function handleLogin() {
           잔돈으로 시작하는<br />나만의 코인 투자
         </p>
       </div>
+    </div>
+
+    <!-- 비밀번호 재설정 완료 안내 -->
+    <div
+      v-if="showResetDone"
+      class="mb-4 bg-brand-bg rounded-xl px-4 py-3 text-sm text-brand text-center font-medium"
+    >
+      비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.
     </div>
 
     <!-- Form -->
@@ -92,6 +97,14 @@ async function handleLogin() {
       >
         <span v-if="isLoading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
         {{ isLoading ? '로그인 중...' : '로그인' }}
+      </button>
+
+      <!-- 비밀번호 찾기 -->
+      <button
+        class="self-center text-sm text-text-tertiary active:opacity-70"
+        @click="router.push({ name: 'password-reset' })"
+      >
+        비밀번호를 잊으셨나요?
       </button>
     </div>
 

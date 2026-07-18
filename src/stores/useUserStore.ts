@@ -12,8 +12,7 @@ const LS_REFRESH = 'tikkle_refresh_token'
 interface UserMeData {
   id: number
   name: string
-  email: string
-  status: string
+  phoneNumber: string
   createdAt: string
   hasInvestmentProfile: boolean
   hasKbankAccount: boolean
@@ -98,6 +97,7 @@ export const useUserStore = defineStore('user', () => {
     profile.value = {
       id: '',
       name: '',
+      phoneNumber: params.phoneNumber,
       risk_type: 'NEUTRAL',
       rule: 'UNDER_1000',
       is_auto: true,
@@ -130,6 +130,7 @@ export const useUserStore = defineStore('user', () => {
     profile.value = {
       id: '',
       name: params.name,
+      phoneNumber: params.phoneNumber,
       risk_type: 'NEUTRAL',
       rule: 'UNDER_1000',
       is_auto: true,
@@ -168,9 +169,9 @@ export const useUserStore = defineStore('user', () => {
   // ════════════════════════════════════════════════
 
   // ── Get profile (GET /api/users/me) ──
-  // Fetches id, name, and email from the server and merges them into the
-  // existing profile. Fields seeded during login (risk_type, rule, is_auto,
-  // onboarding_completed) are preserved so they are not lost on a re-fetch.
+  // Fetches id, name, and phoneNumber from the server and merges them into the
+  // existing profile. Fields seeded during login (risk_type, rule, is_auto)
+  // are preserved so they are not lost on a re-fetch.
   async function fetchProfile(): Promise<void> {
     const { default: api } = await import('@/utils/api')
     const { data: envelope } = await api.get<UserMeEnvelope>('/api/users/me')
@@ -181,7 +182,7 @@ export const useUserStore = defineStore('user', () => {
       is_auto:   profile.value?.is_auto   ?? true,
       id:    String(fetched.id),
       name:  fetched.name,
-      email: fetched.email,
+      phoneNumber: fetched.phoneNumber,
       hasInvestmentProfile: fetched.hasInvestmentProfile,
       hasKbankAccount:      fetched.hasKbankAccount,
       hasUpbitKey:          fetched.hasUpbitKey,
