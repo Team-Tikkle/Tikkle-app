@@ -6,10 +6,10 @@ const accessKey         = defineModel<string>('accessKey', { required: true });
 const secretKey         = defineModel<string>('secretKey', { required: true });
 const twoFactorProvider = defineModel<TwoFactorProvider | ''>('twoFactorProvider', { required: true });
 
-const TWO_FACTOR_OPTIONS: { key: TwoFactorProvider; label: string; emoji: string }[] = [
-  { key: 'KAKAO', label: '카카오톡', emoji: '💬' },
-  { key: 'NAVER', label: '네이버',   emoji: '🇳' },
-  { key: 'HANA',  label: '하나원큐', emoji: '🏦' },
+const TWO_FACTOR_OPTIONS: { key: TwoFactorProvider; label: string }[] = [
+  { key: 'KAKAO', label: '카카오톡' },
+  { key: 'NAVER', label: '네이버'   },
+  { key: 'HANA',  label: '하나인증서' },
 ];
 
 const apiGuideOpen      = ref(false);
@@ -161,7 +161,6 @@ const twoFactorGuideOpen = ref(false);
             : 'border-surface-border bg-white'"
           @click="twoFactorProvider = opt.key"
         >
-          <span class="text-xl">{{ opt.emoji }}</span>
           <span
             class="text-sm font-semibold"
             :class="twoFactorProvider === opt.key ? 'text-brand' : 'text-text-primary'"

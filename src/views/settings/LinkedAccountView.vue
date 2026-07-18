@@ -12,10 +12,10 @@ const secretKey = ref('')
 const twoFactorProvider = ref<TwoFactorProvider | ''>('')
 const successMsg = ref('')
 
-const TWO_FACTOR_OPTIONS: { key: TwoFactorProvider; label: string; emoji: string }[] = [
-  { key: 'KAKAO', label: '카카오톡', emoji: '💬' },
-  { key: 'NAVER', label: '네이버',   emoji: '🇳' },
-  { key: 'HANA',  label: '하나원큐', emoji: '🏦' },
+const TWO_FACTOR_OPTIONS: { key: TwoFactorProvider; label: string }[] = [
+  { key: 'KAKAO', label: '카카오톡' },
+  { key: 'NAVER', label: '네이버'   },
+  { key: 'HANA',  label: '하나인증서' },
 ]
 
 const apiGuideOpen = ref(false)
@@ -204,7 +204,6 @@ function handleSave() {
                 : 'border-surface-border bg-white text-text-secondary'"
               @click="twoFactorProvider = opt.key"
             >
-              <span>{{ opt.emoji }}</span>
               <span>{{ opt.label }}</span>
             </button>
           </div>

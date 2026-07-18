@@ -252,7 +252,7 @@ const fmt = fmtKRW;
             2차 인증을 완료해 주세요
           </p>
           <p class="text-base text-text-tertiary leading-relaxed">
-            카카오톡, 네이버, 또는 하나원큐 앱에서<br />업비트 입금 인증 알림을
+            카카오톡, 네이버, 또는 하나인증서 앱에서<br />업비트 입금 인증 알림을
             확인해 주세요.
           </p>
           <p class="text-sm text-text-disabled mt-2">
