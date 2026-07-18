@@ -319,13 +319,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
         String text;
         PendingIntent contentIntent = null;
         switch (actionType) {
-            case "ORDER_REQUESTED":   // 자동 매매 → 즉시 매수 접수 (탭하면 앱만 열기)
-                title = "잔돈으로 코인을 샀어요 📈";
-                text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
-                      + stockName + " 매수를 요청했어요!";
-                contentIntent = buildLaunchIntent();
-                break;
-            case "WAITING_APPROVAL":     // 수동 매매 → 매수 제안 (탭하면 검토 화면으로)
+            case "PENDING_PURCHASE":     // 매수 제안 (탭하면 검토 화면으로)
                 title = "잔돈으로 투자할까요? 🤔";
                 text  = merchant + "에서 결제한 잔돈 " + change + "원으로 "
                       + stockName + " 매수를 진행할까요? 눌러서 확인해 주세요.";
