@@ -72,7 +72,7 @@ const cryptoThemes = ref<CryptoTheme[]>([]);
 const ALL_CATEGORIES: CategoryType[] = [
   'CAFE', 'MART', 'FOOD', 'SHOPPING', 'TRAFFIC', 'CULTURE', 'ETC',
 ];
-const selectedRule = ref<RuleType>('ROUND_UP_10000');
+const selectedRule = ref<RuleType>('PERCENT_10');
 
 // ── UI 상태 ──
 const { isLoading, errorMsg, run } = useAsyncAction();

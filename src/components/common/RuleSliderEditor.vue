@@ -79,17 +79,6 @@ const sliderFillStyle = computed(() => {
       <button
         class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
         :class="
-          ruleMode === 'ROUND_UP'
-            ? 'bg-white text-text-primary shadow-sm'
-            : 'text-text-tertiary'
-        "
-        @click="ruleMode = 'ROUND_UP'"
-      >
-        올림 잔돈 적립
-      </button>
-      <button
-        class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
-        :class="
           ruleMode === 'PERCENT'
             ? 'bg-white text-text-primary shadow-sm'
             : 'text-text-tertiary'
@@ -97,6 +86,17 @@ const sliderFillStyle = computed(() => {
         @click="ruleMode = 'PERCENT'"
       >
         비율 잔돈 적립
+      </button>
+      <button
+        class="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all"
+        :class="
+          ruleMode === 'ROUND_UP'
+            ? 'bg-white text-text-primary shadow-sm'
+            : 'text-text-tertiary'
+        "
+        @click="ruleMode = 'ROUND_UP'"
+      >
+        올림 잔돈 적립
       </button>
     </div>
 

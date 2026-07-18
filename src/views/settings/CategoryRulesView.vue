@@ -19,12 +19,12 @@ const CATEGORIES: { type: CategoryType; label: string; icon: string }[] = [
 ];
 
 const localRules = reactive<Record<CategoryType, RuleType>>(
-  Object.fromEntries(CATEGORIES.map((c) => [c.type, 'ROUND_UP_10000'])) as Record<CategoryType, RuleType>,
+  Object.fromEntries(CATEGORIES.map((c) => [c.type, 'PERCENT_10'])) as Record<CategoryType, RuleType>,
 );
 
 // 서버에서 받은 초기값 스냅샷 — 변경 여부 감지에 사용
 const savedRules = reactive<Record<CategoryType, RuleType>>(
-  Object.fromEntries(CATEGORIES.map((c) => [c.type, 'ROUND_UP_10000'])) as Record<CategoryType, RuleType>,
+  Object.fromEntries(CATEGORIES.map((c) => [c.type, 'PERCENT_10'])) as Record<CategoryType, RuleType>,
 );
 
 const isLoading    = ref(true);
@@ -37,7 +37,7 @@ onMounted(async () => {
     await settingsStore.fetchSettings();
     for (const rule of settingsStore.spareChangeRules) {
       // 서버가 미설정 카테고리에 ruleType: null 을 반환하므로,
-      // null/빈 값은 건너뛰고 기본값(ROUND_UP_10000)을 유지한다.
+      // null/빈 값은 건너뛰고 기본값(PERCENT_10)을 유지한다.
       if (rule.category in localRules && rule.ruleType) {
         localRules[rule.category]  = rule.ruleType;
         savedRules[rule.category]  = rule.ruleType;
@@ -55,7 +55,7 @@ const openCategoryMeta = computed(() =>
 );
 
 const sheetRule = computed<RuleType>({
-  get: () => (openCategory.value ? localRules[openCategory.value] : 'ROUND_UP_10000'),
+  get: () => (openCategory.value ? localRules[openCategory.value] : 'PERCENT_10'),
   set: (v) => { if (openCategory.value) localRules[openCategory.value] = v; },
 });
 
