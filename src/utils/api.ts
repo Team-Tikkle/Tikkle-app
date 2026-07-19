@@ -7,6 +7,11 @@ const LS_REFRESH = 'tikkle_refresh_token'
 // Error code returned by the backend when the refresh token is expired
 const REFRESH_EXPIRED_CODE = 'AUTH-006'
 
+// 업비트 키가 만료/권한 부족일 때 서버는 HTTP 401 + UPBIT-010을 반환한다.
+// 이는 "인증 실패"가 아니라 "업비트 재연동 필요"이므로, 토큰 재발급/로그아웃
+// 로직을 절대 태우면 안 된다. 그대로 caller에게 넘겨 재연동 UI를 띄우게 한다.
+const UPBIT_INVALID_KEY_CODE = 'UPBIT-010'
+
 // ── Dev logger — only prints in development builds ──
 const isDev = import.meta.env.DEV
 function devLog(...args: unknown[]) {
@@ -86,6 +91,12 @@ api.interceptors.response.use(
     const errorCode = error.response?.data?.code
 
     devWarn(`← ${status} ${originalRequest?.url} | code=${errorCode ?? '—'} msg=${error.response?.data?.message ?? error.message}`)
+
+    // UPBIT-010은 401이지만 인증 실패가 아니다(업비트 키 만료/권한 부족).
+    // 재발급/로그아웃을 태우지 말고 그대로 넘겨 재연동 안내를 띄우게 한다.
+    if (errorCode === UPBIT_INVALID_KEY_CODE) {
+      return Promise.reject(error)
+    }
 
     // Only intercept 401s that haven't already been retried,
     // and never try to reissue for public (no-auth) endpoints.

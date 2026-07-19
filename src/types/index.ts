@@ -45,7 +45,7 @@ export interface UserProfile {
 }
 
 // Payments & Transactions
-export type TransactionStatus = 'PENDING' | 'INVESTED' | 'CANCELED' | 'EXPIRED'
+export type TransactionStatus = 'PENDING' | 'INVESTED' | 'CANCELED'
 
 // ── Payment feed & dashboard (GET /api/payments, /api/payments/dashboard) ──
 // These endpoints return camelCase fields straight from the backend.

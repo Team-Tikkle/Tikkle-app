@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/useUserStore'
 import { useUpbitMarketStore } from '@/stores/useUpbitMarketStore'
 import { usePortfolioStore } from '@/stores/usePortfolioStore'
@@ -7,6 +8,7 @@ import BottomNav from '@/components/common/BottomNav.vue'
 import { coinIconUrl, coinIconFallback } from '@/utils/coin'
 import type { PortfolioHolding } from '@/types'
 
+const router         = useRouter()
 const userStore      = useUserStore()
 const marketStore    = useUpbitMarketStore()
 const portfolioStore = usePortfolioStore()
@@ -145,8 +147,32 @@ function fmtPrice(n: number): string {
 
     <div class="px-4 flex flex-col gap-3 mt-1">
 
+      <!-- ── 업비트 재연동 필요 (UPBIT-010) — 로그아웃하지 않고 재연동만 유도 ── -->
+      <div
+        v-if="portfolioStore.upbitKeyInvalid"
+        class="bg-white rounded-xl px-6 py-6 flex flex-col items-center gap-4 text-center"
+      >
+        <div class="w-14 h-14 rounded-full bg-danger-bg flex items-center justify-center">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="flex flex-col gap-1">
+          <p class="text-base font-bold text-text-primary">업비트 재연동이 필요해요</p>
+          <p class="text-sm text-text-tertiary leading-relaxed">
+            업비트 인증이 만료되었어요. 다시 연동하면 보유 자산을 확인할 수 있어요.
+          </p>
+        </div>
+        <button
+          class="w-full py-3 rounded-xl bg-brand text-white text-base font-semibold active:bg-brand-hover"
+          @click="router.push('/settings/api-key')"
+        >
+          업비트 재연동
+        </button>
+      </div>
+
       <!-- ── 내 자산 ── -->
-      <div class="bg-white rounded-xl px-6 py-5 flex flex-col gap-4">
+      <div v-else class="bg-white rounded-xl px-6 py-5 flex flex-col gap-4">
 
         <!-- 에러 -->
         <p v-if="portfolioStore.error" class="text-sm text-danger">{{ portfolioStore.error }}</p>

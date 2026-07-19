@@ -95,11 +95,13 @@ const categories = computed(() => {
 const maxAmount = computed(() => Math.max(1, ...categories.value.map((c) => c.amount)))
 
 // ── Status badge config ──
+// 서버 피드 status는 PENDING / INVESTED / CANCELED 3개뿐이다.
+// CANCELED는 사용자 거절·만료·업비트 실패를 모두 뭉친 값이라 사유를 특정하지 않는
+// 중립 문구('미투자')로 안내한다.
 const statusConfig: Record<TransactionStatus, { label: string; class: string }> = {
   INVESTED: { label: '투자 완료', class: 'badge-invested' },
   PENDING:  { label: '대기 중',   class: 'badge-pending' },
-  CANCELED: { label: '투자 취소', class: 'badge-canceled text-danger' },
-  EXPIRED:  { label: '만료',      class: 'badge-expired' },
+  CANCELED: { label: '미투자',    class: 'badge-canceled' },
 }
 
 const fmt = fmtKRW

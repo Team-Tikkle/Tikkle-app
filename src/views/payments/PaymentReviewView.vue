@@ -2,15 +2,16 @@
 /**
  * PaymentReviewView.vue
  *
- * Reached by tapping a WAITING_APPROVAL feedback notification. The native listener
- * opens a deep link (tikkle://payments/review?...) carrying the proposal details;
- * the user approves or rejects the spare-change investment here.
+ * Reached by tapping a local notification for a PENDING_PURCHASE payment. The
+ * native listener opens a deep link (tikkle://payments/review?...) carrying the
+ * proposal details; the user approves or rejects the spare-change investment here.
  *
  * Route  : /payments/review?eventId&merchant&amount&spareChange&ticker&stockName
  * Flow   :
  *   1. POST /api/payments/{eventId}/approve
  *   2. 200 OK → open SSE GET /api/payments/{eventId}/stream
- *   3. Await SUCCESS | PENDING_TRADE | FAILED | TIMEOUT event, then close SSE
+ *   3. Await SUCCESS | PENDING_TRADE | DEPOSIT_FAILED | TRADE_FAILED |
+ *      UPBIT_INVALID_KEY | TIMEOUT | FAILED event, then close SSE
  */
 import { ref, computed, onUnmounted } from 'vue';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
@@ -41,10 +42,12 @@ const ticker = (route.query.ticker as string) || '';
 const isActionable = computed(() => !!eventId);
 
 // ── Phase state machine ──
-// idle → approving → waiting → success | pending_trade | deposit_failed | trade_failed | timeout | upbit_invalid_key | failed
-type Phase = 'idle' | 'approving' | 'waiting' | 'success' | 'pending_trade' | 'deposit_failed' | 'trade_failed' | 'timeout' | 'upbit_invalid_key' | 'failed';
+// idle → approving → waiting → success | pending_trade | deposit_failed | trade_failed
+//   | timeout | upbit_invalid_key | upbit_setup_required | failed
+type Phase = 'idle' | 'approving' | 'waiting' | 'success' | 'pending_trade' | 'deposit_failed' | 'trade_failed' | 'timeout' | 'upbit_invalid_key' | 'upbit_setup_required' | 'failed';
 const phase = ref<Phase>('idle');
 const errorMsg = ref('');
+const setupMsg = ref('');  // upbit_setup_required 단계에서 보여줄 안내(연동/2차인증)
 const sseResult = ref<SseTradeResult | null>(null);
 let sseAbort: AbortController | null = null;
 
@@ -61,11 +64,22 @@ async function handleApprove() {
     await paymentStore.approvePaymentEvent(eventId);
   } catch (err) {
     const code = (err as AxiosError<{ code?: string }>).response?.data?.code;
-    if (code === 'UPBIT_INVALID_KEY') {
+    // 승인이 실패해도 결제 건은 PENDING_PURCHASE로 유지되어 재시도 가능하다.
+    if (code === 'UPBIT-010') {
+      // 업비트 키 만료/권한 부족 → 재연동 안내
       phase.value = 'upbit_invalid_key';
+    } else if (code === 'USER-003') {
+      // 업비트 미연동 → 연동 화면으로 유도
+      setupMsg.value = '투자를 진행하려면 업비트 계정 연동이 필요해요.';
+      phase.value = 'upbit_setup_required';
+    } else if (code === 'USER-004') {
+      // 2차 인증 수단 미설정 → 설정 화면으로 유도
+      setupMsg.value = '투자를 진행하려면 업비트 2차 인증 수단 설정이 필요해요.';
+      phase.value = 'upbit_setup_required';
     } else {
+      // PAYMENT-006 / PAYMENT-007 / UPBIT-008 / 기타 → 재시도 가능 (idle 복귀)
       phase.value = 'idle';
-      errorMsg.value = '오류가 발생해 투자 요청에 실패했어요. 다시 시도해 주세요.';
+      errorMsg.value = '투자 요청에 실패했어요. 잠시 후 다시 시도해 주세요.';
     }
     return;
   }
@@ -81,18 +95,25 @@ async function handleApprove() {
     signal: sseAbort.signal,
     onmessage(ev) {
       const name = ev.event;
-      // CONNECTED / PROCESSING → 계속 대기
+      // 문자열 하트비트(CONNECTED·PROCESSING) → 계속 대기
       if (name === 'CONNECTED' || name === 'PROCESSING') return;
 
       // 터미널 이벤트: 연결 즉시 종료
       sseAbort?.abort();
 
+      // TIMEOUT은 문자열 payload. 결제 건이 PENDING_PURCHASE로 복구되어 재승인 가능하다.
+      if (name === 'TIMEOUT') {
+        phase.value = 'timeout';
+        return;
+      }
+
+      // 이하 객체 payload 이벤트. 서버 message는 개발자용 서술이므로 화면에 쓰지 않고,
+      // 이벤트명으로만 분기해 FE가 작성한 고정 문구를 보여준다.
       let data: SseTradeResult;
       try {
         data = JSON.parse(ev.data) as SseTradeResult;
       } catch {
         phase.value = 'failed';
-        errorMsg.value = '응답을 처리하는 중 오류가 발생했어요.';
         return;
       }
 
@@ -103,21 +124,15 @@ async function handleApprove() {
         sseResult.value = data;
         phase.value = 'pending_trade';
       } else if (name === 'DEPOSIT_FAILED') {
-        errorMsg.value = data.message || '업비트 입금이 거절되거나 취소되었습니다.';
         if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'deposit_failed';
       } else if (name === 'TRADE_FAILED') {
-        errorMsg.value = data.message || '업비트 매수 주문이 거절되거나 취소되었습니다.';
         if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'trade_failed';
       } else if (name === 'UPBIT_INVALID_KEY') {
         phase.value = 'upbit_invalid_key';
-      } else if (name === 'TIMEOUT') {
-        errorMsg.value = data.message || '업비트 2차 인증 시간이 초과되었습니다.';
-        if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
-        phase.value = 'timeout';
       } else {
-        errorMsg.value = data.message || '매수에 실패했어요.';
+        // FAILED 및 알 수 없는 이벤트
         if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'failed';
       }
@@ -125,7 +140,7 @@ async function handleApprove() {
     onerror(err) {
       if (sseAbort?.signal.aborted) return; // 의도적 종료 — 무시
       sseAbort?.abort();
-      errorMsg.value = '연결 중 오류가 발생했어요. 다시 시도해 주세요.';
+      // 스트림 연결 실패(소유권 검증 404 PAYMENT-004 포함) → 실패 화면
       phase.value = 'failed';
       throw err; // 자동 재연결 방지
     },
@@ -380,7 +395,9 @@ const fmt = fmtKRW;
         </div>
         <div class="flex flex-col items-center gap-2 text-center">
           <p class="text-2xl font-bold text-text-primary">입금 실패</p>
-          <p class="text-base text-text-tertiary leading-relaxed">{{ errorMsg }}</p>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            업비트 원화 입금이 거절되거나 취소되었어요.<br>출금된 원화는 없습니다.
+          </p>
         </div>
       </div>
       <div class="px-6 pb-10 pt-4">
@@ -403,7 +420,9 @@ const fmt = fmtKRW;
         </div>
         <div class="flex flex-col items-center gap-2 text-center">
           <p class="text-2xl font-bold text-text-primary">매수 실패</p>
-          <p class="text-base text-text-tertiary leading-relaxed">{{ errorMsg }}</p>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            매수 주문이 체결되지 못했어요.
+          </p>
         </div>
         <!-- 원화 보관 고지 — 반드시 표시 -->
         <div class="w-full bg-surface rounded-xl px-5 py-4 flex gap-3">
@@ -435,16 +454,51 @@ const fmt = fmtKRW;
         <div class="flex flex-col items-center gap-2 text-center">
           <p class="text-2xl font-bold text-text-primary">인증 시간 초과</p>
           <p class="text-base text-text-tertiary leading-relaxed">
-            2차 인증 시간이 초과되었습니다.<br>다시 시도해 주세요.
+            2차 인증 시간이 초과되었어요.<br>결제 건이 유지되어 다시 승인할 수 있어요.
           </p>
         </div>
       </div>
-      <div class="px-6 pb-10 pt-4">
+      <div class="px-6 pb-10 pt-4 flex flex-col gap-3">
         <button
-          class="w-full py-4 rounded-2xl bg-surface text-text-primary text-lg font-semibold active:bg-surface-border"
+          class="w-full py-4 rounded-2xl bg-brand text-white text-lg font-bold active:bg-brand-hover"
+          @click="phase = 'idle'"
+        >
+          다시 승인하기
+        </button>
+        <button
+          class="w-full py-3 text-base text-text-tertiary font-medium"
           @click="router.replace('/payments')"
         >
-          돌아가기
+          나중에 하기
+        </button>
+      </div>
+    </template>
+
+    <!-- ════ Phase: upbit_setup_required (업비트 미연동 / 2차 인증 미설정) ════ -->
+    <template v-else-if="phase === 'upbit_setup_required'">
+      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
+        <div class="w-24 h-24 rounded-full bg-brand-bg flex items-center justify-center">
+          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0051ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+        </div>
+        <div class="flex flex-col items-center gap-2 text-center">
+          <p class="text-2xl font-bold text-text-primary">업비트 설정 필요</p>
+          <p class="text-base text-text-tertiary leading-relaxed">{{ setupMsg }}</p>
+        </div>
+      </div>
+      <div class="px-6 pb-10 pt-4 flex flex-col gap-3">
+        <button
+          class="w-full py-4 rounded-2xl bg-brand text-white text-lg font-bold active:bg-brand-hover"
+          @click="router.replace('/settings/api-key')"
+        >
+          업비트 설정하기
+        </button>
+        <button
+          class="w-full py-3 text-base text-text-tertiary font-medium"
+          @click="router.replace('/payments')"
+        >
+          나중에 하기
         </button>
       </div>
     </template>
@@ -490,7 +544,9 @@ const fmt = fmtKRW;
         </div>
         <div class="flex flex-col items-center gap-2 text-center">
           <p class="text-2xl font-bold text-text-primary">매수 실패</p>
-          <p class="text-base text-text-tertiary leading-relaxed">{{ errorMsg }}</p>
+          <p class="text-base text-text-tertiary leading-relaxed">
+            알 수 없는 오류로 매수에 실패했어요.<br>잠시 후 다시 시도해 주세요.
+          </p>
         </div>
       </div>
       <div class="px-6 pb-10 pt-4">
