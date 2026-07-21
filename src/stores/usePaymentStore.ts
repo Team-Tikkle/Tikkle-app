@@ -33,7 +33,22 @@ export const usePaymentStore = defineStore('payment', () => {
     const { default: api } = await import('@/utils/api')
     await api.patch(`/api/payments/${id}/category`, { category })
     const item = feed.value.find((tx) => tx.id === id)
-    if (item) item.category = category
+    if (!item) return
+
+    // 대시보드 카테고리 차트를 낙관적으로 즉시 반영한다.
+    if (dashboard.value) {
+      const spending = dashboard.value.categorySpending
+      const oldEntry = spending.find((c) => c.category === item.category)
+      if (oldEntry) oldEntry.amount -= item.amount
+      const newEntry = spending.find((c) => c.category === category)
+      if (newEntry) {
+        newEntry.amount += item.amount
+      } else {
+        spending.push({ category, amount: item.amount })
+      }
+    }
+
+    item.category = category
   }
 
   // ── Paged payment feed (GET /api/payments) — low-level fetch ──
