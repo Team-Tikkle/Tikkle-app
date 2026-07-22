@@ -218,8 +218,8 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
       <!-- ── Contact ── -->
       <div class="px-2 py-1 flex items-center gap-2">
         <span class="text-sm text-text-disabled">문의</span>
-        <a href="mailto:example@gmail.com" class="text-sm text-text-tertiary underline underline-offset-2">
-          example@gmail.com
+        <a href="mailto:support@tikkle.xyz" class="text-sm text-text-tertiary underline underline-offset-2">
+          support@tikkle.xyz
         </a>
       </div>
 
