@@ -1,0 +1,52 @@
+import { Capacitor, registerPlugin } from '@capacitor/core'
+
+// ── TikkleSystem native bridge (Android only) ────────────────────────────────
+// Backed by android/.../TikkleSystemPlugin.java. Every call is a no-op /
+// safe default on web so views can call these unconditionally.
+interface TikkleSystemPlugin {
+  isNotificationListenerEnabled(): Promise<{ enabled: boolean }>
+  openNotificationAccessSettings(): Promise<void>
+  isIgnoringBatteryOptimizations(): Promise<{ ignoring: boolean }>
+  requestIgnoreBatteryOptimizations(): Promise<void>
+}
+
+const TikkleSystem = registerPlugin<TikkleSystemPlugin>('TikkleSystem')
+
+const isNative = () => Capacitor.isNativePlatform()
+
+/** 리스너(알림 접근) 권한이 켜져 있는지. 웹에서는 항상 true (배너 미노출). */
+export async function isListenerEnabled(): Promise<boolean> {
+  if (!isNative()) return true
+  try {
+    return (await TikkleSystem.isNotificationListenerEnabled()).enabled
+  } catch {
+    return true
+  }
+}
+
+/** 시스템 알림 접근 설정 화면 열기. */
+export async function openNotificationAccessSettings(): Promise<void> {
+  if (!isNative()) return
+  try { await TikkleSystem.openNotificationAccessSettings() } catch { /* no-op */ }
+}
+
+/** 배터리 최적화 예외가 적용되어 있는지. 웹에서는 항상 true. */
+export async function isBatteryExempt(): Promise<boolean> {
+  if (!isNative()) return true
+  try {
+    return (await TikkleSystem.isIgnoringBatteryOptimizations()).ignoring
+  } catch {
+    return true
+  }
+}
+
+/** 배터리 최적화 예외 시스템 요청 다이얼로그를 띄운다. */
+export async function requestBatteryExemption(): Promise<void> {
+  if (!isNative()) return
+  try { await TikkleSystem.requestIgnoreBatteryOptimizations() } catch { /* no-op */ }
+}
+
+/** 배터리 최적화 예외가 아직 없다면 시스템 요청 다이얼로그를 띄운다. */
+export async function requestBatteryExemptionIfNeeded(): Promise<void> {
+  if (!(await isBatteryExempt())) await requestBatteryExemption()
+}

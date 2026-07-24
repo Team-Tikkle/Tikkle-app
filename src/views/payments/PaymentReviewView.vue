@@ -370,7 +370,7 @@ const fmt = fmtKRW;
         <div class="w-full bg-surface rounded-xl px-5 py-4 flex gap-3">
           <span class="text-base shrink-0">💡</span>
           <p class="text-sm text-text-tertiary leading-relaxed">
-            체결이 완료되면 스마트폰 푸시 알림으로 안내해 드립니다. 지금 앱을 자유롭게 이용하셔도 됩니다.
+            체결 결과는 결제 내역 화면에서 확인하실 수 있어요. 지금 앱을 자유롭게 이용하셔도 됩니다.
           </p>
         </div>
       </div>

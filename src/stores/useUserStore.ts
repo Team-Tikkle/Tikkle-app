@@ -105,6 +105,9 @@ export const useUserStore = defineStore('user', () => {
       hasKbankAccount:      !tokenData.isNewUser,
       hasUpbitKey:          !tokenData.isNewUser,
     }
+
+    // FCM 디바이스 토큰 등록 (네이티브에서만 동작, 실패해도 로그인 흐름을 막지 않음)
+    import('@/utils/push').then(({ registerPush }) => registerPush())
   }
 
   // ── Signup (POST /api/auth/signup) ──
@@ -138,6 +141,9 @@ export const useUserStore = defineStore('user', () => {
       hasKbankAccount:      false,
       hasUpbitKey:          false,
     }
+
+    // FCM 디바이스 토큰 등록 (네이티브에서만 동작, 실패해도 가입 흐름을 막지 않음)
+    import('@/utils/push').then(({ registerPush }) => registerPush())
   }
 
   // ── Logout (POST /api/auth/logout) ──
@@ -148,6 +154,12 @@ export const useUserStore = defineStore('user', () => {
       const storedToken = localStorage.getItem(LS_ACCESS)
       console.log('[logout] access token in localStorage:', storedToken ? `${storedToken.slice(0, 12)}…` : 'MISSING')
     }
+    // 토큰 해제는 인증 헤더가 필요하므로 세션을 지우기 전에 호출한다.
+    // 누락 시 로그아웃한 기기로 FCM 알림이 계속 발송된다.
+    try {
+      const { unregisterPush } = await import('@/utils/push')
+      await unregisterPush()
+    } catch { /* 실패해도 로그아웃은 계속 진행 */ }
     try {
       const { default: api } = await import('@/utils/api')
       await api.post('/api/auth/logout')

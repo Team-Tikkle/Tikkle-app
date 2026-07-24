@@ -1,20 +1,45 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AppHeader from '@/components/common/AppHeader.vue'
 import BottomNav from '@/components/common/BottomNav.vue'
 import { useUserStore } from '@/stores/useUserStore'
 import { useAsyncAction } from '@/composables/useAsyncAction'
 import { useModalBackHandler } from '@/composables/useAndroidBack'
+import { App as CapApp } from '@capacitor/app'
+import { Capacitor } from '@capacitor/core'
+import type { PluginListenerHandle } from '@capacitor/core'
+import {
+  isListenerEnabled,
+  openNotificationAccessSettings,
+  isBatteryExempt,
+  requestBatteryExemption,
+} from '@/utils/tikkleSystem'
 
 const router = useRouter()
 const userStore = useUserStore()
 
+// ── 시스템 권한 상태 (Android 네이티브에서만 노출) ──
+// 설정 화면에서 켜고 돌아오는 경우를 위해 앱 복귀(resume) 시 재확인한다.
+const isNativeApp = Capacitor.isNativePlatform()
+const listenerOn  = ref(true)
+const batteryOk   = ref(true)
+let resumeHandle: PluginListenerHandle | null = null
+
+function refreshSystemStatus() {
+  isListenerEnabled().then((v) => { listenerOn.value = v })
+  isBatteryExempt().then((v) => { batteryOk.value = v })
+}
+
 // Ensure profile is loaded even if the user navigates directly to /settings
 // without passing through HomeView (e.g. deep-link or hard refresh).
-onMounted(() => {
+onMounted(async () => {
   if (!userStore.profile?.name) userStore.fetchProfile().catch(() => {})
+  refreshSystemStatus()
+  resumeHandle = await CapApp.addListener('resume', refreshSystemStatus)
 })
+
+onUnmounted(() => { resumeHandle?.remove() })
 
 // Withdrawal modal state
 const showWithdrawalModal = ref(false)
@@ -147,6 +172,38 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
           <span class="text-base font-medium text-text-primary">업비트 계정 및 API 키 관리</span>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
+        </button>
+      </div>
+
+      <!-- ── System permissions (native only) ── -->
+      <div v-if="isNativeApp" class="bg-white rounded-xl overflow-hidden divide-y divide-surface-border">
+        <!-- 알림 접근 권한 -->
+        <button
+          class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
+          @click="openNotificationAccessSettings()"
+        >
+          <div class="flex flex-col gap-1 text-left">
+            <span class="text-base font-medium text-text-primary">알림 접근 권한</span>
+            <span class="text-sm text-text-tertiary">결제 알림을 읽어 잔돈을 적립하는 데 필요해요</span>
+          </div>
+          <span
+            class="text-sm font-semibold shrink-0"
+            :class="listenerOn ? 'text-brand' : 'text-danger'"
+          >{{ listenerOn ? '켜짐' : '꺼짐' }}</span>
+        </button>
+        <!-- 배터리 최적화 제외 -->
+        <button
+          class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
+          @click="!batteryOk && requestBatteryExemption()"
+        >
+          <div class="flex flex-col gap-1 text-left">
+            <span class="text-base font-medium text-text-primary">배터리 사용 최적화 제외</span>
+            <span class="text-sm text-text-tertiary">백그라운드에서도 결제 감지가 멈추지 않아요</span>
+          </div>
+          <span
+            class="text-sm font-semibold shrink-0"
+            :class="batteryOk ? 'text-brand' : 'text-danger'"
+          >{{ batteryOk ? '적용됨' : '미적용' }}</span>
         </button>
       </div>
 

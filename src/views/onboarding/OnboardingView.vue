@@ -168,6 +168,9 @@ function handleSubmit() {
       ALL_CATEGORIES.map((category) => ({ category, ruleType: selectedRule.value })),
     );
     userStore.completeOnboarding();
+    // 배터리 최적화 예외 요청 — 리스너가 절전 정책에 의해 죽는 것을 예방 (Phase 2-①)
+    const { requestBatteryExemptionIfNeeded } = await import('@/utils/tikkleSystem');
+    await requestBatteryExemptionIfNeeded();
     router.replace('/');
   });
 }
@@ -269,6 +272,15 @@ function handleSubmit() {
         </div>
 
         <RuleSliderEditor v-model="selectedRule" />
+
+        <!-- 배터리 최적화 예외 안내 (Phase 2-①) -->
+        <div class="bg-surface rounded-xl px-4 py-3.5 flex gap-3">
+          <span class="text-base shrink-0">🔋</span>
+          <p class="text-sm text-text-tertiary leading-relaxed">
+            시작하기를 누르면 <span class="font-semibold text-text-secondary">배터리 사용 최적화 제외</span>를 요청해요. 허용해야 백그라운드에서도 결제를 놓치지 않아요.
+            삼성 기기는 <span class="font-semibold text-text-secondary">설정 → 배터리 → 백그라운드 사용 제한</span>의 '사용 안 함 앱 절전'에서도 티끌을 제외해 주세요.
+          </p>
+        </div>
 
         <p v-if="errorMsg" role="alert" class="text-sm text-danger text-center px-2">
           {{ errorMsg }}

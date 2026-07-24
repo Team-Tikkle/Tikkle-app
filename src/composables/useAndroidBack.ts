@@ -51,7 +51,7 @@ export function useModalBackHandler(
 export const toastMessage = ref('')
 let _toastTimer: ReturnType<typeof setTimeout> | null = null
 
-function showToast(msg: string) {
+export function showToast(msg: string) {
   toastMessage.value = msg
   if (_toastTimer) clearTimeout(_toastTimer)
   _toastTimer = setTimeout(() => { toastMessage.value = '' }, 2000)

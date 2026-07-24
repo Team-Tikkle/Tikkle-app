@@ -15,3 +15,6 @@ C\:*
 .idea/
 
 .env
+
+# Firebase (secret - do not commit)
+android/app/google-services.json

@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed } from 'vue'
+import { onMounted, onUnmounted, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { App as CapApp } from '@capacitor/app'
+import type { PluginListenerHandle } from '@capacitor/core'
 import { useUserStore } from '@/stores/useUserStore'
 import { useUpbitMarketStore } from '@/stores/useUpbitMarketStore'
 import { usePortfolioStore } from '@/stores/usePortfolioStore'
 import BottomNav from '@/components/common/BottomNav.vue'
 import { coinIconUrl, coinIconFallback } from '@/utils/coin'
+import { isListenerEnabled, openNotificationAccessSettings } from '@/utils/tikkleSystem'
 import type { PortfolioHolding } from '@/types'
 
 const router         = useRouter()
@@ -13,7 +16,18 @@ const userStore      = useUserStore()
 const marketStore    = useUpbitMarketStore()
 const portfolioStore = usePortfolioStore()
 
+// 리스너(알림 접근) 권한 자가진단 — 꺼져 있으면 상단 경고 배너 노출 (웹에서는 항상 숨김)
+// 설정 화면에서 켜고 돌아오는 경우를 위해 앱 복귀(resume) 시에도 재확인한다.
+const listenerDisabled = ref(false)
+let resumeHandle: PluginListenerHandle | null = null
+
+function refreshListenerBanner() {
+  isListenerEnabled().then((enabled) => { listenerDisabled.value = !enabled })
+}
+
 onMounted(async () => {
+  refreshListenerBanner()
+  resumeHandle = await CapApp.addListener('resume', refreshListenerBanner)
   if (!userStore.profile?.name) userStore.fetchProfile().catch(() => {})
   await portfolioStore.fetchPortfolio()
   // 보유 코인 페어 코드로만 실시간 시세를 구독한다.
@@ -22,6 +36,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  resumeHandle?.remove()
   marketStore.disconnect()
 })
 
@@ -146,6 +161,20 @@ function fmtPrice(n: number): string {
     </div>
 
     <div class="px-4 flex flex-col gap-3 mt-1">
+
+      <!-- ── 알림 접근 권한 경고 배너 (자가진단) ── -->
+      <button
+        v-if="listenerDisabled"
+        class="w-full bg-danger-bg rounded-xl px-4 py-3.5 flex items-center gap-3 text-left active:opacity-80"
+        @click="openNotificationAccessSettings()"
+      >
+        <span class="text-base shrink-0">⚠️</span>
+        <span class="flex-1 text-sm text-text-primary leading-relaxed">
+          <span class="font-semibold text-danger">알림 접근 권한이 꺼져 있어요.</span>
+          결제를 감지할 수 없어 잔돈 적립이 멈춘 상태예요. 눌러서 다시 켜 주세요.
+        </span>
+        <svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
 
       <!-- ── 업비트 재연동 필요 (UPBIT-010) — 로그아웃하지 않고 재연동만 유도 ── -->
       <div

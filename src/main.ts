@@ -5,6 +5,7 @@ import { initAndroidBack } from './composables/useAndroidBack'
 import App from './App.vue'
 import router from './router'
 import { useUserStore } from './stores/useUserStore'
+import { navigateFromDeepLink } from './utils/deeplink'
 import './style.css'
 
 // ── Splash screen (index.html #app-splash) ──
@@ -15,24 +16,6 @@ function hideSplash() {
   if (!splash) return
   splash.classList.add('app-splash--hidden')
   splash.addEventListener('transitionend', () => splash.remove(), { once: true })
-}
-
-// ── Deep-link handler ──
-// Native payment-approval notifications open tikkle://payments/review?...
-// Parse the URL and route to the in-app review screen.
-function navigateFromDeepLink(url: string) {
-  try {
-    const parsed = new URL(url)
-    const path = parsed.pathname.replace(/\/$/, '')
-    if (parsed.hostname === 'payments' && path === '/review') {
-      router.push({
-        path: '/payments/review',
-        query: Object.fromEntries(parsed.searchParams.entries()),
-      })
-    }
-  } catch (e) {
-    console.warn('[deeplink] could not parse url:', url, e)
-  }
 }
 
 // ── Bootstrap sequence ──
@@ -68,4 +51,11 @@ function navigateFromDeepLink(url: string) {
   CapApp.addListener('appUrlOpen', ({ url }) => navigateFromDeepLink(url))
   const launch = await CapApp.getLaunchUrl()
   if (launch?.url) navigateFromDeepLink(launch.url)
+
+  // FCM: register the device token once the session is confirmed valid.
+  // Login/signup paths call registerPush from the user store instead.
+  if (userStore.isAuthenticated) {
+    const { registerPush } = await import('@/utils/push')
+    void registerPush()
+  }
 })()
