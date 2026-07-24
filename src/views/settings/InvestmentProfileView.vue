@@ -19,6 +19,8 @@ const settingsStore = useSettingsStore()
 const { isLoading, errorMsg, run } = useAsyncAction()
 
 const successMsg = ref('')
+const saved = ref(false)
+let savedTimer: ReturnType<typeof setTimeout> | null = null
 
 const prefs = reactive({
   riskTolerance:       'HOLD'          as RiskTolerance,
@@ -50,6 +52,7 @@ function handleSave() {
     return
   }
   successMsg.value = ''
+  saved.value = false
   run(async () => {
     onboardingStore.setPreferences({
       riskTolerance:       prefs.riskTolerance,
@@ -60,6 +63,9 @@ function handleSave() {
     })
     await onboardingStore.submitOnboarding()
     successMsg.value = '투자 성향이 업데이트되었습니다.'
+    saved.value = true
+    if (savedTimer) clearTimeout(savedTimer)
+    savedTimer = setTimeout(() => { saved.value = false }, 3000)
   })
 }
 </script>
@@ -119,12 +125,15 @@ function handleSave() {
     <div class="fixed bottom-0 left-0 right-0 max-w-mobile mx-auto bg-surface px-6 pt-3 pb-8">
       <button
         class="w-full py-4 rounded-xl text-md font-semibold text-white flex items-center justify-center gap-2 transition-colors"
-        :class="isLoading ? 'bg-text-disabled' : 'bg-brand active:bg-brand-hover'"
+        :class="isLoading ? 'bg-text-disabled' : saved ? 'bg-success' : 'bg-brand active:bg-brand-hover'"
         :disabled="isLoading"
         @click="handleSave"
       >
         <span v-if="isLoading" class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-        {{ isLoading ? '저장 중...' : '저장하기' }}
+        <svg v-else-if="saved" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+        {{ isLoading ? '저장 중...' : saved ? '저장 완료' : '저장하기' }}
       </button>
     </div>
   </div>
