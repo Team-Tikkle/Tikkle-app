@@ -40,9 +40,16 @@ function timeAgo(iso?: string): string {
   return `${Math.floor(hours / 24)}일 전`
 }
 
-// Open an external link in the system browser (works in web + Capacitor WebView)
-function openExternal(url: string) {
-  if (url && url !== '#') window.open(url, '_blank', 'noopener')
+// 외부 링크 확인 모달
+const externalUrl = ref<string | null>(null)
+
+function promptExternal(url: string) {
+  if (url && url !== '#') externalUrl.value = url
+}
+
+function confirmExternal() {
+  if (externalUrl.value) window.open(externalUrl.value, '_blank', 'noopener')
+  externalUrl.value = null
 }
 
 function goToGlossary() {
@@ -102,7 +109,7 @@ const bookIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
         v-else
         :key="item.id"
         class="bg-white rounded-xl p-4 text-left active:bg-surface transition-colors"
-        @click="openExternal(item.source_url)"
+        @click="promptExternal(item.source_url)"
       >
         <div class="flex items-start gap-3">
           <!-- Thumbnail when the API provides one; trend icon as fallback -->
@@ -216,7 +223,7 @@ const bookIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
           v-else
           :key="video.id"
           class="bg-white rounded-xl overflow-hidden text-left active:opacity-90 transition-opacity"
-          @click="openExternal(video.video_url)"
+          @click="promptExternal(video.video_url)"
         >
           <!-- Thumbnail with play overlay -->
           <div class="relative aspect-video bg-surface">
@@ -248,6 +255,58 @@ const bookIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
       :article-id="selectedArticleId"
       @close="selectedArticleId = null"
     />
+
+    <!-- 외부 링크 확인 모달 -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        leave-active-class="transition-opacity duration-150"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="externalUrl"
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
+          @click.self="externalUrl = null"
+        >
+          <div class="w-full max-w-sm bg-white rounded-2xl overflow-hidden shadow-xl">
+            <div class="px-6 pt-6 pb-5 flex flex-col gap-3">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-brand-bg flex items-center justify-center text-brand shrink-0">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                    <polyline points="15 3 21 3 21 9"/>
+                    <line x1="10" y1="14" x2="21" y2="3"/>
+                  </svg>
+                </div>
+                <h3 class="text-base font-bold text-text-primary">외부 사이트로 이동</h3>
+              </div>
+              <p class="text-sm text-text-secondary leading-relaxed">
+                티끌 앱을 벗어나 외부 사이트로 이동합니다.
+              </p>
+              <p class="text-xs text-text-secondary break-all bg-surface rounded-lg px-3 py-2 font-mono leading-relaxed">
+                {{ externalUrl }}
+              </p>
+            </div>
+            <div class="flex border-t border-surface-border">
+              <button
+                class="flex-1 py-4 text-base font-medium text-text-tertiary active:bg-surface transition-colors"
+                @click="externalUrl = null"
+              >
+                취소
+              </button>
+              <div class="w-px bg-surface-border" />
+              <button
+                class="flex-1 py-4 text-base font-semibold text-brand active:bg-brand-bg transition-colors"
+                @click="confirmExternal"
+              >
+                이동
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
     <BottomNav />
   </div>
