@@ -6,6 +6,7 @@ import BottomNav from '@/components/common/BottomNav.vue'
 import { useUserStore } from '@/stores/useUserStore'
 import { useAsyncAction } from '@/composables/useAsyncAction'
 import { useModalBackHandler } from '@/composables/useAndroidBack'
+import { LEGAL_DOCS, type LegalDocKey } from '@/utils/legal'
 import { App as CapApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 import type { PluginListenerHandle } from '@capacitor/core'
@@ -80,8 +81,7 @@ function formatPhone(phone?: string): string {
 const chevronRight = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c7c7cc" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`
 
 // Legal sheet: 'privacy' | 'terms' | null
-const legalSheet = ref<'privacy' | 'terms' | null>(null)
-const legalTitles = { privacy: '개인정보 처리방침', terms: '이용약관' }
+const legalSheet = ref<LegalDocKey | null>(null)
 
 // 뒤로가기 시 열려있는 모달/시트를 닫는다
 useModalBackHandler(computed(() => legalSheet.value !== null), () => { legalSheet.value = null })
@@ -213,7 +213,7 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
           @click="legalSheet = 'privacy'"
         >
-          <span class="text-base font-medium text-text-primary">개인정보 처리방침</span>
+          <span class="text-base font-medium text-text-primary">개인정보처리방침</span>
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
         </button>
@@ -303,7 +303,7 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
             >
               <!-- Sheet header -->
               <div class="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
-                <h3 class="text-lg font-bold text-text-primary">{{ legalTitles[legalSheet] }}</h3>
+                <h3 class="text-lg font-bold text-text-primary">{{ LEGAL_DOCS[legalSheet].title }}</h3>
                 <button
                   class="w-8 h-8 flex items-center justify-center text-text-tertiary"
                   @click="legalSheet = null"
@@ -316,9 +316,7 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
               <div class="h-px bg-surface-border shrink-0" />
               <!-- Content area -->
               <div class="flex-1 overflow-y-auto px-6 py-6">
-                <p class="text-sm text-text-disabled text-center mt-16">
-                  내용이 곧 추가될 예정입니다.
-                </p>
+                <article class="text-xs2 text-text-secondary leading-relaxed whitespace-pre-wrap break-words">{{ LEGAL_DOCS[legalSheet].body }}</article>
               </div>
             </div>
         </div>

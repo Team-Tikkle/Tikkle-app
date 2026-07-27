@@ -48,10 +48,10 @@ async function handleLogin() {
     <!-- Brand -->
     <div class="flex flex-col items-center gap-4 mb-10">
       <div class="w-20 h-20 rounded-3xl overflow-hidden shadow-lg">
-        <img src="/logo.png" alt="Tikkle" class="block w-full h-full object-cover" />
+        <img src="/logo.png" alt="티끌" class="block w-full h-full object-cover" />
       </div>
       <div class="flex flex-col items-center gap-1.5">
-        <h1 class="text-4xl font-bold text-text-primary tracking-tight">Tikkle</h1>
+        <h1 class="text-4xl font-bold text-text-primary tracking-tight">티끌</h1>
         <p class="text-base text-text-tertiary text-center leading-relaxed">
           잔돈으로 시작하는<br />나만의 코인 투자
         </p>
@@ -123,9 +123,8 @@ async function handleLogin() {
 
     <!-- Legal footer -->
     <p class="mb-10 text-xs2 text-text-disabled text-center leading-relaxed px-4">
-      계속 진행하면 Tikkle의
-      <span class="underline">이용약관</span> 및
-      <span class="underline">개인정보 처리방침</span>에 동의합니다.
+      <RouterLink to="/legal/terms" class="underline">이용약관</RouterLink> 및
+      <RouterLink to="/legal/privacy" class="underline">개인정보처리방침</RouterLink>
     </p>
   </div>
 </template>

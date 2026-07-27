@@ -26,6 +26,13 @@ const router = createRouter({
       meta: { guestOnly: true },
     },
 
+    // 약관·방침 열람 — 가입 전후 모두 접근 가능해야 하므로 guestOnly 를 두지 않는다
+    {
+      path: '/legal/:doc',
+      name: 'legal',
+      component: () => import('@/views/legal/LegalDocView.vue'),
+    },
+
     // ══════════════════════════════════════
     // Protected — authenticated, any onboarding status
     // ══════════════════════════════════════

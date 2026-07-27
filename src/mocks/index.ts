@@ -7,7 +7,6 @@ export const mockUser: UserProfile = {
   risk_type: 'NEUTRAL',
   rule: 'UNDER_1000',
   is_auto: true,
-  kis_account_number: '50123456789',
   hasInvestmentProfile: true,
   hasKbankAccount: true,
   hasUpbitKey: true,

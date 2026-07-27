@@ -11,6 +11,9 @@ import {
   PASSWORD_POLICY_HINT,
 } from '@/utils/auth';
 import { useCountdown } from '@/composables/useCountdown';
+import { useModalBackHandler } from '@/composables/useAndroidBack';
+import { LEGAL_DOCS, type LegalDocKey } from '@/utils/legal';
+import CheckBox from '@/components/common/CheckBox.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -24,6 +27,32 @@ const signupToken = ref('');
 const name = ref('');
 const password = ref('');
 const passwordConfirm = ref('');
+
+// ── 필수 동의 (3단계) ──
+const agreedAge = ref(false);
+const agreedTerms = ref(false);
+const agreedPrivacy = ref(false);
+
+const agreedAll = computed({
+  get: () => agreedAge.value && agreedTerms.value && agreedPrivacy.value,
+  set: (v: boolean) => {
+    agreedAge.value = v;
+    agreedTerms.value = v;
+    agreedPrivacy.value = v;
+  },
+});
+
+// 문서 열람 시트 — 라우팅하면 3단계까지 온 입력·signupToken 이 날아가므로
+// 화면 이동 없이 시트로 띄운다.
+const openDoc = ref<LegalDocKey | null>(null);
+useModalBackHandler(() => openDoc.value !== null, () => { openDoc.value = null; });
+
+// 시트에서 '동의하기' — 열려 있던 문서의 항목만 체크하고 닫는다.
+function agreeAndClose() {
+  if (openDoc.value === 'terms') agreedTerms.value = true;
+  else if (openDoc.value === 'privacy') agreedPrivacy.value = true;
+  openDoc.value = null;
+}
 
 const isLoading = ref(false);
 const errorMsg = ref('');
@@ -87,6 +116,7 @@ const passwordInvalid = computed(
 // Step 3: 회원가입
 async function handleSignup() {
   if (!name.value.trim() || !isValidPassword(password.value) || passwordMismatch.value) return;
+  if (!agreedAll.value) return;
   isLoading.value = true;
   errorMsg.value = '';
   try {
@@ -116,7 +146,8 @@ async function handleSignup() {
 const canProceed = computed(() => {
   if (step.value === 1) return isValidPhone(phoneNumber.value.trim());
   if (step.value === 2) return code.value.length === 6;
-  return Boolean(name.value.trim()) && isValidPassword(password.value) && !passwordMismatch.value;
+  return Boolean(name.value.trim()) && isValidPassword(password.value) && !passwordMismatch.value
+    && agreedAll.value;
 });
 
 function handleCta() {
@@ -219,12 +250,12 @@ function handleCta() {
         </div>
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
-            <label class="text-sm font-semibold text-text-secondary">이름</label>
+            <label class="text-sm font-semibold text-text-secondary">닉네임</label>
             <input
               v-model="name"
               type="text"
               maxlength="50"
-              placeholder="홍길동"
+              placeholder="닉네임"
               class="w-full px-4 py-3.5 rounded-xl bg-white border border-surface-border text-base text-text-primary placeholder:text-text-disabled focus:outline-none focus:border-brand focus:ring-2 focus:ring-brand/20 transition-all"
             />
           </div>
@@ -258,6 +289,59 @@ function handleCta() {
             <p v-if="passwordMismatch" class="text-xs2 text-danger">비밀번호가 일치하지 않습니다.</p>
           </div>
         </div>
+
+        <!-- 약관 동의 -->
+        <div class="flex flex-col rounded-xl bg-white border border-surface-border overflow-hidden">
+          <label class="flex items-center gap-3 px-4 py-3.5 active:bg-surface transition-colors">
+            <input v-model="agreedAll" type="checkbox" class="sr-only" />
+            <CheckBox :checked="agreedAll" />
+            <span class="text-sm font-semibold text-text-primary">전체 동의</span>
+          </label>
+
+          <div class="h-px bg-surface-border mx-4" />
+
+          <div class="flex items-center gap-3 px-4 py-3">
+            <label class="flex items-center gap-3 flex-1 min-w-0">
+              <input v-model="agreedAge" type="checkbox" class="sr-only" />
+              <CheckBox :checked="agreedAge" />
+              <span class="text-sm text-text-secondary truncate">
+                <span class="text-brand font-medium">[필수]</span> 만 14세 이상입니다
+              </span>
+            </label>
+          </div>
+
+          <div class="flex items-center gap-3 px-4 py-3">
+            <label class="flex items-center gap-3 flex-1 min-w-0">
+              <input v-model="agreedTerms" type="checkbox" class="sr-only" />
+              <CheckBox :checked="agreedTerms" />
+              <span class="text-sm text-text-secondary truncate">
+                <span class="text-brand font-medium">[필수]</span> 이용약관 동의
+              </span>
+            </label>
+            <button
+              class="shrink-0 text-xs2 text-text-tertiary underline active:opacity-60 px-1"
+              @click="openDoc = 'terms'"
+            >
+              보기
+            </button>
+          </div>
+
+          <div class="flex items-center gap-3 px-4 py-3">
+            <label class="flex items-center gap-3 flex-1 min-w-0">
+              <input v-model="agreedPrivacy" type="checkbox" class="sr-only" />
+              <CheckBox :checked="agreedPrivacy" />
+              <span class="text-sm text-text-secondary truncate">
+                <span class="text-brand font-medium">[필수]</span> 개인정보처리방침 동의
+              </span>
+            </label>
+            <button
+              class="shrink-0 text-xs2 text-text-tertiary underline active:opacity-60 px-1"
+              @click="openDoc = 'privacy'"
+            >
+              보기
+            </button>
+          </div>
+        </div>
       </template>
 
       <!-- 에러 메시지 -->
@@ -282,5 +366,52 @@ function handleCta() {
         <span v-else>처리 중...</span>
       </button>
     </div>
+
+    <!-- 약관·방침 열람 시트 -->
+    <Teleport to="body">
+      <Transition
+        enter-active-class="transition-opacity duration-200"
+        enter-from-class="opacity-0"
+        leave-active-class="transition-opacity duration-150"
+        leave-to-class="opacity-0"
+      >
+        <div
+          v-if="openDoc"
+          class="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+          @click.self="openDoc = null"
+        >
+          <div class="w-full max-w-mobile bg-white rounded-t-3xl flex flex-col max-h-[85vh]">
+            <div class="flex items-center justify-between px-6 pt-5 pb-3 shrink-0">
+              <h3 class="text-md font-bold text-text-primary">
+                {{ LEGAL_DOCS[openDoc].title }}
+              </h3>
+              <button
+                class="w-8 h-8 flex items-center justify-center text-text-tertiary"
+                aria-label="닫기"
+                @click="openDoc = null"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto px-6 pb-4">
+              <article class="text-xs2 text-text-secondary leading-relaxed whitespace-pre-wrap break-words">{{ LEGAL_DOCS[openDoc].body }}</article>
+            </div>
+
+            <div class="px-6 pb-10 pt-3 shrink-0 border-t border-surface-border">
+              <button
+                class="w-full py-4 rounded-xl bg-brand active:bg-brand-hover text-white text-base font-semibold transition-colors"
+                @click="agreeAndClose"
+              >
+                동의하기
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>

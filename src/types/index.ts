@@ -38,7 +38,6 @@ export interface UserProfile {
   risk_type: RiskType
   rule: RoundUpRule
   is_auto: boolean
-  kis_account_number?: string
   hasInvestmentProfile: boolean
   hasKbankAccount: boolean
   hasUpbitKey: boolean

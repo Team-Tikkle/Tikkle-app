@@ -8,7 +8,7 @@ loadEnv()
 
 const capacitorConfig: CapacitorConfig = {
   appId: 'com.tikkle.app',
-  appName: 'Tikkle',
+  appName: '티끌',
   webDir: 'dist',
   plugins: {
     // @codetrix-studio/capacitor-google-auth
