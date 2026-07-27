@@ -46,6 +46,8 @@ export const usePaymentStore = defineStore('payment', () => {
       } else {
         spending.push({ category, amount: item.amount })
       }
+      // 합계가 0 이하가 된 카테고리는 차트에서 제거한다.
+      dashboard.value.categorySpending = spending.filter((c) => c.amount > 0)
     }
 
     item.category = category
