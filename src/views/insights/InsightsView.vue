@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import AppHeader from '@/components/common/AppHeader.vue'
 import BottomNav from '@/components/common/BottomNav.vue'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
@@ -9,10 +9,16 @@ import ArticleDetailSheet from '@/components/insights/ArticleDetailSheet.vue'
 import { useInsightStore } from '@/stores/useInsightStore'
 
 const router = useRouter()
+const route = useRoute()
 const insightStore = useInsightStore()
 
 type InsightsTab = 'market' | 'guide'
-const activeTab = ref<InsightsTab>('market')
+const activeTab = ref<InsightsTab>(route.query.tab === 'guide' ? 'guide' : 'market')
+
+function setTab(tab: InsightsTab) {
+  activeTab.value = tab
+  router.replace({ query: tab === 'market' ? {} : { tab } })
+}
 
 // Per-tab loading flags so each section can show its own spinner
 const marketLoading = ref(true)
@@ -70,7 +76,7 @@ const bookIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" st
         :key="tab.key"
         class="flex-1 py-3.5 text-base font-semibold transition-all relative"
         :class="activeTab === tab.key ? 'text-brand' : 'text-text-tertiary'"
-        @click="activeTab = tab.key as InsightsTab"
+        @click="setTab(tab.key as InsightsTab)"
       >
         {{ tab.label }}
         <!-- Active underline -->
