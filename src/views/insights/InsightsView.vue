@@ -7,6 +7,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import ArticleDetailSheet from '@/components/insights/ArticleDetailSheet.vue'
 import { useInsightStore } from '@/stores/useInsightStore'
+import { useModalBackHandler } from '@/composables/useAndroidBack'
 
 const router = useRouter()
 const route = useRoute()
@@ -51,6 +52,9 @@ function confirmExternal() {
   if (externalUrl.value) window.open(externalUrl.value, '_blank', 'noopener')
   externalUrl.value = null
 }
+
+// 안드로이드 뒤로가기 버튼이 앱 종료 안내 대신 이 모달을 닫도록 등록한다.
+useModalBackHandler(() => externalUrl.value !== null, () => { externalUrl.value = null })
 
 function goToGlossary() {
   router.push({ name: 'insights-glossary' })

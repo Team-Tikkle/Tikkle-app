@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { InsightArticle } from '@/types'
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue'
 import { useInsightStore } from '@/stores/useInsightStore'
+import { useModalBackHandler } from '@/composables/useAndroidBack'
 
 // `articleId` drives the sheet: a non-null id opens it and triggers a detail
 // fetch; null keeps it closed. The parent owns the id and listens for `close`.
@@ -10,6 +11,9 @@ const props = defineProps<{ articleId: string | null }>()
 const emit = defineEmits<{ close: [] }>()
 
 const insightStore = useInsightStore()
+
+// 안드로이드 뒤로가기 버튼이 앱 종료 안내 대신 이 시트를 닫도록 등록한다.
+useModalBackHandler(computed(() => props.articleId !== null), close)
 
 const article = ref<InsightArticle | null>(null)
 const isLoading = ref(false)
