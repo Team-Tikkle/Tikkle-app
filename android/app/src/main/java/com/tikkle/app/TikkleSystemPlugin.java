@@ -65,4 +65,12 @@ public class TikkleSystemPlugin extends Plugin {
         getActivity().startActivity(intent);
         call.resolve();
     }
+
+    // 이미 예외 적용된 상태에서는 REQUEST 다이얼로그가 아무 UI 없이 즉시 종료되므로,
+    // 앱 목록에서 현재 상태를 확인/관리할 수 있는 설정 화면을 대신 연다.
+    @PluginMethod
+    public void openBatteryOptimizationSettings(PluginCall call) {
+        getActivity().startActivity(new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));
+        call.resolve();
+    }
 }

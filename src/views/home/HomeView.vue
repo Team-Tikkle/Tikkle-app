@@ -8,7 +8,7 @@ import { useUpbitMarketStore } from '@/stores/useUpbitMarketStore'
 import { usePortfolioStore } from '@/stores/usePortfolioStore'
 import BottomNav from '@/components/common/BottomNav.vue'
 import { coinIconUrl, coinIconFallback } from '@/utils/coin'
-import { isListenerEnabled, openNotificationAccessSettings } from '@/utils/tikkleSystem'
+import { isListenerEnabled, openNotificationAccessSettings, isBatteryExempt, requestBatteryExemption } from '@/utils/tikkleSystem'
 import type { PortfolioHolding } from '@/types'
 
 const router         = useRouter()
@@ -16,18 +16,21 @@ const userStore      = useUserStore()
 const marketStore    = useUpbitMarketStore()
 const portfolioStore = usePortfolioStore()
 
-// 리스너(알림 접근) 권한 자가진단 — 꺼져 있으면 상단 경고 배너 노출 (웹에서는 항상 숨김)
-// 설정 화면에서 켜고 돌아오는 경우를 위해 앱 복귀(resume) 시에도 재확인한다.
+// 리스너(알림 접근) 권한 · 배터리 최적화 예외 자가진단 — 꺼져 있으면 상단 경고 배너 노출
+// (웹에서는 항상 숨김). 설정 화면에서 켜고 돌아오는 경우를 위해 앱 복귀(resume) 시에도
+// 재확인한다. 두 배너는 서로 독립적이라 둘 다 꺼져 있으면 둘 다 보인다.
 const listenerDisabled = ref(false)
+const batteryNotExempt = ref(false)
 let resumeHandle: PluginListenerHandle | null = null
 
-function refreshListenerBanner() {
+function refreshPermissionBanners() {
   isListenerEnabled().then((enabled) => { listenerDisabled.value = !enabled })
+  isBatteryExempt().then((exempt) => { batteryNotExempt.value = !exempt })
 }
 
 onMounted(async () => {
-  refreshListenerBanner()
-  resumeHandle = await CapApp.addListener('resume', refreshListenerBanner)
+  refreshPermissionBanners()
+  resumeHandle = await CapApp.addListener('resume', refreshPermissionBanners)
   if (!userStore.profile?.name) userStore.fetchProfile().catch(() => {})
   await portfolioStore.fetchPortfolio()
   // 보유 코인 페어 코드로만 실시간 시세를 구독한다.
@@ -172,6 +175,20 @@ function fmtPrice(n: number): string {
         <span class="flex-1 text-sm text-text-primary leading-relaxed">
           <span class="font-semibold text-danger">알림 접근 권한이 꺼져 있어요.</span>
           결제를 감지할 수 없어 잔돈 적립이 멈춘 상태예요. 눌러서 다시 켜 주세요.
+        </span>
+        <svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- ── 배터리 최적화 예외 경고 배너 (자가진단) ── -->
+      <button
+        v-if="batteryNotExempt"
+        class="w-full bg-danger-bg rounded-xl px-4 py-3.5 flex items-center gap-3 text-left active:opacity-80"
+        @click="requestBatteryExemption()"
+      >
+        <span class="text-base shrink-0">🔋</span>
+        <span class="flex-1 text-sm text-text-primary leading-relaxed">
+          <span class="font-semibold text-danger">배터리 사용 최적화 예외가 꺼져 있어요.</span>
+          백그라운드에서 결제 감지가 멈출 수 있어요. 눌러서 예외로 설정해 주세요.
         </span>
         <svg class="shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
       </button>

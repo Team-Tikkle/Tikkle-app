@@ -8,6 +8,7 @@ interface TikkleSystemPlugin {
   openNotificationAccessSettings(): Promise<void>
   isIgnoringBatteryOptimizations(): Promise<{ ignoring: boolean }>
   requestIgnoreBatteryOptimizations(): Promise<void>
+  openBatteryOptimizationSettings(): Promise<void>
 }
 
 const TikkleSystem = registerPlugin<TikkleSystemPlugin>('TikkleSystem')
@@ -44,6 +45,16 @@ export async function isBatteryExempt(): Promise<boolean> {
 export async function requestBatteryExemption(): Promise<void> {
   if (!isNative()) return
   try { await TikkleSystem.requestIgnoreBatteryOptimizations() } catch { /* no-op */ }
+}
+
+/**
+ * 배터리 최적화 앱별 관리 목록 화면을 연다.
+ * 이미 예외 적용된 상태에서는 requestBatteryExemption()의 다이얼로그가 아무 UI 없이
+ * 바로 닫혀버리므로, 그 경우엔 이 함수로 현재 상태를 눈으로 확인/관리할 수 있게 한다.
+ */
+export async function openBatteryOptimizationSettings(): Promise<void> {
+  if (!isNative()) return
+  try { await TikkleSystem.openBatteryOptimizationSettings() } catch { /* no-op */ }
 }
 
 /** 배터리 최적화 예외가 아직 없다면 시스템 요청 다이얼로그를 띄운다. */

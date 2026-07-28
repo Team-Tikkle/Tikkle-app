@@ -16,6 +16,7 @@ import {
   openNotificationAccessSettings,
   isBatteryExempt,
   requestBatteryExemption,
+  openBatteryOptimizationSettings,
 } from '@/utils/tikkleSystem'
 
 const router = useRouter()
@@ -195,7 +196,7 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
         <!-- 배터리 최적화 제외 -->
         <button
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
-          @click="!batteryOk && requestBatteryExemption()"
+          @click="batteryOk ? openBatteryOptimizationSettings() : requestBatteryExemption()"
         >
           <div class="flex flex-col gap-1 text-left">
             <span class="text-base font-medium text-text-primary">배터리 사용 최적화 제외</span>
