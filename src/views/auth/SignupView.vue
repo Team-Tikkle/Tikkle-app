@@ -14,6 +14,7 @@ import { useCountdown } from '@/composables/useCountdown';
 import { useModalBackHandler } from '@/composables/useAndroidBack';
 import { LEGAL_DOCS, type LegalDocKey } from '@/utils/legal';
 import CheckBox from '@/components/common/CheckBox.vue';
+import MarkdownDoc from '@/components/common/MarkdownDoc.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -398,7 +399,7 @@ function handleCta() {
             </div>
 
             <div class="flex-1 overflow-y-auto px-6 pb-4">
-              <article class="text-xs2 text-text-secondary leading-relaxed whitespace-pre-wrap break-words">{{ LEGAL_DOCS[openDoc].body }}</article>
+              <MarkdownDoc :source="LEGAL_DOCS[openDoc].body" />
             </div>
 
             <div class="px-6 pb-10 pt-3 shrink-0 border-t border-surface-border">

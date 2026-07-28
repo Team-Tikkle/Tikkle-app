@@ -7,6 +7,7 @@ import { useUserStore } from '@/stores/useUserStore'
 import { useAsyncAction } from '@/composables/useAsyncAction'
 import { useModalBackHandler } from '@/composables/useAndroidBack'
 import { LEGAL_DOCS, type LegalDocKey } from '@/utils/legal'
+import MarkdownDoc from '@/components/common/MarkdownDoc.vue'
 import { App as CapApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 import type { PluginListenerHandle } from '@capacitor/core'
@@ -316,7 +317,7 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
               <div class="h-px bg-surface-border shrink-0" />
               <!-- Content area -->
               <div class="flex-1 overflow-y-auto px-6 py-6">
-                <article class="text-xs2 text-text-secondary leading-relaxed whitespace-pre-wrap break-words">{{ LEGAL_DOCS[legalSheet].body }}</article>
+                <MarkdownDoc :source="LEGAL_DOCS[legalSheet].body" />
               </div>
             </div>
         </div>

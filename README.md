@@ -21,7 +21,6 @@ cp .env.example .env
 | 변수 | 용도 |
 |---|---|
 | `VITE_API_BASE_URL` | 백엔드 API 베이스 URL |
-| `VITE_GOOGLE_CLIENT_ID` | Google OAuth 클라이언트 ID |
 | `VITE_PAYMENT_SECRET_KEY` | 결제 스크래핑 HMAC 서명 시크릿 (백엔드와 동일해야 함) |
 | `VITE_SKIP_AUTH` | 개발용 인증 우회 (`true` 시 목 프로필로 실행). 실기기 빌드에서는 `false` |
 

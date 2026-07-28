@@ -7,6 +7,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { LEGAL_DOCS, isLegalDocKey } from '@/utils/legal'
 import AppHeader from '@/components/common/AppHeader.vue'
+import MarkdownDoc from '@/components/common/MarkdownDoc.vue'
 
 const route = useRoute()
 
@@ -21,9 +22,7 @@ const doc = computed(() => {
     <AppHeader :title="doc.title" show-back />
 
     <div class="flex-1 px-6 py-5">
-      <article
-        class="text-sm text-text-secondary leading-relaxed whitespace-pre-wrap break-words"
-      >{{ doc.body }}</article>
+      <MarkdownDoc :source="doc.body" />
     </div>
   </div>
 </template>
