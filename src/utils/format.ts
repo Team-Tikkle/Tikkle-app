@@ -35,3 +35,13 @@ export function ruleSummary(rule: RuleType): string {
 export function fmtKRW(amount: number): string {
   return amount.toLocaleString('ko-KR');
 }
+
+/**
+ * 코인 체결 수량 포맷 — 체결값을 반올림 없이 그대로 보여준다.
+ * 업비트와 동일하게 소수점 8자리까지 두고 의미 없는 꼬리 0만 제거한다.
+ * toFixed를 거치는 이유는 toString()이 작은 수를 지수 표기(1e-7)로 만들기 때문.
+ */
+export function fmtVolume(v: number): string {
+  if (v === 0) return '0';
+  return v.toFixed(8).replace(/\.?0+$/, '');
+}

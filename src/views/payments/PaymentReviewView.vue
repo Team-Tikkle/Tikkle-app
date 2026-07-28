@@ -18,7 +18,7 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useRoute, useRouter } from 'vue-router';
 import { usePaymentStore } from '@/stores/usePaymentStore';
 import AppHeader from '@/components/common/AppHeader.vue';
-import { fmtKRW } from '@/utils/format';
+import { fmtKRW, fmtVolume } from '@/utils/format';
 import { useBackHandler } from '@/composables/useAndroidBack';
 import { coinIconUrl, coinIconFallback } from '@/utils/coin';
 import type { SseTradeResult } from '@/types';
@@ -163,6 +163,11 @@ async function handleReject() {
 }
 
 const fmt = fmtKRW;
+
+// 체결 완료 화면의 코인명 — SSE 응답 우선, 없으면 딥링크 파라미터로 폴백
+const successCoinName = computed(
+  () => sseResult.value?.targetCoinName || stockName || '코인',
+);
 </script>
 
 <template>
@@ -279,66 +284,81 @@ const fmt = fmtKRW;
 
     <!-- ════ Phase: success ════ -->
     <template v-else-if="phase === 'success'">
-      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
-        <!-- 체크 아이콘 -->
-        <div
-          class="w-24 h-24 rounded-full bg-brand-bg flex items-center justify-center"
-        >
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="#0051ff"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+      <div class="flex-1 flex flex-col items-center justify-center px-5 gap-7">
+        <!-- 히어로: 매수한 코인 로고 + 체결 배지 -->
+        <div class="relative shrink-0">
+          <div
+            class="w-20 h-20 rounded-full bg-surface flex items-center justify-center overflow-hidden"
           >
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+            <img
+              v-if="ticker"
+              :src="coinIconUrl(ticker)"
+              :alt="successCoinName"
+              class="w-12 h-12 object-contain"
+              @error="coinIconFallback"
+            />
+            <svg
+              v-else
+              width="40" height="40" viewBox="0 0 24 24" fill="none"
+              stroke="#0051ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
+          <!-- 체크 배지 -->
+          <span
+            v-if="ticker"
+            class="absolute -bottom-0.5 -right-0.5 w-8 h-8 rounded-full bg-brand border-4 border-white flex items-center justify-center"
+          >
+            <svg
+              width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="#ffffff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
         </div>
 
-        <div class="flex flex-col items-center gap-2 text-center">
-          <p class="text-2xl font-bold text-text-primary">매수 완료!</p>
-          <p class="text-base text-text-tertiary">{{ sseResult?.message }}</p>
+        <div class="flex flex-col items-center gap-1.5 text-center">
+          <p class="text-2xl font-bold text-text-primary">
+            {{ fmt(spareChange) }}원 투자 완료
+          </p>
+          <p class="text-base text-text-tertiary">
+            {{ successCoinName }} 매수를 완료했어요.
+          </p>
         </div>
 
         <!-- 체결 상세 -->
         <div
           v-if="sseResult"
-          class="w-full flex flex-col divide-y divide-surface-border"
+          class="w-full bg-surface rounded-2xl overflow-hidden divide-y divide-surface-border"
         >
-          <div
-            v-if="sseResult.targetCoinName"
-            class="flex items-center justify-between py-3.5"
-          >
-            <span class="text-base text-text-tertiary">코인</span>
-            <span class="text-base font-semibold text-text-primary">{{
-              sseResult.targetCoinName
-            }}</span>
-          </div>
-          <div
-            v-if="sseResult.investedVolume != null"
-            class="flex items-center justify-between py-3.5"
-          >
-            <span class="text-base text-text-tertiary">매수 수량</span>
-            <span class="text-base font-semibold text-text-primary">{{
-              sseResult.investedVolume
-            }}</span>
+          <div class="flex items-center justify-between px-4 py-3.5">
+            <span class="text-base text-text-tertiary">결제처</span>
+            <span class="text-base font-semibold text-text-primary">{{ merchant }}</span>
           </div>
           <div
             v-if="sseResult.investedPrice != null"
-            class="flex items-center justify-between py-3.5"
+            class="flex items-center justify-between px-4 py-3.5"
           >
             <span class="text-base text-text-tertiary">체결 단가</span>
-            <span class="text-base font-semibold text-text-primary"
-              >₩{{ fmt(sseResult.investedPrice) }}</span
-            >
+            <span class="text-base font-semibold text-text-primary">
+              {{ fmt(sseResult.investedPrice) }}원
+            </span>
+          </div>
+          <div
+            v-if="sseResult.investedVolume != null"
+            class="flex items-center justify-between px-4 py-3.5"
+          >
+            <span class="text-base text-text-tertiary">매수 수량</span>
+            <span class="text-base font-semibold text-text-primary">
+              {{ fmtVolume(sseResult.investedVolume) }}개
+            </span>
           </div>
         </div>
       </div>
 
-      <div class="px-6 pb-10 pt-4">
+      <div class="px-5 pb-10 pt-4">
         <button
           class="w-full py-4 rounded-2xl bg-brand text-white text-lg font-bold active:bg-brand-hover"
           @click="router.replace('/payments')"

@@ -8,7 +8,7 @@ import EmptyState from '@/components/common/EmptyState.vue'
 import RemainingTime from '@/components/common/RemainingTime.vue'
 import { useAsyncAction } from '@/composables/useAsyncAction'
 import type { TransactionStatus, PaymentFeedStatus, CategoryType, PaymentFeedItem } from '@/types'
-import { fmtKRW } from '@/utils/format'
+import { fmtKRW, fmtVolume } from '@/utils/format'
 
 const paymentStore = usePaymentStore()
 const router = useRouter()
@@ -116,12 +116,6 @@ const statusConfig: Record<TransactionStatus, { label: string; class: string }> 
 }
 
 const fmt = fmtKRW
-
-function fmtVolume(v: number): string {
-  if (v === 0) return '0'
-  const s = v.toPrecision(4)
-  return parseFloat(s).toString()
-}
 
 function fmtDate(iso: string) {
   const d = new Date(iso)
