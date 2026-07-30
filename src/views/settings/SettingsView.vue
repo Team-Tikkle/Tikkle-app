@@ -213,6 +213,14 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
       <div class="bg-white rounded-xl overflow-hidden divide-y divide-surface-border">
         <button
           class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
+          @click="router.push('/settings/notices')"
+        >
+          <span class="text-base font-medium text-text-primary">공지사항</span>
+          <!-- eslint-disable-next-line vue/no-v-html -->
+          <span v-html="chevronRight" />
+        </button>
+        <button
+          class="w-full px-5 py-4 flex items-center justify-between active:bg-surface"
           @click="legalSheet = 'privacy'"
         >
           <span class="text-base font-medium text-text-primary">개인정보처리방침</span>

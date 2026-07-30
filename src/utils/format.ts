@@ -36,6 +36,15 @@ export function fmtKRW(amount: number): string {
   return amount.toLocaleString('ko-KR');
 }
 
+/** 게시일 포맷 (2026.07.28) — 파싱 불가 시 빈 문자열 */
+export function fmtDateDot(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${d.getFullYear()}.${mm}.${dd}`;
+}
+
 /**
  * 코인 체결 수량 포맷 — 체결값을 반올림 없이 그대로 보여준다.
  * 업비트와 동일하게 소수점 8자리까지 두고 의미 없는 꼬리 0만 제거한다.

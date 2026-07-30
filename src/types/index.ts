@@ -136,6 +136,21 @@ export interface Portfolio {
   holdings:             PortfolioHolding[]
 }
 
+// ── 공지사항 (GET /api/notices, /api/notices/{id}) ──
+// 목록 항목 — 본문(content) 제외.
+// 서버가 상단 고정(isPinned) 우선 + 게시일시 내림차순으로 정렬해 내려준다.
+export interface NoticeSummary {
+  id:          number
+  title:       string
+  isPinned:    boolean
+  publishedAt: string  // ISO-8601, e.g. "2026-07-28T09:00:00"
+}
+
+// 상세 — content는 plain text이며 \n\n 으로 문단을 구분한다.
+export interface Notice extends NoticeSummary {
+  content: string
+}
+
 // News & Insights
 export interface NewsArticle {
   id: string

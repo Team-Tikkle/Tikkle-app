@@ -6,6 +6,7 @@ import type { PluginListenerHandle } from '@capacitor/core'
 import { useUserStore } from '@/stores/useUserStore'
 import { useUpbitMarketStore } from '@/stores/useUpbitMarketStore'
 import { usePortfolioStore } from '@/stores/usePortfolioStore'
+import { useNoticeStore } from '@/stores/useNoticeStore'
 import BottomNav from '@/components/common/BottomNav.vue'
 import { coinIconUrl, coinIconFallback } from '@/utils/coin'
 import { isListenerEnabled, openNotificationAccessSettings, isBatteryExempt, requestBatteryExemption } from '@/utils/tikkleSystem'
@@ -15,6 +16,10 @@ const router         = useRouter()
 const userStore      = useUserStore()
 const marketStore    = useUpbitMarketStore()
 const portfolioStore = usePortfolioStore()
+const noticeStore    = useNoticeStore()
+
+// 상단 고정 공지 1건만 배너로 노출. 목록은 서버가 고정 우선으로 정렬해 주므로 첫 건을 쓴다.
+const pinnedNotice = computed(() => noticeStore.notices.find((n) => n.isPinned) ?? null)
 
 // 리스너(알림 접근) 권한 · 배터리 최적화 예외 자가진단 — 꺼져 있으면 상단 경고 배너 노출
 // (웹에서는 항상 숨김). 설정 화면에서 켜고 돌아오는 경우를 위해 앱 복귀(resume) 시에도
@@ -32,6 +37,8 @@ onMounted(async () => {
   refreshPermissionBanners()
   resumeHandle = await CapApp.addListener('resume', refreshPermissionBanners)
   if (!userStore.profile?.name) userStore.fetchProfile().catch(() => {})
+  // 공지 배너는 부가 정보이므로 실패해도 홈 렌더링을 막지 않는다.
+  noticeStore.fetchNotices().catch(() => {})
   await portfolioStore.fetchPortfolio()
   // 보유 코인 페어 코드로만 실시간 시세를 구독한다.
   const codes = portfolioStore.portfolio?.holdingMarketCodes ?? []
@@ -164,6 +171,30 @@ function fmtPrice(n: number): string {
     </div>
 
     <div class="px-4 flex flex-col gap-3 mt-1">
+
+      <!-- ── 고정 공지 배너 ── -->
+      <button
+        v-if="pinnedNotice"
+        class="w-full bg-brand-bg rounded-xl px-4 py-3.5 flex items-center gap-3 text-left active:opacity-80"
+        @click="router.push({ name: 'settings-notice-detail', params: { id: pinnedNotice.id } })"
+      >
+        <svg
+          class="shrink-0 text-brand" width="18" height="18" viewBox="0 0 24 24"
+          fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        >
+          <path d="m3 11 18-5v12L3 14v-3z" />
+          <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
+        </svg>
+        <span class="flex-1 text-sm font-medium text-text-primary truncate">
+          {{ pinnedNotice.title }}
+        </span>
+        <svg
+          class="shrink-0" width="16" height="16" viewBox="0 0 24 24"
+          fill="none" stroke="#0051ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+        >
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
 
       <!-- ── 알림 접근 권한 경고 배너 (자가진단) ── -->
       <button

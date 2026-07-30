@@ -115,6 +115,19 @@ const router = createRouter({
       component: () => import('@/views/settings/KbankCardView.vue'),
       meta: { requiresAuth: true, requiresOnboarding: true },
     },
+    {
+      // 공지사항 — 설정 메뉴 및 홈 고정 공지 배너에서 진입
+      path: '/settings/notices',
+      name: 'settings-notices',
+      component: () => import('@/views/settings/NoticesView.vue'),
+      meta: { requiresAuth: true, requiresOnboarding: true },
+    },
+    {
+      path: '/settings/notices/:id',
+      name: 'settings-notice-detail',
+      component: () => import('@/views/settings/NoticeDetailView.vue'),
+      meta: { requiresAuth: true, requiresOnboarding: true },
+    },
 
     // ══════════════════════════════════════
     // Catch-all unknown paths
