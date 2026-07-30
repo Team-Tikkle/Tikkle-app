@@ -13,11 +13,9 @@ interface TikkleSystemPlugin {
 
 const TikkleSystem = registerPlugin<TikkleSystemPlugin>('TikkleSystem')
 
-const isNative = () => Capacitor.isNativePlatform()
-
 /** 리스너(알림 접근) 권한이 켜져 있는지. 웹에서는 항상 true (배너 미노출). */
 export async function isListenerEnabled(): Promise<boolean> {
-  if (!isNative()) return true
+  if (!Capacitor.isNativePlatform()) return true
   try {
     return (await TikkleSystem.isNotificationListenerEnabled()).enabled
   } catch {
@@ -27,13 +25,13 @@ export async function isListenerEnabled(): Promise<boolean> {
 
 /** 시스템 알림 접근 설정 화면 열기. */
 export async function openNotificationAccessSettings(): Promise<void> {
-  if (!isNative()) return
+  if (!Capacitor.isNativePlatform()) return
   try { await TikkleSystem.openNotificationAccessSettings() } catch { /* no-op */ }
 }
 
 /** 배터리 최적화 예외가 적용되어 있는지. 웹에서는 항상 true. */
 export async function isBatteryExempt(): Promise<boolean> {
-  if (!isNative()) return true
+  if (!Capacitor.isNativePlatform()) return true
   try {
     return (await TikkleSystem.isIgnoringBatteryOptimizations()).ignoring
   } catch {
@@ -43,7 +41,7 @@ export async function isBatteryExempt(): Promise<boolean> {
 
 /** 배터리 최적화 예외 시스템 요청 다이얼로그를 띄운다. */
 export async function requestBatteryExemption(): Promise<void> {
-  if (!isNative()) return
+  if (!Capacitor.isNativePlatform()) return
   try { await TikkleSystem.requestIgnoreBatteryOptimizations() } catch { /* no-op */ }
 }
 
@@ -53,7 +51,7 @@ export async function requestBatteryExemption(): Promise<void> {
  * 바로 닫혀버리므로, 그 경우엔 이 함수로 현재 상태를 눈으로 확인/관리할 수 있게 한다.
  */
 export async function openBatteryOptimizationSettings(): Promise<void> {
-  if (!isNative()) return
+  if (!Capacitor.isNativePlatform()) return
   try { await TikkleSystem.openBatteryOptimizationSettings() } catch { /* no-op */ }
 }
 

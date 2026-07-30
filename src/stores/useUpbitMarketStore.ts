@@ -90,16 +90,12 @@ export const useUpbitMarketStore = defineStore('upbitMarket', () => {
 
     ws.onclose = () => {
       isConnected.value = false
-      _clearPing()
+      if (pingTimer) { clearInterval(pingTimer); pingTimer = null }
     }
   }
 
-  function _clearPing() {
-    if (pingTimer) { clearInterval(pingTimer); pingTimer = null }
-  }
-
   function _cleanup() {
-    _clearPing()
+    if (pingTimer) { clearInterval(pingTimer); pingTimer = null }
     if (ws) { ws.close(); ws = null }
     isConnected.value = false
   }

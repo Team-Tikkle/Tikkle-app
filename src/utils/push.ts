@@ -13,10 +13,6 @@ const CHANNEL_ID = 'tikkle_payment_result'
 let currentToken: string | null = null
 let listenersAttached = false
 
-function isNative(): boolean {
-  return Capacitor.isNativePlatform()
-}
-
 async function sendTokenToServer(token: string): Promise<void> {
   // Must not block app flow — a failed registration retries on next launch.
   try {
@@ -33,7 +29,7 @@ async function sendTokenToServer(token: string): Promise<void> {
  * Safe to call repeatedly — the server upserts tokens idempotently.
  */
 export async function registerPush(): Promise<void> {
-  if (!isNative()) return
+  if (!Capacitor.isNativePlatform()) return
 
   if (!listenersAttached) {
     listenersAttached = true

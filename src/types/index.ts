@@ -69,31 +69,9 @@ export interface PaymentFeedItem {
 }
 
 // ── Spring Data Page envelope ──
-export interface PageSort {
-  empty:    boolean
-  sorted:   boolean
-  unsorted: boolean
-}
-
-export interface Pageable {
-  offset:     number
-  sort:       PageSort
-  paged:      boolean
-  pageNumber: number
-  pageSize:   number
-  unpaged:    boolean
-}
-
 export interface Page<T> {
-  first:            boolean
-  last:             boolean
-  size:             number
-  content:          T[]
-  number:           number
-  sort:             PageSort
-  numberOfElements: number
-  pageable:         Pageable
-  empty:            boolean
+  content: T[]
+  last:    boolean
 }
 
 // ── Dashboard (GET /api/payments/dashboard) ──

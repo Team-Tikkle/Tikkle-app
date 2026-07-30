@@ -1,18 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type {
+  ApiEnvelope,
   NewsArticle,
   InsightArticle,
   GlossaryTerm,
   RecommendedVideo,
 } from '@/types'
-
-// Backend wraps every payload in the standard envelope: { code, message, data }
-interface Envelope<T> {
-  code: string
-  message: string
-  data: T
-}
 
 // ── Market-topic normalization ──
 // The backend serializes fields in camelCase (publishedAt, thumbnailUrl,
@@ -114,7 +108,7 @@ export const useInsightStore = defineStore('insight', () => {
   // ── Today's market topics (GET /api/insights/market-topics) ──
   async function fetchMarketTopics(): Promise<void> {
     const { default: api } = await import('@/utils/api')
-    const { data: envelope } = await api.get<Envelope<RawMarketTopic[]>>(
+    const { data: envelope } = await api.get<ApiEnvelope<RawMarketTopic[]>>(
       '/api/insights/market-topics',
     )
     marketTopics.value = envelope.data.map(normalizeMarketTopic)
@@ -123,7 +117,7 @@ export const useInsightStore = defineStore('insight', () => {
   // ── Investment glossary (GET /api/insights/terms) ──
   async function fetchTerms(): Promise<void> {
     const { default: api } = await import('@/utils/api')
-    const { data: envelope } = await api.get<Envelope<RawTerm[]>>(
+    const { data: envelope } = await api.get<ApiEnvelope<RawTerm[]>>(
       '/api/insights/terms',
     )
     terms.value = envelope.data.map((t) => ({
@@ -136,7 +130,7 @@ export const useInsightStore = defineStore('insight', () => {
   // ── Beginner article list, body excluded (GET /api/insights/articles) ──
   async function fetchArticles(): Promise<void> {
     const { default: api } = await import('@/utils/api')
-    const { data: envelope } = await api.get<Envelope<RawArticle[]>>(
+    const { data: envelope } = await api.get<ApiEnvelope<RawArticle[]>>(
       '/api/insights/articles',
     )
     articles.value = envelope.data.map(normalizeArticle)
@@ -145,7 +139,7 @@ export const useInsightStore = defineStore('insight', () => {
   // ── Beginner article detail with full body (GET /api/insights/articles/{id}) ──
   async function fetchArticle(id: string): Promise<InsightArticle> {
     const { default: api } = await import('@/utils/api')
-    const { data: envelope } = await api.get<Envelope<RawArticle>>(
+    const { data: envelope } = await api.get<ApiEnvelope<RawArticle>>(
       `/api/insights/articles/${id}`,
     )
     return normalizeArticle(envelope.data)
@@ -154,7 +148,7 @@ export const useInsightStore = defineStore('insight', () => {
   // ── Curated recommended videos (GET /api/insights/videos) ──
   async function fetchVideos(): Promise<void> {
     const { default: api } = await import('@/utils/api')
-    const { data: envelope } = await api.get<Envelope<RawVideo[]>>(
+    const { data: envelope } = await api.get<ApiEnvelope<RawVideo[]>>(
       '/api/insights/videos',
     )
     videos.value = envelope.data.map(normalizeVideo)

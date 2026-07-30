@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { Preferences } from '@capacitor/preferences'
-import type { UserProfile } from '@/types'
-import { mockUser } from '@/mocks'
+import type { ApiEnvelope, UserProfile } from '@/types'
 
 // ── localStorage keys ──
 const LS_ACCESS  = 'tikkle_access_token'
@@ -17,11 +16,6 @@ interface UserMeData {
   hasInvestmentProfile: boolean
   hasKbankAccount: boolean
   hasUpbitKey: boolean
-}
-interface UserMeEnvelope {
-  code: string
-  message: string
-  data: UserMeData
 }
 
 export const useUserStore = defineStore('user', () => {
@@ -186,7 +180,7 @@ export const useUserStore = defineStore('user', () => {
   // are preserved so they are not lost on a re-fetch.
   async function fetchProfile(): Promise<void> {
     const { default: api } = await import('@/utils/api')
-    const { data: envelope } = await api.get<UserMeEnvelope>('/api/users/me')
+    const { data: envelope } = await api.get<ApiEnvelope<UserMeData>>('/api/users/me')
     const fetched = envelope.data
     profile.value = {
       risk_type: profile.value?.risk_type ?? 'NEUTRAL',
@@ -221,7 +215,17 @@ export const useUserStore = defineStore('user', () => {
   async function bootstrap(): Promise<void> {
     // Dev mode: skip real API calls, hydrate mock profile so the app is usable
     if (DEV_SKIP) {
-      profile.value = { ...mockUser }
+      profile.value = {
+        id: 'user-001',
+        name: '티끌 사용자',
+        phoneNumber: '01012345678',
+        risk_type: 'NEUTRAL',
+        rule: 'UNDER_1000',
+        is_auto: true,
+        hasInvestmentProfile: true,
+        hasKbankAccount: true,
+        hasUpbitKey: true,
+      }
       return
     }
 
