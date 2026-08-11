@@ -6,6 +6,7 @@ import App from './App.vue'
 import router from './router'
 import { useUserStore } from './stores/useUserStore'
 import { navigateFromDeepLink } from './utils/deeplink'
+import { loadPendingReview } from './utils/pendingReview'
 import './style.css'
 
 // ── Splash screen (index.html #app-splash) ──
@@ -51,6 +52,17 @@ function hideSplash() {
   CapApp.addListener('appUrlOpen', ({ url }) => navigateFromDeepLink(url))
   const launch = await CapApp.getLaunchUrl()
   if (launch?.url) navigateFromDeepLink(launch.url)
+
+  // 매수 승인 후 진행 중이던 건이 있으면 그 화면으로 되돌린다.
+  // 딥링크로 들어온 경우엔 사용자가 고른 화면이 우선.
+  function resumePendingReview() {
+    const pending = loadPendingReview()
+    if (!pending?.eventId) return
+    if (router.currentRoute.value.path === '/payments/review') return
+    router.replace({ path: '/payments/review', query: pending })
+  }
+  if (!launch?.url) resumePendingReview()
+  CapApp.addListener('resume', resumePendingReview)
 
   // FCM: register the device token once the session is confirmed valid.
   // Login/signup paths call registerPush from the user store instead.

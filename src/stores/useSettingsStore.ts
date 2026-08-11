@@ -100,6 +100,8 @@ export const useSettingsStore = defineStore('settings', () => {
     const { default: api } = await import('@/utils/api')
     try {
       await api.patch('/api/settings/kbank', params)
+      // 로컬 스냅샷도 갱신 — 안 하면 화면 재진입(fetchSettings) 전까지 옛 값이 남는다.
+      if (linkedAccount.value) linkedAccount.value.targetCardLast4 = params.targetCardLast4
     } catch (err) {
       mapError(err)
     }

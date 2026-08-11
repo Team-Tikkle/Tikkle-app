@@ -86,7 +86,6 @@ export interface PaymentDashboard {
   totalUninvested:     number  // 미투자 잔돈 합계
   pendingCount:        number  // 대기 중 건수
   categorySpending:    CategorySpending[]
-  lastPaymentDetectedAt?: string | null  // 마지막 결제 감지 시각 (리스너 유실 가시화)
 }
 
 // Generic backend response envelope: { code, message, data }

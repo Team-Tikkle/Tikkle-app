@@ -88,7 +88,7 @@ export async function registerPush(): Promise<void> {
  * the session is cleared (the DELETE request needs the auth header).
  */
 export async function unregisterPush(): Promise<void> {
-  if (!isNative() || !currentToken) return
+  if (!Capacitor.isNativePlatform() || !currentToken) return
   try {
     const { default: api } = await import('@/utils/api')
     await api.delete('/api/users/me/device-token', { data: { fcmToken: currentToken } })

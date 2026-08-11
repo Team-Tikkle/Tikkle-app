@@ -61,7 +61,7 @@ function handleSave() {
       <div v-else-if="settingsStore.linkedAccount?.targetCardLast4" class="bg-surface rounded-xl px-4 py-3.5 flex items-center justify-between">
         <span class="text-sm text-text-tertiary">현재 등록된 카드</span>
         <span class="text-base font-semibold text-text-primary tracking-widest">
-          •••• {{ settingsStore.linkedAccount.targetCardLast4 }}
+          **** **** **** {{ settingsStore.linkedAccount.targetCardLast4 }}
         </span>
       </div>
       <p v-else-if="loadError" class="text-sm text-danger text-center">{{ loadError }}</p>
@@ -80,9 +80,9 @@ function handleSave() {
       </div>
 
       <!-- 푸시 알림 필수 안내 -->
-      <div class="bg-surface rounded-xl px-4 py-3.5 flex items-start gap-3">
+      <div class="bg-warning-bg border border-warning rounded-xl px-4 py-3.5 flex items-start gap-3">
         <svg
-          class="text-text-tertiary shrink-0 mt-0.5"
+          class="text-warning shrink-0 mt-0.5"
           width="16"
           height="16"
           viewBox="0 0 24 24"
@@ -96,7 +96,7 @@ function handleSave() {
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
         <div class="flex flex-col gap-2">
-          <p class="text-sm font-semibold text-text-primary">케이뱅크 앱 푸시 알림 필수</p>
+          <p class="text-sm font-bold text-warning">케이뱅크 앱 푸시 알림 필수</p>
           <p class="text-xs2 text-text-tertiary leading-relaxed">
             케이뱅크 앱의 결제 푸시 알림이 켜져 있어야 정상 작동합니다.
           </p>

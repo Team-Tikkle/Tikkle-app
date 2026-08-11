@@ -43,9 +43,9 @@ const isValid = computed(() => /^\d{4}$/.test(cardLast4.value));
     </div>
 
     <!-- 푸시 알림 필수 안내 -->
-    <div class="bg-surface rounded-xl px-4 py-3.5 flex items-start gap-3">
+    <div class="bg-warning-bg border border-warning rounded-xl px-4 py-3.5 flex items-start gap-3">
       <svg
-        class="text-text-tertiary shrink-0 mt-0.5"
+        class="text-warning shrink-0 mt-0.5"
         width="16"
         height="16"
         viewBox="0 0 24 24"
@@ -59,7 +59,7 @@ const isValid = computed(() => /^\d{4}$/.test(cardLast4.value));
         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
       </svg>
       <div class="flex flex-col gap-2">
-        <p class="text-sm font-semibold text-text-primary">
+        <p class="text-sm font-bold text-warning">
           케이뱅크 앱 푸시 알림 필수
         </p>
         <p class="text-xs2 text-text-tertiary leading-relaxed">

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import RuleSliderEditor from '@/components/common/RuleSliderEditor.vue';
+import { useModalBackHandler } from '@/composables/useAndroidBack';
 import type { CategoryType, RuleType } from '@/types';
 
 const props = defineProps<{
@@ -9,6 +10,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'close'): void;
 }>();
+
+useModalBackHandler(() => props.category !== null, () => emit('close'));
 
 const modelValue = defineModel<RuleType>({ required: true });
 </script>

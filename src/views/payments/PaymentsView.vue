@@ -48,17 +48,6 @@ const monthOptions = computed(() => {
 
 const monthSheetOpen = ref(false)
 
-// ── 마지막 결제 감지 (리스너 유실 자가 발견용) ──
-// null/undefined → 미표시. 당일이면 "오늘", 그 외 "N일 전".
-const lastDetectedLabel = computed(() => {
-  const iso = paymentStore.dashboard?.lastPaymentDetectedAt
-  if (!iso) return null
-  const detected = new Date(iso)
-  if (isNaN(detected.getTime())) return null
-  const days = Math.floor((Date.now() - detected.getTime()) / 86_400_000)
-  return days <= 0 ? '오늘' : `${days}일 전`
-})
-
 const selectedMonthLabel = computed(() =>
   monthOptions.value.find(m => m.value === paymentStore.feedMonth)?.label ?? paymentStore.feedMonth
 )
@@ -243,11 +232,6 @@ onUnmounted(() => observer?.disconnect())
       </Teleport>
 
       <!-- ── Summary stats ── -->
-      <!-- 마지막 결제 감지 시점 — 리스너가 죽었을 때 사용자가 스스로 발견하게 한다 -->
-      <p v-if="lastDetectedLabel" class="text-xs2 text-text-tertiary px-1">
-        마지막 결제 감지: <span class="font-semibold text-text-secondary">{{ lastDetectedLabel }}</span>
-      </p>
-
       <!-- 로딩 skeleton (첫 데이터 도착 전) -->
       <div v-if="paymentStore.dashboardLoading && !paymentStore.dashboard" class="grid grid-cols-3 gap-2">
         <div v-for="i in 3" :key="i" class="bg-white rounded-xl p-3 flex flex-col gap-1.5">

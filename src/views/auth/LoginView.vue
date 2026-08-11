@@ -47,7 +47,7 @@ async function handleLogin() {
 
     <!-- Brand -->
     <div class="flex flex-col items-center gap-4 mb-10">
-      <div class="w-20 h-20 rounded-3xl overflow-hidden shadow-lg">
+      <div class="w-20 h-20 rounded-3xl overflow-hidden shadow-lg border-4 border-white">
         <img src="/logo.png" alt="티끌" class="block w-full h-full object-cover" />
       </div>
       <div class="flex flex-col items-center gap-1.5">

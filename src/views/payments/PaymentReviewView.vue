@@ -13,7 +13,7 @@
  *   3. Await SUCCESS | PENDING_TRADE | DEPOSIT_FAILED | TRADE_FAILED |
  *      UPBIT_INVALID_KEY | TIMEOUT | FAILED event, then close SSE
  */
-import { ref, computed, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { useRoute, useRouter } from 'vue-router';
 import { usePaymentStore } from '@/stores/usePaymentStore';
@@ -21,6 +21,7 @@ import AppHeader from '@/components/common/AppHeader.vue';
 import { fmtKRW, fmtVolume } from '@/utils/format';
 import { useBackHandler } from '@/composables/useAndroidBack';
 import { coinIconUrl, coinIconFallback } from '@/utils/coin';
+import { savePendingReview, loadPendingReview, clearPendingReview } from '@/utils/pendingReview';
 import type { SseTradeResult } from '@/types';
 import type { AxiosError } from 'axios';
 
@@ -84,7 +85,15 @@ async function handleApprove() {
     return;
   }
 
-  // Step 2: open SSE
+  // Step 2: 진행 중 표시 후 스트림 구독
+  // 앱을 나갔다 돌아와도 이 화면으로 되돌아오도록 기억해 둔다.
+  savePendingReview(route.query as Record<string, string>);
+  openStream();
+}
+
+// 승인 없이 스트림만 다시 연다 (앱 복귀 후 재구독 경로에서도 사용).
+function openStream() {
+  if (!eventId) return;
   phase.value = 'waiting';
   sseAbort = new AbortController();
   const token = localStorage.getItem('tikkle_access_token') ?? '';
@@ -98,8 +107,9 @@ async function handleApprove() {
       // 문자열 하트비트(CONNECTED·PROCESSING) → 계속 대기
       if (name === 'CONNECTED' || name === 'PROCESSING') return;
 
-      // 터미널 이벤트: 연결 즉시 종료
+      // 터미널 이벤트: 연결 즉시 종료 + 복귀 대상에서 제외
       sseAbort?.abort();
+      clearPendingReview();
 
       // TIMEOUT은 문자열 payload. 결제 건이 PENDING_PURCHASE로 복구되어 재승인 가능하다.
       if (name === 'TIMEOUT') {
@@ -140,12 +150,18 @@ async function handleApprove() {
     onerror(err) {
       if (sseAbort?.signal.aborted) return; // 의도적 종료 — 무시
       sseAbort?.abort();
+      clearPendingReview();
       // 스트림 연결 실패(소유권 검증 404 PAYMENT-004 포함) → 실패 화면
       phase.value = 'failed';
       throw err; // 자동 재연결 방지
     },
   }).catch(() => {}); // AbortError 조용히 처리
 }
+
+// 승인까지 마친 뒤 앱을 나갔다 돌아온 경우 — 승인 재요청 없이 스트림만 다시 잡는다.
+onMounted(() => {
+  if (eventId && loadPendingReview()?.eventId === eventId) openStream();
+});
 
 // ── Reject ──
 const isRejecting = ref(false);
