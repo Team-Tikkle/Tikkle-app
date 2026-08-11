@@ -76,7 +76,7 @@ const twoFactorGuideOpen = ref(false);
           <li class="flex gap-3">
             <span class="text-xs font-bold text-white bg-brand rounded-full w-5 h-5 flex items-center justify-center shrink-0 mt-0.5">3</span>
             <p class="text-sm text-text-primary leading-relaxed">
-              IP 주소 등록란에 <span class="font-mono font-semibold text-text-primary bg-white px-1.5 py-0.5 rounded border border-surface-border">34.64.106.45</span>를 입력해 주세요.
+              IP 주소 등록란에 <span class="font-mono font-semibold text-text-primary bg-white px-1.5 py-0.5 rounded border border-surface-border">34.22.75.37</span>를 입력해 주세요.
             </p>
           </li>
           <li class="flex gap-3">
