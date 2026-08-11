@@ -33,16 +33,19 @@ function refreshPermissionBanners() {
   isBatteryExempt().then((exempt) => { batteryNotExempt.value = !exempt })
 }
 
+// 자산 조회 + 보유 코인 페어 코드로만 실시간 시세 구독. 재시도 버튼도 같은 경로를 탄다.
+async function retry() {
+  await portfolioStore.fetchPortfolio()
+  marketStore.connect(portfolioStore.portfolio?.holdingMarketCodes ?? [])
+}
+
 onMounted(async () => {
   refreshPermissionBanners()
   resumeHandle = await CapApp.addListener('resume', refreshPermissionBanners)
   if (!userStore.profile?.name) userStore.fetchProfile().catch(() => {})
   // 공지 배너는 부가 정보이므로 실패해도 홈 렌더링을 막지 않는다.
   noticeStore.fetchNotices().catch(() => {})
-  await portfolioStore.fetchPortfolio()
-  // 보유 코인 페어 코드로만 실시간 시세를 구독한다.
-  const codes = portfolioStore.portfolio?.holdingMarketCodes ?? []
-  marketStore.connect(codes)
+  await retry()
 })
 
 onUnmounted(() => {
@@ -251,8 +254,22 @@ function fmtPrice(n: number): string {
       <!-- ── 내 자산 ── -->
       <div v-else class="bg-white rounded-xl px-6 py-5 flex flex-col gap-4">
 
-        <!-- 에러 -->
-        <p v-if="portfolioStore.error" class="text-sm text-danger">{{ portfolioStore.error }}</p>
+        <!-- 에러 — 안내 한 줄 + 서버 원문 메시지 + 재시도 -->
+        <div v-if="portfolioStore.error" class="flex flex-col gap-3">
+          <div class="flex flex-col gap-1">
+            <p class="text-sm text-danger">{{ portfolioStore.error }}</p>
+            <p v-if="portfolioStore.errorDetail" class="text-xs2 text-text-tertiary leading-relaxed">
+              {{ portfolioStore.errorDetail }}
+            </p>
+          </div>
+          <button
+            class="w-full py-3 rounded-xl bg-brand text-white text-base font-semibold active:bg-brand-hover disabled:opacity-50"
+            :disabled="portfolioStore.loading"
+            @click="retry()"
+          >
+            {{ portfolioStore.loading ? '불러오는 중...' : '다시 시도' }}
+          </button>
+        </div>
 
         <!-- 로딩 skeleton (첫 데이터 도착 전) -->
         <div v-else-if="!portfolioStore.portfolio" class="flex flex-col gap-3">
