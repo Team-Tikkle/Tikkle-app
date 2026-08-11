@@ -4,18 +4,19 @@ import AppHeader from '@/components/common/AppHeader.vue';
 import CategoryRuleSheet from '@/components/settings/CategoryRuleSheet.vue';
 import { useSettingsStore } from '@/stores/useSettingsStore';
 import { ruleSummary } from '@/utils/format';
+import { CATEGORY_ICONS } from '@/utils/category';
 import type { CategoryType, RuleType } from '@/types';
 
 const settingsStore = useSettingsStore();
 
 const CATEGORIES: { type: CategoryType; label: string; icon: string }[] = [
-  { type: 'CAFE',     label: '카페·디저트', icon: '☕' },
-  { type: 'MART',     label: '편의점·마트', icon: '🏪' },
-  { type: 'FOOD',     label: '식사·배달',   icon: '🍽️' },
-  { type: 'SHOPPING', label: '쇼핑',        icon: '🛍️' },
-  { type: 'TRAFFIC',  label: '교통·주유',   icon: '🚌' },
-  { type: 'CULTURE',  label: '문화·여가',   icon: '🎬' },
-  { type: 'ETC',      label: '기타',        icon: '📦' },
+  { type: 'CAFE',     label: '카페·디저트', icon: CATEGORY_ICONS.CAFE },
+  { type: 'MART',     label: '편의점·마트', icon: CATEGORY_ICONS.MART },
+  { type: 'FOOD',     label: '식사·배달',   icon: CATEGORY_ICONS.FOOD },
+  { type: 'SHOPPING', label: '쇼핑',        icon: CATEGORY_ICONS.SHOPPING },
+  { type: 'TRAFFIC',  label: '교통·주유',   icon: CATEGORY_ICONS.TRAFFIC },
+  { type: 'CULTURE',  label: '문화·여가',   icon: CATEGORY_ICONS.CULTURE },
+  { type: 'ETC',      label: '기타',        icon: CATEGORY_ICONS.ETC },
 ];
 
 const localRules = reactive<Record<CategoryType, RuleType>>(
@@ -116,7 +117,11 @@ async function saveAll() {
             @click="openSheet(cat.type)"
           >
             <div class="flex items-center gap-3">
-              <span class="text-xl w-7 text-center leading-none">{{ cat.icon }}</span>
+              <!-- eslint-disable-next-line vue/no-v-html -->
+              <span
+                class="w-9 h-9 rounded-lg bg-brand-bg flex items-center justify-center shrink-0 text-brand"
+                v-html="cat.icon"
+              />
               <span class="text-base font-medium text-text-primary">{{ cat.label }}</span>
             </div>
             <div class="flex items-center gap-2">

@@ -40,8 +40,10 @@ const modelValue = defineModel<RuleType>({ required: true });
             class="w-full max-w-mobile bg-white rounded-t-3xl px-6 pt-5 pb-10 flex flex-col gap-5"
           >
             <div class="flex items-center justify-between">
-              <h3 class="text-md font-bold text-text-primary">
-                {{ props.category.icon }} {{ props.category.label }} 잔돈 규칙
+              <h3 class="text-md font-bold text-text-primary flex items-center gap-2">
+                <!-- eslint-disable-next-line vue/no-v-html -->
+                <span class="text-brand flex items-center" v-html="props.category.icon" />
+                {{ props.category.label }} 잔돈 규칙
               </h3>
               <button
                 class="w-8 h-8 flex items-center justify-center text-text-tertiary"
