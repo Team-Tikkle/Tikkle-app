@@ -67,6 +67,12 @@ export const useUserStore = defineStore('user', () => {
   function _clearSession() {
     _clearTokens()
     profile.value = null
+    // 네이티브 리스너가 읽는 사용자별 상태도 함께 비운다.
+    // 안 지우면 로그아웃 후에도 리스너가 옛 userId 로 결제를 계속 전송하고,
+    // 다음 사용자가 이전 사용자의 자동투자 Off 설정을 물려받는다.
+    // (실패해도 세션 정리는 계속돼야 하므로 await 하지 않는다)
+    Preferences.remove({ key: 'userId' }).catch(() => {})
+    Preferences.remove({ key: 'isInvestmentEnabled' }).catch(() => {})
   }
 
   // ════════════════════════════════════════════════
