@@ -14,7 +14,13 @@ import { CATEGORY_ICONS } from '@/utils/category'
 const paymentStore = usePaymentStore()
 const router = useRouter()
 
-// PENDING 결제 항목 → 결제 승인 페이지. 피드 항목의 id가 곧 eventId.
+// 승인 대기(PENDING)는 승인 화면으로, 진행 중(IN_PROGRESS)은 진행 화면으로 복귀한다.
+// 완료·미투자 건은 열 것이 없다.
+function isOpenable(tx: PaymentFeedItem): boolean {
+  return tx.status === 'PENDING' || tx.status === 'IN_PROGRESS'
+}
+
+// 결제 승인/진행 페이지로 이동. 피드 항목의 id가 곧 eventId.
 function goReview(tx: PaymentFeedItem) {
   router.push({
     name: 'payment-review',
@@ -96,13 +102,13 @@ const categories = computed(() => {
 const maxAmount = computed(() => Math.max(1, ...categories.value.map((c) => c.amount)))
 
 // ── Status badge config ──
-// 서버 피드 status는 PENDING / INVESTED / CANCELED 3개뿐이다.
 // CANCELED는 사용자 거절·만료·업비트 실패를 모두 뭉친 값이라 사유를 특정하지 않는
 // 중립 문구('미투자')로 안내한다.
 const statusConfig: Record<TransactionStatus, { label: string; class: string }> = {
-  INVESTED: { label: '투자 완료', class: 'badge-invested' },
-  PENDING:  { label: '대기 중',   class: 'badge-pending' },
-  CANCELED: { label: '미투자',    class: 'badge-canceled' },
+  INVESTED:    { label: '투자 완료', class: 'badge-invested' },
+  PENDING:     { label: '대기 중',   class: 'badge-pending' },
+  IN_PROGRESS: { label: '진행 중',   class: 'badge-pending' },
+  CANCELED:    { label: '미투자',    class: 'badge-canceled' },
 }
 
 const fmt = fmtKRW
@@ -327,8 +333,8 @@ onUnmounted(() => observer?.disconnect())
             v-for="tx in paymentStore.feed"
             :key="tx.id"
             class="py-3.5 flex items-center gap-3 first:pt-0"
-            :class="tx.status === 'PENDING' ? 'cursor-pointer' : ''"
-            @click="tx.status === 'PENDING' && goReview(tx)"
+            :class="isOpenable(tx) ? 'cursor-pointer' : ''"
+            @click="isOpenable(tx) && goReview(tx)"
           >
             <!-- Category icon — tap to change category -->
             <button
@@ -383,8 +389,9 @@ onUnmounted(() => observer?.disconnect())
                 {{ fmtVolume(tx.investedVolume) }}개 · ₩{{ fmt(tx.investedPrice) }}
               </span>
 
-              <!-- Remaining time until the approval deadline — PENDING only -->
-              <RemainingTime v-if="tx.status === 'PENDING' && tx.expiredAt" :expired-at="tx.expiredAt" />
+              <!-- 현재 단계의 마감 시각 — PENDING은 승인 마감(24h),
+                   IN_PROGRESS는 2차 인증(210초)/체결(10분) 마감 -->
+              <RemainingTime v-if="isOpenable(tx) && tx.expiredAt" :expired-at="tx.expiredAt" />
             </div>
           </div>
         </div>

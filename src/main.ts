@@ -6,7 +6,6 @@ import App from './App.vue'
 import router from './router'
 import { useUserStore } from './stores/useUserStore'
 import { navigateFromDeepLink } from './utils/deeplink'
-import { loadPendingReview } from './utils/pendingReview'
 import './style.css'
 
 // ── Splash screen (index.html #app-splash) ──
@@ -53,16 +52,29 @@ function hideSplash() {
   const launch = await CapApp.getLaunchUrl()
   if (launch?.url) navigateFromDeepLink(launch.url)
 
-  // 매수 승인 후 진행 중이던 건이 있으면 그 화면으로 되돌린다.
+  // 승인 후 진행 중인 건이 있으면 그 화면으로 되돌린다. 2차 인증은 외부 앱으로
+  // 전환해야 끝나므로 앱을 떠나는 것이 정상 경로다 — 복귀할 때마다 서버에 물어본다.
   // 딥링크로 들어온 경우엔 사용자가 고른 화면이 우선.
-  function resumePendingReview() {
-    const pending = loadPendingReview()
-    if (!pending?.eventId) return
+  async function resumeInProgressPayment() {
+    if (!userStore.isAuthenticated) return
     if (router.currentRoute.value.path === '/payments/review') return
-    router.replace({ path: '/payments/review', query: pending })
+    const { usePaymentStore } = await import('@/stores/usePaymentStore')
+    const [inProgress] = await usePaymentStore().fetchInProgress()
+    if (!inProgress) return
+    router.replace({
+      path: '/payments/review',
+      query: {
+        eventId:     String(inProgress.eventId),
+        merchant:    inProgress.merchant,
+        amount:      String(inProgress.amount),
+        spareChange: String(inProgress.spareChange),
+        ticker:      inProgress.targetCoinMarket ?? undefined,
+        stockName:   inProgress.targetCoinName ?? undefined,
+      },
+    })
   }
-  if (!launch?.url) resumePendingReview()
-  CapApp.addListener('resume', resumePendingReview)
+  if (!launch?.url) void resumeInProgressPayment()
+  CapApp.addListener('resume', () => void resumeInProgressPayment())
 
   // FCM: register the device token once the session is confirmed valid.
   // Login/signup paths call registerPush from the user store instead.

@@ -21,7 +21,6 @@ import AppHeader from '@/components/common/AppHeader.vue';
 import { fmtKRW, fmtVolume } from '@/utils/format';
 import { useBackHandler } from '@/composables/useAndroidBack';
 import { coinIconUrl, coinIconFallback } from '@/utils/coin';
-import { savePendingReview, loadPendingReview, clearPendingReview } from '@/utils/pendingReview';
 import type { SseTradeResult } from '@/types';
 import type { AxiosError } from 'axios';
 
@@ -77,8 +76,14 @@ async function handleApprove() {
       // 2차 인증 수단 미설정 → 설정 화면으로 유도
       setupMsg.value = '투자를 진행하려면 업비트 2차 인증 수단 설정이 필요해요.';
       phase.value = 'upbit_setup_required';
+    } else if (code === 'PAYMENT-006') {
+      // 승인 대기 상태가 아니라 거절된 경우 — 이미 진행 중이거나 이미 끝난 건이다.
+      // (진행 중 재승인은 2차 인증이 두 번 나가 원화가 이중 입금되므로 서버가 막는다.)
+      // 스트림을 잡으면 서버가 현재 상태 스냅샷을 보내주므로 어느 쪽이든 알아서 맞는
+      // 화면으로 간다.
+      openStream();
     } else {
-      // PAYMENT-006 / PAYMENT-007 / UPBIT-008 / 기타 → 재시도 가능 (idle 복귀)
+      // PAYMENT-007 / UPBIT-008 / 기타 → 재시도 가능 (idle 복귀)
       phase.value = 'idle';
       errorMsg.value = '투자 요청에 실패했어요. 잠시 후 다시 시도해 주세요.';
     }
@@ -86,8 +91,6 @@ async function handleApprove() {
   }
 
   // Step 2: 진행 중 표시 후 스트림 구독
-  // 앱을 나갔다 돌아와도 이 화면으로 되돌아오도록 기억해 둔다.
-  savePendingReview(route.query as Record<string, string>);
   openStream();
 }
 
@@ -96,6 +99,8 @@ function openStream() {
   if (!eventId) return;
   phase.value = 'waiting';
   sseAbort = new AbortController();
+  // 4xx 는 재시도해도 소용없다(PAYMENT-004 등) — 그때만 실패로 끝낸다.
+  let fatal = false;
   const token = localStorage.getItem('tikkle_access_token') ?? '';
   const baseUrl = (import.meta.env.VITE_API_BASE_URL as string) ?? '';
 
@@ -107,9 +112,8 @@ function openStream() {
       // 문자열 하트비트(CONNECTED·PROCESSING) → 계속 대기
       if (name === 'CONNECTED' || name === 'PROCESSING') return;
 
-      // 터미널 이벤트: 연결 즉시 종료 + 복귀 대상에서 제외
+      // 터미널 이벤트: 연결 즉시 종료 (웹뷰 자동 재연결 방지)
       sseAbort?.abort();
-      clearPendingReview();
 
       // TIMEOUT은 문자열 payload. 결제 건이 PENDING_PURCHASE로 복구되어 재승인 가능하다.
       if (name === 'TIMEOUT') {
@@ -140,27 +144,52 @@ function openStream() {
         if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'trade_failed';
       } else if (name === 'UPBIT_INVALID_KEY') {
+        // 서버는 이 건을 FAILED 로 확정한다 — 피드도 같이 맞춰 둔다.
+        if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'upbit_invalid_key';
+      } else if (name === 'CLOSED') {
+        // 이미 거절·만료(NOT_INVESTED)된 건에 재구독한 경우. 실패가 아니므로
+        // 화면을 붙잡지 않고 조용히 결제 내역으로 보낸다.
+        if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
+        router.replace('/payments');
       } else {
         // FAILED 및 알 수 없는 이벤트
         if (eventId) paymentStore.markFeedItemCanceled(Number(eventId));
         phase.value = 'failed';
       }
     },
+    onopen(res) {
+      if (res.ok) return Promise.resolve();
+      fatal = res.status >= 400 && res.status < 500;
+      throw new Error(`stream ${res.status}`);
+    },
     onerror(err) {
       if (sseAbort?.signal.aborted) return; // 의도적 종료 — 무시
-      sseAbort?.abort();
-      clearPendingReview();
-      // 스트림 연결 실패(소유권 검증 404 PAYMENT-004 포함) → 실패 화면
-      phase.value = 'failed';
-      throw err; // 자동 재연결 방지
+      if (fatal) {
+        sseAbort?.abort();
+        phase.value = 'failed';
+        throw err; // 자동 재연결 중단
+      }
+      // 2차 인증 중 앱 전환·네트워크 변경으로 끊기는 것은 정상 경로다.
+      // 실패 화면을 띄우지 않고 라이브러리의 자동 재연결에 맡긴다 —
+      // 재구독하면 서버가 현재 상태 스냅샷을 1회 다시 보내준다.
     },
   }).catch(() => {}); // AbortError 조용히 처리
 }
 
-// 승인까지 마친 뒤 앱을 나갔다 돌아온 경우 — 승인 재요청 없이 스트림만 다시 잡는다.
-onMounted(() => {
-  if (eventId && loadPendingReview()?.eventId === eventId) openStream();
+// 이미 승인돼 진행 중인 건이면 승인 재요청 없이 스트림만 다시 잡는다.
+// 진행 여부는 서버(GET /api/payments/in-progress)가 판단한다 — 재설치·기기 교체에도
+// 정확하고, PENDING_DEPOSIT 에서 재승인하면 400 PAYMENT-006 이라 물어보고 가야 한다.
+// 확인이 끝날 때까지 '투자하기' 를 눌리지 않게 막는다.
+const resumeChecked = ref(false);
+
+onMounted(async () => {
+  if (!eventId) return (resumeChecked.value = true);
+  const inProgress = await paymentStore.fetchInProgress();
+  const found = inProgress.some((p) => String(p.eventId) === eventId);
+  resumeChecked.value = true;
+  // 구독 직후 서버가 현재 상태 스냅샷을 1회 보내주므로 phase 는 그걸로 확정된다.
+  if (found) openStream();
 });
 
 // ── Reject ──
@@ -254,22 +283,22 @@ const successCoinName = computed(
         <button
           class="w-full py-4 rounded-2xl text-white text-lg font-bold transition-colors flex items-center justify-center gap-2"
           :class="
-            phase === 'approving' || !isActionable
+            phase === 'approving' || !isActionable || !resumeChecked
               ? 'bg-text-disabled'
               : 'bg-brand active:bg-brand-hover'
           "
-          :disabled="phase === 'approving' || !isActionable"
+          :disabled="phase === 'approving' || !isActionable || !resumeChecked"
           @click="handleApprove"
         >
           <span
-            v-if="phase === 'approving'"
+            v-if="phase === 'approving' || !resumeChecked"
             class="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"
           />
           투자하기
         </button>
         <button
           class="w-full py-3 text-base text-text-tertiary font-medium disabled:opacity-40"
-          :disabled="phase === 'approving' || isRejecting || !isActionable"
+          :disabled="phase === 'approving' || isRejecting || !isActionable || !resumeChecked"
           @click="handleReject"
         >
           {{ isRejecting ? '취소 중...' : '투자 취소' }}

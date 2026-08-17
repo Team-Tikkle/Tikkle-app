@@ -7,6 +7,7 @@ import type {
   PaymentDashboard,
   ApiEnvelope,
   CategoryType,
+  InProgressPayment,
 } from '@/types'
 
 export const usePaymentStore = defineStore('payment', () => {
@@ -20,6 +21,21 @@ export const usePaymentStore = defineStore('payment', () => {
   async function rejectPaymentEvent(eventId: string) {
     const { default: api } = await import('@/utils/api')
     await api.post(`/api/payments/${eventId}/reject`)
+  }
+
+  // ── 진행 중인 결제 조회 (GET /api/payments/in-progress) ──
+  // 앱 재진입 시 화면 복구의 출발점. 없으면 빈 배열.
+  // 복구 경로에서 호출되므로 실패해도 앱이 멈추면 안 된다 → 빈 배열로 폴백.
+  async function fetchInProgress(): Promise<InProgressPayment[]> {
+    try {
+      const { default: api } = await import('@/utils/api')
+      const { data: envelope } = await api.get<ApiEnvelope<InProgressPayment[]>>(
+        '/api/payments/in-progress',
+      )
+      return envelope.data ?? []
+    } catch {
+      return []
+    }
   }
 
   // FAILED SSE 이벤트 수신 시 피드 로컬 상태를 CANCELED로 낙관적 업데이트한다.
@@ -139,6 +155,7 @@ export const usePaymentStore = defineStore('payment', () => {
   return {
     approvePaymentEvent,
     rejectPaymentEvent,
+    fetchInProgress,
     markFeedItemCanceled,
     updateCategory,
     // feed / dashboard state for the 결제 내역 tab

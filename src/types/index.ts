@@ -44,12 +44,14 @@ export interface UserProfile {
 }
 
 // Payments & Transactions
-export type TransactionStatus = 'PENDING' | 'INVESTED' | 'CANCELED'
+// IN_PROGRESS = 승인 후 진행 중(PENDING_DEPOSIT·PENDING_TRADE) — 승인/거절 불가.
+export type TransactionStatus = 'PENDING' | 'IN_PROGRESS' | 'INVESTED' | 'CANCELED'
 
 // ── Payment feed & dashboard (GET /api/payments, /api/payments/dashboard) ──
 // These endpoints return camelCase fields straight from the backend.
 
 // Status filter for the feed; mirrors the 결제 내역 tab. 'ALL' = no filter.
+// IN_PROGRESS 는 응답에만 존재하는 값이라 쿼리 필터에는 넣지 않는다.
 export type PaymentFeedStatus = 'ALL' | 'PENDING' | 'INVESTED' | 'CANCELED'
 
 // One row in the paged payment feed.
@@ -65,6 +67,21 @@ export interface PaymentFeedItem {
   targetCoinName:   string | null  // e.g. "비트코인"
   investedVolume:   number | null  // 체결된 코인 수량 (INVESTED 상태에서만 존재)
   investedPrice:    number | null  // 체결 단가 (INVESTED 상태에서만 존재)
+  createdAt:        string
+}
+
+// ── 진행 중인 결제 (GET /api/payments/in-progress) ──
+// 승인 후 아직 끝나지 않은 건. status 는 피드의 PaymentViewStatus 가 아니라
+// 내부 상태가 그대로 내려오고, 마감 시각 필드명도 피드와 달리 expiresAt 이다.
+export interface InProgressPayment {
+  eventId:          number
+  status:           'PENDING_DEPOSIT' | 'PENDING_TRADE'
+  merchant:         string
+  amount:           number
+  spareChange:      number
+  targetCoinMarket: string | null
+  targetCoinName:   string | null
+  expiresAt:        string
   createdAt:        string
 }
 

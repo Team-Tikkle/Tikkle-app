@@ -65,6 +65,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
 
     // ── Verified package whitelist ────────────────────────────────────────────
     private static final String PKG_KBANK     = "com.kbankwith.smartbank"; // K뱅크
+    private static final String PKG_TEST      = "com.android.shell"; // TEST shell
 
     // ── K뱅크 (KBank) patterns ─────────────────────────────────────────────────
     //
@@ -108,7 +109,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
         Log.v(TAG, "onNotificationPosted pkg=" + pkg);
 
         // Hard whitelist — drop everything that is not a verified target
-        if (!PKG_KBANK.equals(pkg)) return;
+        if (!PKG_KBANK.equals(pkg) && !PKG_TEST.equals(pkg)) return;
 
         // 자동 투자 서비스가 Off 상태이면 파싱·전송 없이 즉시 종료.
         // 프론트엔드가 PATCH /api/settings/investment 호출 후 CapacitorStorage에 동기화한다.
@@ -149,7 +150,7 @@ public class PaymentNotificationListener extends NotificationListenerService {
      * source package. Returns null if the text does not match the expected layout.
      */
     private ParsedPayment routeParser(String pkg, String body) {
-        if (!PKG_KBANK.equals(pkg)) {
+        if (!PKG_KBANK.equals(pkg) && !PKG_TEST.equals(pkg)) {
             return null;
         }
         try {
