@@ -9,6 +9,7 @@ import type {
   CategoryType,
   InProgressPayment,
 } from '@/types'
+import { USE_MOCK, mockPaymentFeed, mockDashboard } from '@/mocks'
 
 export const usePaymentStore = defineStore('payment', () => {
   // ── Spare-change proposal approval (from NEED_APPROVAL notification) ──
@@ -78,8 +79,17 @@ export const usePaymentStore = defineStore('payment', () => {
     month: string
     page?: number
   }): Promise<Page<PaymentFeedItem>> {
-    const { default: api } = await import('@/utils/api')
     const { status = 'ALL', month, page = 0 } = params
+
+    // 목 모드: 상태 필터만 적용해 한 페이지로 돌려준다(last=true 라 무한스크롤은 즉시 종료).
+    if (USE_MOCK) {
+      const content = status === 'ALL'
+        ? mockPaymentFeed
+        : mockPaymentFeed.filter((tx) => tx.status === status)
+      return { content, last: true }
+    }
+
+    const { default: api } = await import('@/utils/api')
     const { data: envelope } = await api.get<ApiEnvelope<Page<PaymentFeedItem>>>(
       '/api/payments',
       { params: { status, month, page } },
@@ -90,6 +100,7 @@ export const usePaymentStore = defineStore('payment', () => {
   // ── Monthly dashboard (GET /api/payments/dashboard) — low-level fetch ──
   // month is 'YYYY-MM' (e.g. "2026-06").
   async function fetchPaymentDashboard(month: string): Promise<PaymentDashboard> {
+    if (USE_MOCK) return mockDashboard
     const { default: api } = await import('@/utils/api')
     const { data: envelope } = await api.get<ApiEnvelope<PaymentDashboard>>(
       '/api/payments/dashboard',

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { AxiosError } from 'axios'
 import type { Portfolio, ApiEnvelope } from '@/types'
+import { USE_MOCK, mockPortfolio } from '@/mocks'
 
 export const usePortfolioStore = defineStore('portfolio', () => {
   const portfolio = ref<Portfolio | null>(null)
@@ -21,6 +22,10 @@ export const usePortfolioStore = defineStore('portfolio', () => {
     upbitKeyInvalid.value = false
     loading.value = true
     try {
+      if (USE_MOCK) {
+        portfolio.value = mockPortfolio
+        return
+      }
       const { default: api } = await import('@/utils/api')
       const { data: envelope } = await api.get<ApiEnvelope<Portfolio>>('/api/upbit/portfolios')
       portfolio.value = envelope.data

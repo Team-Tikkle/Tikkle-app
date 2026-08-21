@@ -23,6 +23,7 @@ cp .env.example .env
 | `VITE_API_BASE_URL` | 백엔드 API 베이스 URL |
 | `VITE_PAYMENT_SECRET_KEY` | 결제 스크래핑 HMAC 서명 시크릿 (백엔드와 동일해야 함) |
 | `VITE_SKIP_AUTH` | 개발용 인증 우회 (`true` 시 목 프로필로 실행). 실기기 빌드에서는 `false` |
+| `VITE_USE_MOCK` | 데모/스크린샷용 목 데이터 (`true` 시 홈 보유자산·결제 내역을 예시 데이터로 대체). 로그인 여부와 무관 |
 
 ## 웹 개발
 
@@ -30,8 +31,22 @@ cp .env.example .env
 npm install
 npm run dev          # 개발 서버
 npm run build        # 타입체크 + 프로덕션 빌드 → dist/
+npm run build:demo   # 목 데이터를 넣은 데모 빌드 (스크린샷용, 아래 참고)
 npm run type-check   # 타입 검사만
 ```
+
+## 데모(스크린샷) 빌드
+
+실기기·AVD에서 예시 데이터로 스크린샷을 찍을 때 씁니다. 홈의 보유자산과 결제
+내역이 `src/mocks` 의 예시 데이터로 대체됩니다(로그인은 실제로 해야 합니다).
+
+```bash
+npm run build:demo         # .env.demo 의 VITE_USE_MOCK=true 가 적용됨
+npx cap sync android
+```
+
+운영 빌드(`npm run build`)는 `MODE=production` 이라 **코드 레벨에서 목이 강제로
+꺼지고**, 목 데이터는 트리셰이킹되어 번들에 포함되지 않습니다.
 
 ## 안드로이드 빌드
 
