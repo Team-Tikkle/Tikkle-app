@@ -1,4 +1,5 @@
 import type { AxiosError } from 'axios'
+import type { TwoFactorProvider } from '@/types'
 
 // ── 서버 에러 응답 규약 ──
 // 실패 응답은 { code, message } 형태이며 식별자는 message가 아닌 code 필드에 담긴다.
@@ -48,3 +49,11 @@ const PHONE_RE = /^01[0-9]{8,9}$/
 export function isValidPhone(phone: string): boolean {
   return PHONE_RE.test(phone)
 }
+
+// ── 업비트 2차 인증 수단 ──
+// 온보딩·설정 두 화면이 같은 목록을 쓴다.
+export const TWO_FACTOR_OPTIONS: { key: TwoFactorProvider; label: string }[] = [
+  { key: 'KAKAO', label: '카카오톡' },
+  { key: 'NAVER', label: '네이버'   },
+  { key: 'HANA',  label: '하나인증서' },
+]

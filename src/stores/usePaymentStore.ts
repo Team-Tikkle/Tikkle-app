@@ -124,6 +124,7 @@ export const usePaymentStore = defineStore('payment', () => {
   }
 
   // Append the next chunk (called by the infinite-scroll observer).
+  // 호출부가 전부 fire-and-forget 이라 여기서 삼키지 않으면 unhandled rejection 이 된다.
   async function loadMoreFeed() {
     if (feedLoading.value || feedLast.value) return
     feedLoading.value = true
@@ -136,17 +137,22 @@ export const usePaymentStore = defineStore('payment', () => {
       feed.value.push(...pageData.content)
       feedLast.value = pageData.last
       feedPage.value += 1
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn('[payment] 결제 내역 조회 실패:', err)
     } finally {
       feedLoading.value = false
     }
   }
 
   // Load the monthly dashboard (summary cards, category chart, pending count).
+  // loadMoreFeed 와 같은 이유로 여기서 삼킨다 — BottomNav 등이 await 하지 않는다.
   async function loadDashboard(month?: string) {
     if (month) feedMonth.value = month
     dashboardLoading.value = true
     try {
       dashboard.value = await fetchPaymentDashboard(feedMonth.value)
+    } catch (err) {
+      if (import.meta.env.DEV) console.warn('[payment] 대시보드 조회 실패:', err)
     } finally {
       dashboardLoading.value = false
     }

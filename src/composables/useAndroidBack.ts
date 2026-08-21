@@ -8,7 +8,7 @@ import type { Router } from 'vue-router'
 // Last registered = highest priority. Handler returns true if it consumed the event.
 const _handlers: Array<() => boolean> = []
 
-export function registerBackHandler(handler: () => boolean): () => void {
+function registerBackHandler(handler: () => boolean): () => void {
   _handlers.push(handler)
   return () => {
     const i = _handlers.lastIndexOf(handler)

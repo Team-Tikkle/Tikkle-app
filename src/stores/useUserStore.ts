@@ -98,9 +98,6 @@ export const useUserStore = defineStore('user', () => {
       id: '',
       name: '',
       phoneNumber: params.phoneNumber,
-      risk_type: 'NEUTRAL',
-      rule: 'UNDER_1000',
-      is_auto: true,
       hasInvestmentProfile: !tokenData.isNewUser,
       hasKbankAccount:      !tokenData.isNewUser,
       hasUpbitKey:          !tokenData.isNewUser,
@@ -134,9 +131,6 @@ export const useUserStore = defineStore('user', () => {
       id: '',
       name: params.name,
       phoneNumber: params.phoneNumber,
-      risk_type: 'NEUTRAL',
-      rule: 'UNDER_1000',
-      is_auto: true,
       hasInvestmentProfile: false,
       hasKbankAccount:      false,
       hasUpbitKey:          false,
@@ -182,16 +176,11 @@ export const useUserStore = defineStore('user', () => {
 
   // ── Get profile (GET /api/users/me) ──
   // Fetches id, name, and phoneNumber from the server and merges them into the
-  // existing profile. Fields seeded during login (risk_type, rule, is_auto)
-  // are preserved so they are not lost on a re-fetch.
   async function fetchProfile(): Promise<void> {
     const { default: api } = await import('@/utils/api')
     const { data: envelope } = await api.get<ApiEnvelope<UserMeData>>('/api/users/me')
     const fetched = envelope.data
     profile.value = {
-      risk_type: profile.value?.risk_type ?? 'NEUTRAL',
-      rule:      profile.value?.rule      ?? 'UNDER_1000',
-      is_auto:   profile.value?.is_auto   ?? true,
       id:    String(fetched.id),
       name:  fetched.name,
       phoneNumber: fetched.phoneNumber,
@@ -225,9 +214,6 @@ export const useUserStore = defineStore('user', () => {
         id: 'user-001',
         name: '티끌 사용자',
         phoneNumber: '01012345678',
-        risk_type: 'NEUTRAL',
-        rule: 'UNDER_1000',
-        is_auto: true,
         hasInvestmentProfile: true,
         hasKbankAccount: true,
         hasUpbitKey: true,

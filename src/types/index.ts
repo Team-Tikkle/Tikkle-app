@@ -1,6 +1,4 @@
 // User & Onboarding
-export type RiskType = 'STABLE' | 'NEUTRAL' | 'AGGRESSIVE'
-export type RoundUpRule = 'UNDER_1000' | 'UNDER_500' | 'UNDER_100'
 
 // ── Onboarding API payload types (POST /api/onboarding) ──
 // 코인 투자 성향 설문 Q1~Q5
@@ -35,9 +33,6 @@ export interface UserProfile {
   id: string
   name: string
   phoneNumber?: string
-  risk_type: RiskType
-  rule: RoundUpRule
-  is_auto: boolean
   hasInvestmentProfile: boolean
   hasKbankAccount: boolean
   hasUpbitKey: boolean

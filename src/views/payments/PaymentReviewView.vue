@@ -213,6 +213,67 @@ const fmt = fmtKRW;
 const successCoinName = computed(
   () => sseResult.value?.targetCoinName || stockName || '코인',
 );
+
+// ── 결과 화면 6종 ──
+// 아이콘·문구·버튼만 다르고 레이아웃이 같아 데이터로만 분기한다.
+type OutcomePhase = 'deposit_failed' | 'trade_failed' | 'timeout'
+  | 'upbit_setup_required' | 'upbit_invalid_key' | 'failed';
+
+interface Outcome {
+  icon:     'x' | 'clock' | 'info';
+  title:    string;
+  body:     string[];              // 줄바꿈 단위
+  note?:    string;                // 회색 고지 박스 (원화 잔류 안내 등)
+  primary?: { label: string; run: () => void };
+  back:     string;                // 하단 이탈 버튼 문구
+}
+
+const OUTCOMES: Record<OutcomePhase, Outcome> = {
+  deposit_failed: {
+    icon: 'x',
+    title: '입금 실패',
+    body: ['업비트 원화 입금이 거절되거나 취소되었어요.', '출금된 원화는 없습니다.'],
+    back: '돌아가기',
+  },
+  trade_failed: {
+    icon: 'x',
+    title: '매수 실패',
+    body: ['매수 주문이 체결되지 못했어요.'],
+    note: '케이뱅크 계좌에서 출금된 원화는 현재 업비트 계좌에 안전하게 보관되어 있습니다. 업비트 앱에서 직접 매수하시거나 원화를 출금해 주세요.',
+    back: '돌아가기',
+  },
+  timeout: {
+    icon: 'clock',
+    title: '인증 시간 초과',
+    body: ['2차 인증 시간이 초과되었어요.', '결제 건이 유지되어 다시 승인할 수 있어요.'],
+    primary: { label: '다시 승인하기', run: () => { phase.value = 'idle'; } },
+    back: '나중에 하기',
+  },
+  upbit_setup_required: {
+    icon: 'info',
+    title: '업비트 설정 필요',
+    body: [],  // setupMsg 로 대체 — 연동/2차인증 중 무엇이 빠졌는지에 따라 달라진다
+    primary: { label: '업비트 설정하기', run: () => router.replace('/settings/api-key') },
+    back: '나중에 하기',
+  },
+  upbit_invalid_key: {
+    icon: 'x',
+    title: '업비트 인증 만료',
+    body: ['업비트 인증이 만료되었습니다.', '다시 연동해 주세요.'],
+    primary: { label: '업비트 재연동', run: () => router.replace('/settings/api-key') },
+    back: '나중에 하기',
+  },
+  failed: {
+    icon: 'x',
+    title: '매수 실패',
+    body: ['알 수 없는 오류로 매수에 실패했어요.', '잠시 후 다시 시도해 주세요.'],
+    back: '돌아가기',
+  },
+};
+
+const outcome = computed<Outcome | null>(
+  () => OUTCOMES[phase.value as OutcomePhase] ?? null,
+);
 </script>
 
 <template>
@@ -450,176 +511,75 @@ const successCoinName = computed(
       </div>
     </template>
 
-    <!-- ════ Phase: deposit_failed (입금 실패) ════ -->
-    <template v-else-if="phase === 'deposit_failed'">
+    <!-- ════ Phase: 결과 화면 6종 (OUTCOMES 로 분기) ════ -->
+    <template v-else-if="outcome">
       <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
-        <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </div>
-        <div class="flex flex-col items-center gap-2 text-center">
-          <p class="text-2xl font-bold text-text-primary">입금 실패</p>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            업비트 원화 입금이 거절되거나 취소되었어요.<br>출금된 원화는 없습니다.
-          </p>
-        </div>
-      </div>
-      <div class="px-6 pb-10 pt-4">
-        <button
-          class="w-full py-4 rounded-2xl bg-surface text-text-primary text-lg font-semibold active:bg-surface-border"
-          @click="router.replace('/payments')"
+        <!-- 아이콘 -->
+        <div
+          class="w-24 h-24 rounded-full flex items-center justify-center"
+          :class="{
+            'bg-danger-bg': outcome.icon === 'x',
+            'bg-surface':   outcome.icon === 'clock',
+            'bg-brand-bg':  outcome.icon === 'info',
+          }"
         >
-          돌아가기
-        </button>
-      </div>
-    </template>
-
-    <!-- ════ Phase: trade_failed (매수 실패 — 원화는 업비트에 있음) ════ -->
-    <template v-else-if="phase === 'trade_failed'">
-      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
-        <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <svg
+            v-if="outcome.icon === 'x'"
+            width="48" height="48" viewBox="0 0 24 24" fill="none"
+            stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+          >
             <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
           </svg>
+          <svg
+            v-else-if="outcome.icon === 'clock'"
+            width="48" height="48" viewBox="0 0 24 24" fill="none"
+            stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+          </svg>
+          <svg
+            v-else
+            width="44" height="44" viewBox="0 0 24 24" fill="none"
+            stroke="#0051ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+          >
+            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
         </div>
+
         <div class="flex flex-col items-center gap-2 text-center">
-          <p class="text-2xl font-bold text-text-primary">매수 실패</p>
+          <p class="text-2xl font-bold text-text-primary">{{ outcome.title }}</p>
           <p class="text-base text-text-tertiary leading-relaxed">
-            매수 주문이 체결되지 못했어요.
+            <!-- upbit_setup_required 는 무엇이 빠졌는지에 따라 문구가 달라진다 -->
+            <template v-if="phase === 'upbit_setup_required'">{{ setupMsg }}</template>
+            <template v-else v-for="(line, i) in outcome.body" :key="i">
+              <br v-if="i">{{ line }}
+            </template>
           </p>
         </div>
-        <!-- 원화 보관 고지 — 반드시 표시 -->
-        <div class="w-full bg-surface rounded-xl px-5 py-4 flex gap-3">
+
+        <!-- 고지 박스 (원화 잔류 안내 등) -->
+        <div v-if="outcome.note" class="w-full bg-surface rounded-xl px-5 py-4 flex gap-3">
           <span class="text-base shrink-0">ℹ️</span>
-          <p class="text-sm text-text-tertiary leading-relaxed">
-            케이뱅크 계좌에서 출금된 원화는 현재 업비트 계좌에 안전하게 보관되어 있습니다. 업비트 앱에서 직접 매수하시거나 원화를 출금해 주세요.
-          </p>
+          <p class="text-sm text-text-tertiary leading-relaxed">{{ outcome.note }}</p>
         </div>
       </div>
-      <div class="px-6 pb-10 pt-4">
-        <button
-          class="w-full py-4 rounded-2xl bg-surface text-text-primary text-lg font-semibold active:bg-surface-border"
-          @click="router.replace('/payments')"
-        >
-          돌아가기
-        </button>
-      </div>
-    </template>
 
-    <!-- ════ Phase: timeout (2차 인증 시간 초과) ════ -->
-    <template v-else-if="phase === 'timeout'">
-      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
-        <div class="w-24 h-24 rounded-full bg-surface flex items-center justify-center">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8e8e93" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-          </svg>
-        </div>
-        <div class="flex flex-col items-center gap-2 text-center">
-          <p class="text-2xl font-bold text-text-primary">인증 시간 초과</p>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            2차 인증 시간이 초과되었어요.<br>결제 건이 유지되어 다시 승인할 수 있어요.
-          </p>
-        </div>
-      </div>
       <div class="px-6 pb-10 pt-4 flex flex-col gap-3">
         <button
+          v-if="outcome.primary"
           class="w-full py-4 rounded-2xl bg-brand text-white text-lg font-bold active:bg-brand-hover"
-          @click="phase = 'idle'"
+          @click="outcome.primary.run()"
         >
-          다시 승인하기
+          {{ outcome.primary.label }}
         </button>
         <button
-          class="w-full py-3 text-base text-text-tertiary font-medium"
+          class="w-full py-3 text-base font-medium"
+          :class="outcome.primary
+            ? 'text-text-tertiary'
+            : 'py-4 rounded-2xl bg-surface text-text-primary text-lg font-semibold active:bg-surface-border'"
           @click="router.replace('/payments')"
         >
-          나중에 하기
-        </button>
-      </div>
-    </template>
-
-    <!-- ════ Phase: upbit_setup_required (업비트 미연동 / 2차 인증 미설정) ════ -->
-    <template v-else-if="phase === 'upbit_setup_required'">
-      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
-        <div class="w-24 h-24 rounded-full bg-brand-bg flex items-center justify-center">
-          <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#0051ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-          </svg>
-        </div>
-        <div class="flex flex-col items-center gap-2 text-center">
-          <p class="text-2xl font-bold text-text-primary">업비트 설정 필요</p>
-          <p class="text-base text-text-tertiary leading-relaxed">{{ setupMsg }}</p>
-        </div>
-      </div>
-      <div class="px-6 pb-10 pt-4 flex flex-col gap-3">
-        <button
-          class="w-full py-4 rounded-2xl bg-brand text-white text-lg font-bold active:bg-brand-hover"
-          @click="router.replace('/settings/api-key')"
-        >
-          업비트 설정하기
-        </button>
-        <button
-          class="w-full py-3 text-base text-text-tertiary font-medium"
-          @click="router.replace('/payments')"
-        >
-          나중에 하기
-        </button>
-      </div>
-    </template>
-
-    <!-- ════ Phase: upbit_invalid_key (업비트 키 만료) ════ -->
-    <template v-else-if="phase === 'upbit_invalid_key'">
-      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
-        <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </div>
-        <div class="flex flex-col items-center gap-2 text-center">
-          <p class="text-2xl font-bold text-text-primary">업비트 인증 만료</p>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            업비트 인증이 만료되었습니다.<br>다시 연동해 주세요.
-          </p>
-        </div>
-      </div>
-      <div class="px-6 pb-10 pt-4 flex flex-col gap-3">
-        <button
-          class="w-full py-4 rounded-2xl bg-brand text-white text-lg font-bold active:bg-brand-hover"
-          @click="router.replace('/settings/api-key')"
-        >
-          업비트 재연동
-        </button>
-        <button
-          class="w-full py-3 text-base text-text-tertiary font-medium"
-          @click="router.replace('/payments')"
-        >
-          나중에 하기
-        </button>
-      </div>
-    </template>
-
-    <!-- ════ Phase: failed (파싱 오류 등) ════ -->
-    <template v-else-if="phase === 'failed'">
-      <div class="flex-1 flex flex-col items-center justify-center px-8 gap-8">
-        <div class="w-24 h-24 rounded-full bg-danger-bg flex items-center justify-center">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ff3b30" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </div>
-        <div class="flex flex-col items-center gap-2 text-center">
-          <p class="text-2xl font-bold text-text-primary">매수 실패</p>
-          <p class="text-base text-text-tertiary leading-relaxed">
-            알 수 없는 오류로 매수에 실패했어요.<br>잠시 후 다시 시도해 주세요.
-          </p>
-        </div>
-      </div>
-      <div class="px-6 pb-10 pt-4">
-        <button
-          class="w-full py-4 rounded-2xl bg-surface text-text-primary text-lg font-semibold active:bg-surface-border"
-          @click="router.replace('/payments')"
-        >
-          돌아가기
+          {{ outcome.back }}
         </button>
       </div>
     </template>

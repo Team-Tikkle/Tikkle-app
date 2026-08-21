@@ -25,22 +25,13 @@ interface RawMarketTopic {
   thumbnail_url?: string | null
 }
 
-// Scraped news text often carries HTML entities (&nbsp;, &quot;, &#39;…)
-// and markup tags (<b>…</b>). Decode entities and strip tags for display.
+// 스크랩된 뉴스 텍스트에는 HTML 엔티티(&nbsp;, &quot;, &#39;…)와 마크업(<b>…</b>)이
+// 섞여 있다. 엔티티 목록을 손으로 나열하면 빠지는 게 생기므로 브라우저 파서에 맡긴다.
+// parseFromString('text/html')은 스크립트를 실행하지 않아 안전하다.
 function cleanNewsText(s?: string): string {
   if (!s) return ''
-  return s
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/&amp;/gi, '&')
-    .replace(/&lt;/gi, '<')
-    .replace(/&gt;/gi, '>')
-    .replace(/&quot;/gi, '"')
-    .replace(/&apos;/gi, "'")
-    .replace(/&#(\d+);/g, (_, n: string) => String.fromCodePoint(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n: string) => String.fromCodePoint(parseInt(n, 16)))
-    .replace(/\s+/g, ' ')
-    .trim()
+  const text = new DOMParser().parseFromString(s, 'text/html').body.textContent ?? ''
+  return text.replace(/\s+/g, ' ').trim()
 }
 
 function normalizeMarketTopic(raw: RawMarketTopic): NewsArticle {
