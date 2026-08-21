@@ -34,11 +34,22 @@ function refreshSystemStatus() {
   isBatteryExempt().then((v) => { batteryOk.value = v })
 }
 
+// ── 앱 버전 ──
+// 네이티브의 versionName(android/app/build.gradle)을 그대로 읽어 표시한다.
+// 하드코딩해두면 gradle 값과 어긋나므로, 버전은 gradle 한 곳에서만 관리한다.
+// 웹에서는 조회할 수 없어 빈 값으로 두고 줄 자체를 감춘다.
+const appVersion = ref('')
+
 // Ensure profile is loaded even if the user navigates directly to /settings
 // without passing through HomeView (e.g. deep-link or hard refresh).
 onMounted(async () => {
   if (!userStore.profile?.name) userStore.fetchProfile().catch(() => {})
   refreshSystemStatus()
+  if (isNativeApp) {
+    CapApp.getInfo()
+      .then(({ version }) => { appVersion.value = version })
+      .catch(() => {})
+  }
   resumeHandle = await CapApp.addListener('resume', refreshSystemStatus)
 })
 
@@ -235,9 +246,9 @@ useModalBackHandler(showWithdrawalModal, () => { showWithdrawalModal.value = fal
           <!-- eslint-disable-next-line vue/no-v-html -->
           <span v-html="chevronRight" />
         </button>
-        <!-- App version — non-clickable -->
-        <div class="px-5 py-4 flex items-center justify-between">
-          <span class="text-base font-medium text-text-tertiary">앱 버전 1.0.0</span>
+        <!-- App version — non-clickable. 네이티브에서만 조회되므로 웹에서는 숨긴다. -->
+        <div v-if="appVersion" class="px-5 py-4 flex items-center justify-between">
+          <span class="text-base font-medium text-text-tertiary">앱 버전 {{ appVersion }}</span>
         </div>
       </div>
 
