@@ -8,7 +8,8 @@
     "build": "vue-tsc -b && vite build",
     "build:demo": "vue-tsc -b && vite build --mode demo",
     "preview": "vite preview",
-    "type-check": "vue-tsc --noEmit"
+    "type-check": "vue-tsc --noEmit",
+    "build:site": "node scripts/build-legal.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",
