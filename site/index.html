@@ -163,6 +163,20 @@
         font-size: 15px;
       }
 
+      /* ── 문제정의 ── */
+      .problem .step {
+        background: var(--surface);
+        border-color: transparent;
+      }
+      .solution {
+        margin-top: 40px;
+        padding: 24px 28px;
+        background: var(--brand-bg);
+        border-radius: var(--r-2xl);
+        color: var(--text-primary);
+        font-size: 17px;
+      }
+
       /* ── Features ── */
       .features {
         background: var(--card);
@@ -253,6 +267,14 @@
         color: rgba(255, 255, 255, 0.85);
         font-size: 17px;
       }
+      .cta-contact {
+        margin-top: 28px;
+        font-size: 15px;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      .cta-contact a {
+        color: #fff;
+      }
       .cta .btn {
         margin-top: 32px;
         background: #fff;
@@ -304,6 +326,7 @@
       <div class="wrap">
         <a class="logo" href="#top">Tikkle</a>
         <div class="nav-links">
+          <a href="#why">왜 필요한가</a>
           <a href="#how">작동 방식</a>
           <a href="#features">기능</a>
           <a href="#trust">데이터와 권한</a>
@@ -331,11 +354,45 @@
       </div>
     </header>
 
+    <section id="why" class="features">
+      <div class="wrap">
+        <h2>코인, 왜 아직 안 하고 계신가요</h2>
+        <p class="lead">
+          대부분 관심이 없어서가 아니라, 정해야 할 게 너무 많아서입니다.
+        </p>
+        <div class="steps problem">
+          <div class="step">
+            <h3>얼마부터 시작해야 하지</h3>
+            <p>
+              목돈을 넣자니 부담스럽고, 소액은 해봐야 의미가 없어 보입니다.
+            </p>
+          </div>
+          <div class="step">
+            <h3>뭘 사야 하지</h3>
+            <p>
+              종목은 수백 개고, 눈에 띄는 뉴스는 대부분 이미 지나간 이야기입니다.
+            </p>
+          </div>
+          <div class="step">
+            <h3>지금이 고점 아닐까</h3>
+            <p>
+              타이밍을 재다 보면 미루게 되고, 그러다 1년이 지나 있습니다.
+            </p>
+          </div>
+        </div>
+        <p class="solution">
+          Tikkle은 이 셋을 정하지 않아도 되게 만들었습니다. 금액은 쓰다 보면
+          잔돈만큼 쌓이고, 종목은 앱이 골라 제안합니다. 회원님은 승인할지만
+          정하면 됩니다.
+        </p>
+      </div>
+    </section>
+
     <section id="how">
       <div class="wrap">
         <h2>세 단계면 끝납니다</h2>
         <p class="lead">
-          한 번 연결해두면 그 다음부터는 아무것도 하지 않아도 됩니다.
+          한 번 연결해두면, 그 다음부터는 확인하고 승인하는 것뿐입니다.
         </p>
         <div class="steps">
           <div class="step">
@@ -465,6 +522,10 @@
         <h2>오늘 쓴 돈부터 모아보세요</h2>
         <p>설치하고 카드 한 장만 연결해서 바로 시작해보세요!</p>
         <a class="btn" href="#">Android 앱 다운로드</a>
+        <p class="cta-contact">
+          궁금한 점은 <a href="mailto:support@tikkle.xyz">support@tikkle.xyz</a> 로
+          보내주세요.
+        </p>
       </div>
     </section>
 
