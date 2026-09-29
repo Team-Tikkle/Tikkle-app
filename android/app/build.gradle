@@ -27,7 +27,7 @@ if (envFile.exists()) {
 // Resolution order: local.properties → .env (VITE_*) → gradle property → default
 def resolveApiBase = localProps.getProperty('API_BASE_URL') ?:
         envProps.getProperty('VITE_API_BASE_URL') ?:
-        project.findProperty('API_BASE_URL') ?: 'https://api.tikkle.com'
+        project.findProperty('API_BASE_URL') ?: 'https://api.tikkle.xyz'
 def resolvePaymentSecret = localProps.getProperty('PAYMENT_SECRET_KEY') ?:
         envProps.getProperty('VITE_PAYMENT_SECRET_KEY') ?:
         project.findProperty('PAYMENT_SECRET_KEY') ?: ''
