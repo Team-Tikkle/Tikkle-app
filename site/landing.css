@@ -1,0 +1,319 @@
+/* 랜딩 페이지 전용 스타일. index.html 과 en/index.html 이 공유한다.
+   토큰과 기본 타이포그래피는 site.css 에 있다. */
+
+/* ── Buttons ── */
+.btn {
+  display: inline-block;
+  padding: 14px 28px;
+  border-radius: var(--r-xl);
+  font-weight: 600;
+  font-size: 16px;
+  text-decoration: none;
+  transition: 0.15s;
+}
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--brand-hover);
+}
+.btn-ghost {
+  background: var(--card);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 80px 0 96px;
+}
+.hero .wrap {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 64px;
+  align-items: center;
+}
+.hero h1 {
+  font-size: 56px;
+  line-height: 1.15;
+  letter-spacing: -0.035em;
+  font-weight: 800;
+}
+.hero h1 em {
+  font-style: normal;
+  color: var(--brand);
+}
+.hero p {
+  margin-top: 20px;
+  font-size: 19px;
+  color: var(--text-secondary);
+}
+.hero-cta {
+  margin-top: 36px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hero-note {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+}
+
+/* ── Phone mockup (스크린샷 교체 자리) ── */
+.phone {
+  width: 300px;
+  aspect-ratio: 1080 / 2400;
+  margin: 0 auto;
+  background: var(--card);
+  border: 8px solid #1c1c1e;
+  border-radius: var(--r-4xl);
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.phone img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.phone .placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: repeating-linear-gradient(
+    45deg,
+    var(--surface-alt) 0 12px,
+    var(--surface) 12px 24px
+  );
+  color: var(--text-tertiary);
+  font-size: 13px;
+  text-align: center;
+  padding: 24px;
+}
+.phone .placeholder strong {
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+/* ── Steps ── */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 48px;
+}
+.step {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2xl);
+  padding: 32px 28px;
+}
+.step-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  background: var(--brand-bg);
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 16px;
+}
+.step h3 {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.step p {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+.step p.note {
+  margin-top: 12px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+}
+
+/* ── 문제정의 ── */
+.problem .step {
+  background: var(--surface);
+  border-color: transparent;
+}
+.solution {
+  margin-top: 40px;
+  padding: 24px 28px;
+  background: var(--brand-bg);
+  border-radius: var(--r-2xl);
+  color: var(--text-primary);
+  font-size: 17px;
+}
+
+/* ── 기술 스택 ── */
+.stack-line {
+  margin-top: 32px;
+  padding: 24px 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2xl);
+  color: var(--text-secondary);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* ── Features ── */
+.features {
+  background: var(--card);
+}
+.feature-list {
+  display: grid;
+  gap: 0;
+  margin-top: 72px;
+}
+.feature {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 72px;
+  align-items: center;
+}
+/* 인접한 두 행은 스크린샷이 좌/우로 갈리므로 세로로 겹쳐도 충돌하지
+   않는다 — 폰 위아래의 빈 여백만 먹는다.
+   ponytail: 겹치는 양은 고정값이다. 설명 문단이 4줄을 넘기면 윗행
+   텍스트와 아랫행 스크린샷이 부딪히니 그때 값을 줄일 것. */
+.feature + .feature {
+  margin-top: -160px;
+}
+/* 짝수 행은 스크린샷을 오른쪽으로 */
+.feature:nth-child(even) {
+  grid-template-columns: 1fr 260px;
+}
+.feature:nth-child(even) .phone {
+  order: 2;
+}
+.feature .phone {
+  width: 260px;
+  border-width: 7px;
+  border-radius: var(--r-3xl);
+}
+.feature h3 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.feature p {
+  margin-top: 12px;
+  color: var(--text-secondary);
+  font-size: 17px;
+}
+
+/* ── Trust ── */
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  margin-top: 48px;
+}
+.trust-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-2xl);
+  padding: 28px;
+}
+.trust-card h3 {
+  font-size: 17px;
+  font-weight: 700;
+}
+.trust-card p {
+  margin-top: 8px;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+.notice {
+  margin-top: 32px;
+  background: var(--warning-bg);
+  color: var(--warning);
+  border-radius: var(--r-xl);
+  padding: 16px 20px;
+  font-size: 14px;
+}
+
+/* ── CTA ── */
+.cta {
+  background: var(--brand);
+  color: #fff;
+  text-align: center;
+}
+.cta h2 {
+  color: #fff;
+}
+.cta p {
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 17px;
+}
+.cta-contact {
+  margin-top: 28px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+}
+.cta-contact a {
+  color: #fff;
+}
+.cta .btn {
+  margin-top: 32px;
+  background: #fff;
+  color: var(--brand);
+}
+
+@media (max-width: 860px) {
+  section {
+    padding: 64px 0;
+  }
+  h2 {
+    font-size: 26px;
+  }
+  .hero .wrap {
+    grid-template-columns: 1fr;
+    gap: 48px;
+  }
+  .hero h1 {
+    font-size: 38px;
+  }
+  .nav-links {
+    display: none;
+  }
+  .steps,
+  .trust-grid {
+    grid-template-columns: 1fr;
+  }
+  .feature-list {
+    gap: 64px;
+  }
+  .feature + .feature {
+    margin-top: 0;
+  }
+  .feature,
+  .feature:nth-child(even) {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    justify-items: center;
+    text-align: center;
+  }
+  .feature:nth-child(even) .phone {
+    order: 0;
+  }
+}
