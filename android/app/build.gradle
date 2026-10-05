@@ -24,6 +24,19 @@ if (envFile.exists()) {
     }
 }
 
+// Release signing config. keystore.properties is machine-local and gitignored;
+// it holds the absolute path to the keystore plus its passwords. If it is absent
+// (CI, fresh clone) the release build stays unsigned rather than failing outright.
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file('keystore.properties')
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+def hasReleaseKeystore = keystoreProps.getProperty('storeFile') != null
+if (!hasReleaseKeystore) {
+    logger.warn('keystore.properties not found — the release APK will be UNSIGNED and cannot be installed.')
+}
+
 // Resolution order: local.properties → .env (VITE_*) → gradle property → default
 def resolveApiBase = localProps.getProperty('API_BASE_URL') ?:
         envProps.getProperty('VITE_API_BASE_URL') ?:
@@ -55,8 +68,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (hasReleaseKeystore) {
+                storeFile     file(keystoreProps.getProperty('storeFile'))
+                storePassword keystoreProps.getProperty('storePassword')
+                keyAlias      keystoreProps.getProperty('keyAlias')
+                keyPassword   keystoreProps.getProperty('keyPassword')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (hasReleaseKeystore) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
