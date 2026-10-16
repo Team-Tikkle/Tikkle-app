@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://tikkle.xyz/sitemap.xml
+Sitemap: https://www.tikkle.xyz/sitemap.xml
