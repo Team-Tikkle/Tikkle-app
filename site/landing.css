@@ -29,6 +29,20 @@
 }
 
 /* ── Hero ── */
+.lang-toggle {
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--r-pill, 9999px);
+  padding: 6px 14px;
+}
+.lang-toggle:hover {
+  color: var(--brand);
+  border-color: var(--brand);
+}
+
 .hero {
   padding: 80px 0 96px;
 }
@@ -242,6 +256,49 @@
   color: var(--text-secondary);
   font-size: 15px;
 }
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  margin-top: 48px;
+}
+.team-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 9999px;
+  object-fit: cover;
+  margin-bottom: 14px;
+}
+.team-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+/* 아이콘 링크 — 터치 타겟을 32px 로 두어 WCAG 최소치(24px)를 넘긴다 */
+.li-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-xs, 6px);
+  color: var(--brand);
+}
+.li-icon:hover {
+  background: var(--brand-bg);
+}
+.li-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.team-grid .role {
+  color: var(--brand);
+  font-size: 14px;
+  font-weight: 600;
+  margin-top: 4px;
+}
 .notice {
   margin-top: 32px;
   background: var(--warning-bg);
@@ -297,7 +354,8 @@
     display: none;
   }
   .steps,
-  .trust-grid {
+  .trust-grid,
+  .team-grid {
     grid-template-columns: 1fr;
   }
   .feature-list {

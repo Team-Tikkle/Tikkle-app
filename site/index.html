@@ -1,4 +1,6 @@
 <!doctype html>
+<!-- 이 페이지를 고치면 site/en/index.html 도 함께 고칠 것. 영문판은 빌드 없이
+     유지하는 수동 복사본이다. -->
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
@@ -14,9 +16,12 @@
       content="결제하고 남은 잔돈으로 살 만한 코인을 앱이 찾아둡니다. 확인하고 승인만 하면 끝."
     />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://tikkle.xyz/" />
-    <meta property="og:image" content="https://tikkle.xyz/og-image.png" />
+    <meta property="og:url" content="https://www.tikkle.xyz/" />
+    <meta property="og:image" content="https://www.tikkle.xyz/og-image.png" />
     <meta name="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://www.tikkle.xyz/" />
+    <link rel="alternate" hreflang="ko" href="https://www.tikkle.xyz/" />
+    <link rel="alternate" hreflang="en" href="https://www.tikkle.xyz/en/" />
     <link rel="icon" href="./favicon-32x32.png" sizes="32x32" />
     <link rel="icon" href="./favicon-16x16.png" sizes="16x16" />
     <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
@@ -32,7 +37,9 @@
           <a href="#how">작동 방식</a>
           <a href="#features">기능</a>
           <a href="#trust">데이터와 권한</a>
+          <a href="#team">팀</a>
         </div>
+        <a class="lang-toggle" href="/en/">EN</a>
       </div>
     </nav>
 
@@ -231,11 +238,63 @@
       </div>
     </section>
 
+    <section id="team" class="features">
+      <div class="wrap">
+        <h2>만드는 사람들</h2>
+        <p class="lead">2026년 5월, 두 명이 서울에서 시작했습니다.</p>
+        <div class="team-grid">
+          <div class="trust-card">
+            <img class="team-photo" src="./people/jungyoon.png" alt="김정윤" width="200" height="200" />
+            <div class="team-head">
+              <h3>김정윤</h3>
+              <a
+                class="li-icon"
+                href="https://www.linkedin.com/in/jungyoon-kim-tikkle/"
+                target="_blank"
+                rel="noopener"
+                aria-label="김정윤 LinkedIn 프로필 (새 창)"
+                ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/></svg></a
+              >
+            </div>
+            <p class="role">공동창업자 · CEO · 백엔드</p>
+            <p>
+              결제 파이프라인·AI 추천 엔진·업비트 연동 등 백엔드와 인프라를
+              맡고 있습니다.
+            </p>
+          </div>
+          <div class="trust-card">
+            <img class="team-photo" src="./people/hyungjun.png" alt="이형준" width="200" height="200" />
+            <div class="team-head">
+              <h3>이형준</h3>
+              <a
+                class="li-icon"
+                href="https://www.linkedin.com/in/hyungjun-lee-b16698428/"
+                target="_blank"
+                rel="noopener"
+                aria-label="이형준 LinkedIn 프로필 (새 창)"
+                ><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 1 1 0-4.125 2.062 2.062 0 0 1 0 4.125zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.225 0z"/></svg></a
+              >
+            </div>
+            <p class="role">공동창업자 · COO · 프론트엔드</p>
+            <p>Android 앱(Vue 3 + Capacitor)과 랜딩 페이지를 맡고 있습니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="download" class="cta">
       <div class="wrap">
         <h2>오늘 쓴 돈부터 모아보세요</h2>
         <p>케이뱅크 카드와 업비트 계정을 연결하고 바로 시작해보세요!</p>
-        <a class="btn" href="#">Android 앱 다운로드</a>
+        <a
+          class="btn"
+          href="https://github.com/Team-Tikkle/Tikkle-app/releases/latest/download/tikkle.apk"
+          >Android 앱 다운로드 (APK)</a
+        >
+        <p class="cta-contact">
+          스토어 외부 설치라 "알 수 없는 출처 허용" 확인이 뜹니다 · 정식 출시
+          2026년 11월 예정
+        </p>
         <p class="cta-contact">
           궁금한 점은
           <a href="mailto:support@tikkle.xyz">support@tikkle.xyz</a> 로
@@ -251,6 +310,12 @@
           <a href="./terms.html">이용약관</a>
           <a href="./privacy.html">개인정보처리방침</a>
           <a href="mailto:support@tikkle.xyz">문의</a>
+          <a
+            href="https://www.linkedin.com/company/tikkle-app/"
+            target="_blank"
+            rel="noopener"
+            >LinkedIn</a
+          >
         </div>
         <span class="copy">© 2026 Tikkle</span>
       </div>
