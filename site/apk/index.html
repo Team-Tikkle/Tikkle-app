@@ -1,6 +1,9 @@
 <!doctype html>
 <!-- QR·짧은 주소(tikkle.xyz/apk)용 다운로드 페이지. 열리자마자 APK 다운로드로
-     넘어가고, 안내 문구만 남긴다. 배포처가 바뀌면 아래 URL 두 곳만 고칠 것. -->
+     넘어가고, 설치 순서를 남긴다. 배포처가 바뀌면 아래 URL 세 곳만 고칠 것.
+     티끌은 알림 리스너(결제 알림 감지)를 선언하므로, 브라우저로 받은 APK 는
+     Play 프로텍트 '강화된 사기 방지'가 설치를 막는다(우회 버튼 없음). 그래서
+     설치하는 동안만 Play 프로텍트 앱 검사를 끄는 순서를 안내한다. -->
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
@@ -16,7 +19,10 @@
       .apk-page h1 { font-size: 26px; margin-top: 16px; }
       .apk-page p { margin-top: 12px; color: var(--text-secondary); font-size: 16px; line-height: 1.6; }
       .apk-page .btn { margin-top: 24px; }
-      .apk-page ol { text-align: left; margin: 24px auto 0; padding-left: 20px; color: var(--text-secondary); font-size: 15px; line-height: 1.7; }
+      .apk-page h2 { margin-top: 40px; font-size: 19px; }
+      .apk-page .note { margin-top: 12px; padding: 14px 16px; background: var(--card); border-radius: 16px; text-align: left; font-size: 14px; }
+      .apk-page ol { text-align: left; margin: 20px auto 0; padding-left: 20px; color: var(--text-secondary); font-size: 15px; line-height: 1.7; }
+      .apk-page ol li + li { margin-top: 10px; }
       .apk-page .small { margin-top: 28px; font-size: 13px; color: var(--text-tertiary); }
       .apk-page .small a { color: inherit; }
     </style>
@@ -27,14 +33,25 @@
       <h1>앱 다운로드가 시작됩니다</h1>
       <p>Android 전용 설치 파일(APK)입니다. 다운로드가 시작되지 않으면 아래 버튼을 눌러 주세요.</p>
       <a class="btn btn-primary" href="https://github.com/Team-Tikkle/Tikkle-app/releases/latest/download/tikkle.apk">Android 앱 다운로드 (APK)</a>
+
+      <h2>설치 순서</h2>
+      <p class="note">
+        티끌은 카드 결제 알림을 읽어 잔돈을 계산합니다. 이런 권한이 있는 앱을 Play 스토어 밖에서 설치하면
+        Google Play 프로텍트가 설치를 막습니다. 설치하는 동안만 검사를 잠시 꺼 주세요.
+      </p>
       <ol>
-        <li>Chrome 경고가 뜨면 <strong>"다운로드"</strong> 를 선택합니다.</li>
-        <li>받은 <strong>tikkle.apk</strong> 를 열고, <strong>"알 수 없는 출처 허용"</strong> 을 켭니다.</li>
-        <li>Play Protect 경고가 보이면 <strong>"무시하고 설치"</strong> 를 누릅니다. 스토어 외부 설치라 뜨는 정상 안내입니다.</li>
+        <li>화면 아래 <strong>"유해한 파일일 수도 있음"</strong> 창에서 <strong>"무시하고 다운로드"</strong>를 누릅니다. 창 없이 다운로드 알림이 100%에서 멈추면 취소하고 위 버튼을 다시 눌러 주세요.</li>
+        <li><strong>Play 스토어</strong> → 오른쪽 위 프로필 → <strong>Play 프로텍트</strong> → 오른쪽 위 톱니바퀴 → <strong>"Play 프로텍트로 앱 검사"</strong>를 끕니다. 통화 중에는 끌 수 없습니다. 삼성 휴대폰에서 "자동 차단으로 설치가 차단됨"이 뜨면 <strong>설정 → 보안 및 개인정보 보호 → 자동 차단</strong>도 잠시 끕니다.</li>
+        <li>다운로드 알림이나 <strong>내 파일 → 다운로드</strong>에서 <strong>tikkle.apk</strong>를 엽니다. 처음이면 <strong>"이 출처 허용"</strong>을 켠 뒤 설치합니다.</li>
+        <li>설치가 끝나면 2번에서 끈 <strong>"Play 프로텍트로 앱 검사"</strong>와 <strong>자동 차단</strong>을 다시 켭니다.</li>
+        <li>앱에서 알림 접근을 켤 때 <strong>"제한된 설정"</strong> 창이 뜨면 <strong>설정 → 애플리케이션 → 티끌 → 오른쪽 위 ⋮ → "제한된 설정 허용"</strong>을 누른 뒤 다시 켭니다.</li>
       </ol>
+
       <p class="small">
         iPhone에서는 설치할 수 없습니다 · Android 7.0 이상<br />
         Download starts automatically. Android only. <a href="https://github.com/Team-Tikkle/Tikkle-app/releases/latest/download/tikkle.apk">Direct link</a><br />
+        Play Protect blocks this install because Tikkle reads card payment notifications.
+        Turn off "Scan apps with Play Protect" while installing, then turn it back on.<br />
         <a href="../">tikkle.xyz 로 돌아가기</a> · <a href="mailto:support@tikkle.xyz">support@tikkle.xyz</a>
       </p>
     </main>
